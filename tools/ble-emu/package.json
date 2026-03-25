@@ -1,0 +1,21 @@
+{
+  "name": "ble-emu",
+  "version": "1.0.0",
+  "description": "Send emulated BLE notify packets to Flutter app via local HTTP",
+  "main": "src/cli.js",
+  "bin": {
+    "ble-emu": "src/cli.js"
+  },
+  "scripts": {
+    "ble-emu": "node src/cli.js",
+    "health": "node src/cli.js health",
+    "inject:value": "node src/cli.js inject:value --value 123",
+    "inject:hex": "node src/cli.js inject:hex --hex \"06 00 00 00 00 00\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  }
+}

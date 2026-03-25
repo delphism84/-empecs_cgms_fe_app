@@ -1,0 +1,7 @@
+[
+  {
+    "file": "C:\\rc\\_cube\\empecs\\empecs_cgms\\docs\\req260305\\CGM App동작 확인_260306.pptx",
+    "where": "pptx.ai(slide 3, ppt/media/image7.png)",
+    "message": "Gemini API error (500): {\n  \"error\": {\n    \"code\": 500,\n    \"message\": \"Internal error encountered.\",\n    \"status\": \"INTERNAL\"\n  }\n}\n"
+  }
+]

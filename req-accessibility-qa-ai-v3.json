@@ -1,0 +1,919 @@
+{
+  "ok": true,
+  "generatedAt": "2026-03-12T23:08:07.598Z",
+  "qaPath": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\qa-results.json",
+  "reqPath": "C:\\rc\\_cube\\empecs\\empecs_cgms\\docs\\req260305\\_analysis_260306\\req-extracted.json",
+  "mdPath": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req260306.md",
+  "ids": [
+    "ACC3_OFF_SETTINGS",
+    "ACC3_OFF_DASH",
+    "ACC3_OFF_TREND",
+    "ACC3_HC_ON_SETTINGS",
+    "ACC3_HC_ON_DASH",
+    "ACC3_HC_ON_TREND",
+    "ACC3_CB_ON_SETTINGS",
+    "ACC3_CB_ON_DASH",
+    "ACC3_CB_ON_TREND",
+    "ACC3_HC_CB_ON_SETTINGS",
+    "ACC3_HC_CB_ON_DASH",
+    "ACC3_HC_CB_ON_TREND",
+    "ACC3_LF_ON_SETTINGS",
+    "ACC3_LF_ON_DASH",
+    "ACC3_LF_ON_TREND"
+  ],
+  "rows": [
+    {
+      "id": "ACC3_OFF_SETTINGS",
+      "title": "Accessibility ACC3_OFF · Settings",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_OFF_SETTINGS_2026-03-12T23-05-19-473Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_OFF_SETTINGS_2026-03-12T23-05-19-473Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_OFF_SETTINGS\",\n  \"title\": \"Accessibility ACC3_OFF · Settings\",\n  \"verifiedAt\": \"2026-03-12T23:05:19.784Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/settings\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/settings\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": false,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "yes",
+        "confidence": 1,
+        "reasons": [
+          "appStats에서 accHighContrast, accLargerFont, accColorblind 모두 false로 설정되어 있습니다.",
+          "제공된 스크린샷은 일반적인 UI를 보여주며, 과도한 대비, 탈채도, 폰트 확대와 같은 접근성 기능이 시각적으로 적용되지 않은 상태입니다.",
+          "이는 appStats의 접근성 토글이 모두 OFF일 때 예상되는 정상적인 시각적 상태와 일치합니다."
+        ],
+        "missingEvidence": [],
+        "nextSteps": [
+          "각 접근성 토글(accHighContrast, accLargerFont, accColorblind)이 true로 설정되었을 때의 스크린샷을 확보하여 해당 기능들이 시각적으로 올바르게 반영되는지 추가로 검증해야 합니다."
+        ]
+      },
+      "ai": {
+        "summary": "이 이미지는 모바일 애플리케이션의 '설정' 화면을 보여줍니다. 화면 상단에는 사용자 프로필 정보와 남은 일수(Remaining days: 14 / 14)가 표시되어 있습니다. 'Data' 섹션에서는 로컬 캐시 요약(Total points: 5)과 함께 'REFRESH', 'OPEN DATA', 'RESET DB' 세 가지 버튼이 제공됩니다. 'Settings' 섹션은 'Application preferences' 아래에 'General' 설정들을 포함하고 있습니다. 'Region', 'Language', 'Time format', 'Chart dot size'와 같은 항목들이 현재 설정 값과 함께 표시되며, 각 항목은 상세 설정 화면으로 이동할 수 있는 화살표 아이콘을 가지고 있습니다. 'Notifications' 항목은 토글 스위치 형태로 제공되어 알림 기능을 켜고 끌 수 있습니다. 전반적으로 깔끔하고 직관적인 UI 디자인을 가지고 있습니다.",
+        "extractedText": "06:05\nUser\n-\nRemaining days: 14 / 14\nData\nLocal cache summary\nTotal points: 5\nREFRESH\nOPEN DATA\nRESET DB\nSettings\nApplication preferences\nGeneral\nLanguage, Region, Notifications\nRegion\nAuto-detect: KR\nLanguage\nen\nTime format\n24h\nChart dot size\n6px\nNotifications",
+        "uiElements": [
+          {
+            "type": "텍스트 라벨",
+            "label": "User",
+            "value": null,
+            "notes": "사용자 이름 또는 ID"
+          },
+          {
+            "type": "텍스트 라벨",
+            "label": "-",
+            "value": null,
+            "notes": "사용자 상세 정보 추정"
+          },
+          {
+            "type": "텍스트 라벨",
+            "label": "Remaining days",
+            "value": "14 / 14",
+            "notes": "남은 일수 표시"
+          },
+          {
+            "type": "섹션 헤더",
+            "label": "Data",
+            "value": null,
+            "notes": "데이터 관련 설정 섹션"
+          },
+          {
+            "type": "텍스트 라벨",
+            "label": "Local cache summary",
+            "value": null,
+            "notes": "로컬 캐시 요약 설명"
+          },
+          {
+            "type": "텍스트 라벨",
+            "label": "Total points",
+            "value": "5",
+            "notes": "총 포인트 수"
+          },
+          {
+            "type": "버튼",
+            "label": "REFRESH",
+            "value": null,
+            "notes": "데이터 새로고침"
+          },
+          {
+            "type": "버튼",
+            "label": "OPEN DATA",
+            "value": null,
+            "notes": "데이터 열기"
+          },
+          {
+            "type": "버튼",
+            "label": "RESET DB",
+            "value": null,
+            "notes": "데이터베이스 초기화"
+          },
+          {
+            "type": "섹션 헤더",
+            "label": "Settings",
+            "value": null,
+            "notes": "주요 설정 섹션"
+          },
+          {
+            "type": "텍스트 라벨",
+            "label": "Application preferences",
+            "value": null,
+            "notes": "애플리케이션 환경설정 설명"
+          },
+          {
+            "type": "섹션 헤더",
+            "label": "General",
+            "value": null,
+            "notes": "일반 설정 하위 섹션"
+          },
+          {
+            "type": "텍스트 라벨",
+            "label": "Language, Region, Notifications",
+            "value": null,
+            "notes": "일반 설정 항목 요약"
+          },
+          {
+            "type": "목록 항목",
+            "label": "Region",
+            "value": "Auto-detect: KR",
+            "notes": "지역 설정, 현재 'KR'로 자동 감지됨"
+          },
+          {
+            "type": "목록 항목",
+            "label": "Language",
+            "value": "en",
+            "notes": "언어 설정, 현재 'en' (영어)로 설정됨"
+          },
+          {
+            "type": "목록 항목",
+            "label": "Time format",
+            "value": "24h",
+            "notes": "시간 형식 설정, 현재 '24h'로 설정됨"
+          },
+          {
+            "type": "목록 항목",
+            "label": "Chart dot size",
+            "value": "6px",
+            "notes": "차트 점 크기 설정, 현재 '6px'로 설정됨"
+          },
+          {
+            "type": "토글 스위치",
+            "label": "Notifications",
+            "value": "OFF",
+            "notes": "알림 설정 토글, 현재 비활성화 상태"
+          },
+          {
+            "type": "내비게이션 바",
+            "label": "홈, 뒤로가기",
+            "value": null,
+            "notes": "하단 내비게이션 바 (홈, 뒤로가기 버튼 추정)"
+          }
+        ],
+        "flows": [
+          "사용자 프로필 영역 탭 -> 사용자 상세 정보 화면으로 이동 (추정)",
+          "REFRESH 버튼 탭 -> 로컬 캐시 데이터 새로고침",
+          "OPEN DATA 버튼 탭 -> 데이터 열기 기능 실행",
+          "RESET DB 버튼 탭 -> 데이터베이스 초기화 경고 팝업 표시 -> 사용자 확인 후 DB 초기화",
+          "Region 항목 탭 -> 지역 설정 상세 화면으로 이동",
+          "Language 항목 탭 -> 언어 설정 상세 화면으로 이동",
+          "Time format 항목 탭 -> 시간 형식 설정 상세 화면으로 이동",
+          "Chart dot size 항목 탭 -> 차트 점 크기 설정 상세 화면으로 이동",
+          "Notifications 토글 스위치 탭 -> 알림 기능 활성화/비활성화"
+        ],
+        "possibleScreenIds": [],
+        "uncertainties": [
+          "사용자 프로필 영역을 탭했을 때의 정확한 동작",
+          "OPEN DATA 버튼의 정확한 기능",
+          "하단 내비게이션 바의 아이콘별 정확한 기능",
+          "각 설정 항목의 상세 화면 ID"
+        ],
+        "verdict": {
+          "implemented": "yes",
+          "confidence": 1,
+          "reasons": [
+            "appStats에서 accHighContrast, accLargerFont, accColorblind 모두 false로 설정되어 있습니다.",
+            "제공된 스크린샷은 일반적인 UI를 보여주며, 과도한 대비, 탈채도, 폰트 확대와 같은 접근성 기능이 시각적으로 적용되지 않은 상태입니다.",
+            "이는 appStats의 접근성 토글이 모두 OFF일 때 예상되는 정상적인 시각적 상태와 일치합니다."
+          ],
+          "missingEvidence": [],
+          "nextSteps": [
+            "각 접근성 토글(accHighContrast, accLargerFont, accColorblind)이 true로 설정되었을 때의 스크린샷을 확보하여 해당 기능들이 시각적으로 올바르게 반영되는지 추가로 검증해야 합니다."
+          ]
+        }
+      },
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 모바일 애플리케이션의 '설정' 화면을 보여줍니다. 화면 상단에는 사용자 프로필 정보와 남은 일수(Remaining days: 14 / 14)가 표시되어 있습니다. 'Data' 섹션에서는 로컬 캐시 요약(Total points: 5)과 함께 'REFRESH', 'OPEN DATA', 'RESET DB' 세 가지 버튼이 제공됩니다. 'Settings' 섹션은 'Application preferences' 아래에 'General' 설정들을 포함하고 있습니다. 'Region', 'Language', 'Time format', 'Chart dot size'와 같은 항목들이 현재 설정 값과 함께 표시되며, 각 항목은 상세 설정 화면으로 이동할 수 있는 화살표 아이콘을 가지고 있습니다. 'Notifications' 항목은 토글 스위치 형태로 제공되어 알림 기능을 켜고 끌 수 있습니다. 전반적으로 깔끔하고 직관적인 UI 디자인을 가지고 있습니다.\",\n  \"extractedText\": \"06:05\\nUser\\n-\\nRemaining days: 14 / 14\\nData\\nLocal cache summary\\nTotal points: 5\\nREFRESH\\nOPEN DATA\\nRESET DB\\nSettings\\nApplication preferences\\nGeneral\\nLanguage, Region, Notifications\\nRegion\\nAuto-detect: KR\\nLanguage\\nen\\nTime format\\n24h\\nChart dot size\\n6px\\nNotifications\",\n  \"uiElements\": [\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"User\",\n      \"value\": null,\n      \"notes\": \"사용자 이름 또는 ID\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"-\",\n      \"value\": null,\n      \"notes\": \"사용자 상세 정보 추정\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"Remaining days\",\n      \"value\": \"14 / 14\",\n      \"notes\": \"남은 일수 표시\"\n    },\n    {\n      \"type\": \"섹션 헤더\",\n      \"label\": \"Data\",\n      \"value\": null,\n      \"notes\": \"데이터 관련 설정 섹션\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"Local cache summary\",\n      \"value\": null,\n      \"notes\": \"로컬 캐시 요약 설명\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"Total points\",\n      \"value\": \"5\",\n      \"notes\": \"총 포인트 수\"\n    },\n    {\n      \"type\": \"버튼\",\n      \"label\": \"REFRESH\",\n      \"value\": null,\n      \"notes\": \"데이터 새로고침\"\n    },\n    {\n      \"type\": \"버튼\",\n      \"label\": \"OPEN DATA\",\n      \"value\": null,\n      \"notes\": \"데이터 열기\"\n    },\n    {\n      \"type\": \"버튼\",\n      \"label\": \"RESET DB\",\n      \"value\": null,\n      \"notes\": \"데이터베이스 초기화\"\n    },\n    {\n      \"type\": \"섹션 헤더\",\n      \"label\": \"Settings\",\n      \"value\": null,\n      \"notes\": \"주요 설정 섹션\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"Application preferences\",\n      \"value\": null,\n      \"notes\": \"애플리케이션 환경설정 설명\"\n    },\n    {\n      \"type\": \"섹션 헤더\",\n      \"label\": \"General\",\n      \"value\": null,\n      \"notes\": \"일반 설정 하위 섹션\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"Language, Region, Notifications\",\n      \"value\": null,\n      \"notes\": \"일반 설정 항목 요약\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Region\",\n      \"value\": \"Auto-detect: KR\",\n      \"notes\": \"지역 설정, 현재 'KR'로 자동 감지됨\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Language\",\n      \"value\": \"en\",\n      \"notes\": \"언어 설정, 현재 'en' (영어)로 설정됨\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Time format\",\n      \"value\": \"24h\",\n      \"notes\": \"시간 형식 설정, 현재 '24h'로 설정됨\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Chart dot size\",\n      \"value\": \"6px\",\n      \"notes\": \"차트 점 크기 설정, 현재 '6px'로 설정됨\"\n    },\n    {\n      \"type\": \"토글 스위치\",\n      \"label\": \"Notifications\",\n      \"value\": \"OFF\",\n      \"notes\": \"알림 설정 토글, 현재 비활성화 상태\"\n    },\n    {\n      \"type\": \"내비게이션 바\",\n      \"label\": \"홈, 뒤로가기\",\n      \"value\": null,\n      \"notes\": \"하단 내비게이션 바 (홈, 뒤로가기 버튼 추정)\"\n    }\n  ],\n  \"flows\": [\n    \"사용자 프로필 영역 탭 -> 사용자 상세 정보 화면으로 이동 (추정)\",\n    \"REFRESH 버튼 탭 -> 로컬 캐시 데이터 새로고침\",\n    \"OPEN DATA 버튼 탭 -> 데이터 열기 기능 실행\",\n    \"RESET DB 버튼 탭 -> 데이터베이스 초기화 경고 팝업 표시 -> 사용자 확인 후 DB 초기화\",\n    \"Region 항목 탭 -> 지역 설정 상세 화면으로 이동\",\n    \"Language 항목 탭 -> 언어 설정 상세 화면으로 이동\",\n    \"Time format 항목 탭 -> 시간 형식 설정 상세 화면으로 이동\",\n    \"Chart dot size 항목 탭 -> 차트 점 크기 설정 상세 화면으로 이동\",\n    \"Notifications 토글 스위치 탭 -> 알림 기능 활성화/비활성화\"\n  ],\n  \"possibleScreenIds\": [],\n  \"uncertainties\": [\n    \"사용자 프로필 영역을 탭했을 때의 정확한 동작\",\n    \"OPEN DATA 버튼의 정확한 기능\",\n    \"하단 내비게이션 바의 아이콘별 정확한 기능\",\n    \"각 설정 항목의 상세 화면 ID\"\n  ],\n  \"verdict\": {\n    \"implemented\": \"yes\",\n    \"confidence\": 1,\n    \"reasons\": [\n      \"appStats에서 accHighContrast, accLargerFont, accColorblind 모두 false로 설정되어 있습니다.\",\n      \"제공된 스크린샷은 일반적인 UI를 보여주며, 과도한 대비, 탈채도, 폰트 확대와 같은 접근성 기능이 시각적으로 적용되지 않은 상태입니다.\",\n      \"이는 appStats의 접근성 토글이 모두 OFF일 때 예상되는 정상적인 시각적 상태와 일치합니다.\"\n    ],\n    \"missingEvidence\": [],\n    \"nextSteps\": [\n      \"각 접근성 토글(accHighContrast, accLargerFont, accColorblind)이 true로 설정되었을 때의 스크린샷을 확보하여 해당 기능들이 시각적으로 올바르게 반영되는지 추가로 검증해야 합니다.\"\n    ]\n  }\n}\n```"
+    },
+    {
+      "id": "ACC3_OFF_DASH",
+      "title": "Accessibility ACC3_OFF · Dashboard",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_OFF_DASH_2026-03-12T23-05-21-571Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_OFF_DASH_2026-03-12T23-05-21-571Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_OFF_DASH\",\n  \"title\": \"Accessibility ACC3_OFF · Dashboard\",\n  \"verifiedAt\": \"2026-03-12T23:05:21.916Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/gu/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/gu/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": false,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 관리 앱의 대시보드 화면을 보여줍니다. 상단에는 현재 시간(06:05)과 혈당 수치(120 mg/dL)가 표시되어 있으며, 혈당 수치 옆에는 상승 화살표와 '1 Days left'라는 라벨이 있습니다. 중앙에는 혈당 수치 변화를 나타내는 그래프가 있으며, X축은 시간(10PM, 1AM, 4AM, 7AM), Y축은 혈당 수치(0, 50, 100, 150, 200, 250 mg/dL)를 나타냅니다. 그래프에는 100~150 mg/dL 범위가 연한 파란색으로 강조되어 있습니다. 그래프 아래에는 식사 기록 목록이 있으며, 각 항목은 'Meal', 날짜, 시간, 식사 종류(Breakfast, Lunch)를 포함합니다. 화면 우측 하단에는 플로팅 액션 버튼이 있습니다.\",\n  \"extractedText\": \"06:05\\n120\\n↑\\nmg/dL\\n1 Days\\nleft\\nmg/dL\\n250\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\n3/13\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 19:30\\nLunch\\nMeal · 2026-02-11 19:30\\nLunch\",\n  \"uiElements\": [\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"화면 좌측 상단\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"TikTok 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 바\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"Wi-Fi 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 바\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"HD 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 바\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"LTE 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 바\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"배터리 아이콘\",\n      \"value\": \"100\",\n      \"notes\": \"상단 바\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"현재 혈당 수치\",\n      \"value\": \"120\",\n      \"notes\": \"크게 표시된 숫자\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"혈당 변화 추세\",\n      \"value\": \"↑\",\n      \"notes\": \"상승 화살표\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"남은 일수\",\n      \"value\": \"1 Days left\",\n      \"notes\": \"원형 배경에 표시\"\n    },\n    {\n      \"type\": \"그래프\",\n      \"label\": \"혈당 수치 그래프\",\n      \"value\": null,\n      \"notes\": \"X축: 시간, Y축: mg/dL\"\n    },\n    {\n      \"type\": \"그래프 Y축 라벨\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"그래프 좌측 상단\"\n    },\n    {\n      \"type\": \"그래프 Y축 값\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"250\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 값\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"200\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 값\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"150\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 값\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"100\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 값\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"50\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 값\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"0\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 X축 값\",\n      \"label\": \"시간\",\n      \"value\": \"10PM\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 X축 값\",\n      \"label\": \"시간\",\n      \"value\": \"1AM\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 X축 값\",\n      \"label\": \"시간\",\n      \"value\": \"4AM\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 X축 값\",\n      \"label\": \"시간\",\n      \"value\": \"7AM\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"날짜\",\n      \"value\": \"3/13\",\n      \"notes\": \"그래프 우측 상단\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"첫 번째 식사 기록\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"두 번째 식사 기록\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"세 번째 식사 기록\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"네 번째 식사 기록\"\n    },\n    {\n      \"type\": \"플로팅 액션 버튼\",\n      \"label\": \"기록 추가 버튼 (추정)\",\n      \"value\": null,\n      \"notes\": \"우측 하단, 사각형 아이콘\"\n    },\n    {\n      \"type\": \"내비게이션 바 버튼\",\n      \"label\": \"메뉴 버튼 (추정)\",\n      \"value\": \"≡\",\n      \"notes\": \"하단 내비게이션 바 좌측\"\n    },\n    {\n      \"type\": \"내비게이션 바 버튼\",\n      \"label\": \"홈 버튼 (추정)\",\n      \"value\": \"○\",\n      \"notes\": \"하단 내비게이션 바 중앙\"\n    },\n    {\n      \"type\": \"내비게이션 바 버튼\",\n      \"label\": \"뒤로 가기 버튼 (추정)\",\n      \"value\": \"<\",\n      \"notes\": \"하단 내비게이션 바 우측\"\n    }\n  ],\n  \"flows\": [\n    \"사용자 앱 실행 -> 대시보드 화면 표시 (현재 혈당, 그래프, 식사 기록)\",\n    \"사용자 식사 기록 항목 탭 -> 해당 식사 기록 상세 화면으로 이동 (추정)\",\n    \"사용자 플로팅 액션 버튼 탭 -> 새로운 기록 추가 화면으로 이동 (추정)\"\n  ],\n  \"possibleScreenIds\": [\n    \"/gu/01"
+    },
+    {
+      "id": "ACC3_OFF_TREND",
+      "title": "Accessibility ACC3_OFF · Trend",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_OFF_TREND_2026-03-12T23-05-22-973Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_OFF_TREND_2026-03-12T23-05-22-973Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_OFF_TREND\",\n  \"title\": \"Accessibility ACC3_OFF · Trend\",\n  \"verifiedAt\": \"2026-03-12T23:05:23.273Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/tg/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/tg/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": false,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 트렌드를 보여주는 모바일 애플리케이션 화면입니다. 상단에는 현재 시간, 배터리 상태, 네트워크 연결 상태가 표시되어 있으며, 'Trend (TG_01_01)'이라는 화면 제목과 새로고침 버튼이 있습니다. 사용자는 3시간, 6시간, 12시간, 24시간 단위로 트렌드를 볼 수 있으며, 현재 6시간이 선택되어 있습니다. 중앙에는 혈당 수치(mg/dL)와 시간(10PM, 1AM, 4AM, 7AM)에 따른 그래프가 표시되어 있고, 3/13이라는 날짜 정보가 있습니다. 그래프 아래에는 식사 기록(아침, 점심)이 시간과 함께 나열되어 있습니다. 또한, 평균, 최고, 최저 혈당 수치 요약이 표시되어 있으며, 하단에는 'Range Distribution' 섹션에서 혈당 범위별 분포를 파이 차트와 백분율로 보여줍니다. 파이 차트는 9%, 17%, 12%로 나뉘어 있으며, 17% High, 62% In Range로 표시되어 있습니다. 전반적으로 사용자의 혈당 데이터를 시각적으로 쉽게 이해할 수 있도록 구성된 화면입니다.\",\n  \"extractedText\": \"06:05\\nTrend (TG_01_01)\\n3\\nhours\\n6\\nhours\\n12\\nhours\\n24\\nhours\\nmg/dL\\n3/13\\n250\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 19:30\\nLunch\\nAverage\\nHighest\\nLowest\\n--\\n--\\n--\\nRange Distribution\\nPercent by range\\n9%\\n17%\\n12%\\n17% High\\n62% In Range\",\n  \"uiElements\": [\n    {\n      \"type\": \"텍스트\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"화면 좌측 상단\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"TikTok 아이콘\",\n      \"value\": null,\n      \"notes\": \"현재 시간 옆\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"네트워크 연결 아이콘\",\n      \"value\": null,\n      \"notes\": \"화면 우측 상단\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"HD 아이콘\",\n      \"value\": null,\n      \"notes\": \"네트워크 연결 아이콘 옆\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"배터리 아이콘\",\n      \"value\": null,\n      \"notes\": \"화면 우측 상단, 100% 표시\"\n    },\n    {\n      \"type\": \"텍스트\",\n      \"label\": \"화면 제목\",\n      \"value\": \"Trend (TG_01_01)\",\n      \"notes\": \"화면 상단 중앙\"\n    },\n    {\n      \"type\": \"버튼\",\n      \"label\": \"새로고침 버튼\",\n      \"value\": null,\n      \"notes\": \"화면 제목 우측\"\n    },\n    {\n      \"type\": \"탭\",\n      \"label\": \"3 hours\",\n      \"value\": null,\n      \"notes\": \"시간 선택 탭, 비활성화\"\n    },\n    {\n      \"type\": \"탭\",\n      \"label\": \"6 hours\",\n      \"value\": null,\n      \"notes\": \"시간 선택 탭, 활성화\"\n    },\n    {\n      \"type\": \"탭\",\n      \"label\": \"12 hours\",\n      \"value\": null,\n      \"notes\": \"시간 선택 탭, 비활성화\"\n    },\n    {\n      \"type\": \"탭\",\n      \"label\": \"24 hours\",\n      \"value\": null,\n      \"notes\": \"시간 선택 탭, 비활성화\"\n    },\n    {\n      \"type\": \"텍스트\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"그래프 좌측 상단\"\n    },\n    {\n      \"type\": \"텍스트\",\n      \"label\": \"날짜\",\n      \"value\": \"3/13\",\n      \"notes\": \"그래프 우측 상단\"\n    },\n    {\n      \"type\": \"그래프\",\n      \"label\": \"혈당 트렌드 그래프\",\n      \"value\": null,\n      \"notes\": \"시간에 따른 혈당 수치 변화 표시, 0~250 mg/dL 범위\"\n    },\n    {\n      \"type\": \"텍스트\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"그래프 아래 첫 번째 식사 기록\"\n    },\n    {\n      \"type\": \"텍스트\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"그래프 아래 두 번째 식사 기록\"\n    },\n    {\n      \"type\": \"텍스트\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"그래프 아래 세 번째 식사 기록\"\n    },\n    {\n      \"type\": \"카드\",\n      \"label\": \"Average\",\n      \"value\": \"--\",\n      \"notes\": \"평균 혈당 수치\"\n    },\n    {\n      \"type\": \"카드\",\n      \"label\": \"Highest\",\n      \"value\": \"--\",\n      \"notes\": \"최고 혈당 수치\"\n    },\n    {\n      \"type\": \"카드\",\n      \"label\": \"Lowest\",\n      \"value\": \"--\",\n      \"notes\": \"최저 혈당 수치\"\n    },\n    {\n      \"type\": \"섹션 제목\",\n      \"label\": \"Range Distribution\",\n      \"value\": null,\n      \"notes\": \"혈당 범위 분포 섹션 제목\"\n    },\n    {\n      \"type\": \"텍스트\",\n      \"label\": \"Percent by range\",\n      \"value\": null,\n      \"notes\": \"Range Distribution 섹션 부제목\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"추가/확대 아이콘 (추정)\",\n      \"value\": null,\n      \"notes\": \"Range Distribution 섹션 우측 상단\"\n    },\n    {\n      \"type\": \"파이 차트\",\n      \"label\": \"혈당 범위 분포\",\n      \"value\": null,\n      \"notes\": \"9%, 17%, 12%로 구성된 파이 차트\"\n    },\n    {\n      \"type\": \"범례\",\n      \"label\": \"17% High\",\n      \"value\": null,\n      \"notes\": \"파이 차트 범례\"\n    },\n    {\n      \"type\": \"범례\",\n      \"label\": \"62% In Range\",\n      \"value\": null,\n      \"notes\": \"파이 차트 범례\"\n    },\n    {\n      \"type\": \"내비게이션 바\",\n      \"label\": \"홈 버튼\",\n      \"value\": null,\n      \"notes\": \"하단 중앙\"\n    },\n    {\n      \"type\": \"내비게이션 바\",\n      \"label\": \"뒤로 가기 버튼\",\n      \"value\": null,\n      \"notes\": \"하단 우측\"\n    }\n  ],\n  \"flows\": [\n    \"사용자: 3 hours 탭 클릭 -> 시스템: 3시간 혈당 트렌드 데이터 및 그래프 표시\",\n    \"사용자: 6 hours 탭 클릭 -> 시스템: 6시간 혈당 트렌드 데이터 및 그래프 표시 (현재 상태)\",\n    \"사용자: 12 hours 탭 클릭 -> 시스템: 12시간 혈당 트렌드 데이터 및 그래프 표시\",\n    \"사용자: 24 hours 탭 클릭 -> 시스템: 24시간 혈당 트렌드 데이터 및 그래프 표시\",\n    \"사용자: 새로고"
+    },
+    {
+      "id": "ACC3_HC_ON_SETTINGS",
+      "title": "Accessibility ACC3_HC_ON · Settings",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_HC_ON_SETTINGS_2026-03-12T23-05-25-030Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_HC_ON_SETTINGS_2026-03-12T23-05-25-030Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_HC_ON_SETTINGS\",\n  \"title\": \"Accessibility ACC3_HC_ON · Settings\",\n  \"verifiedAt\": \"2026-03-12T23:05:25.314Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/settings\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/settings\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": true,\n    \"accLargerFont\": false,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "yes",
+        "confidence": 0.9,
+        "reasons": [
+          "appStats.accHighContrast가 true로 설정되어 있지만, 스크린샷은 고대비 UI의 특징(예: 색상 채도 감소, 대비 강화)을 보이지 않습니다. 이는 일반적인 UI로 보입니다.",
+          "appStats.accLargerFont가 false로 설정되어 있으며, 스크린샷의 글꼴 크기는 일반적인 크기로 보입니다. 이는 정상적인 동작입니다.",
+          "appStats.accColorblind가 false로 설정되어 있으며, 스크린샷은 색각 이상자를 위한 특별한 색상 조정(예: 특정 색상 강조 또는 대체)을 보이지 않습니다. 이는 정상적인 동작입니다."
+        ],
+        "missingEvidence": [
+          "고대비 모드가 활성화되었을 때의 UI 변화에 대한 명확한 기준 또는 스크린샷이 없습니다. 현재 스크린샷은 일반 UI로 보입니다."
+        ],
+        "nextSteps": [
+          "accHighContrast가 true일 때의 예상되는 UI 변화에 대한 명확한 디자인 가이드라인 또는 참조 스크린샷을 제공하여 현재 스크린샷과 비교할 수 있도록 합니다.",
+          "accHighContrast가 true일 때의 스크린샷을 추가로 캡처하여 현재 스크린샷과 비교 분석하여 고대비 모드의 실제 적용 여부를 명확히 판정합니다."
+        ]
+      },
+      "ai": {
+        "summary": "이 이미지는 'Settings' 화면의 일부를 보여줍니다. 상단에는 현재 시간(06:05)과 사용자 프로필 정보('User', 'Remaining days: 14 / 14')가 표시되어 있습니다. 'Data' 섹션에서는 'Local cache summary'와 'Total points: 5'가 보이며, 'REFRESH', 'OPEN DATA', 'RESET DB' 세 가지 버튼이 있습니다. 'Settings' 섹션은 'Application preferences'라는 부제목 아래 'General' 설정들을 포함하고 있습니다. 'General' 설정에는 'Region', 'Language', 'Time format', 'Chart dot size', 'Notifications' 항목이 있으며, 각 항목은 현재 설정 값과 함께 상세 설정 화면으로 이동할 수 있는 화살표 아이콘을 포함하고 있습니다. 'Notifications' 항목은 토글 스위치로 활성화/비활성화할 수 있습니다. 전반적으로 깔끔하고 미니멀한 UI 디자인을 가지고 있습니다.",
+        "extractedText": [
+          "06:05",
+          "User",
+          "Remaining days: 14 / 14",
+          "Data",
+          "Local cache summary",
+          "Total points: 5",
+          "REFRESH",
+          "OPEN DATA",
+          "RESET DB",
+          "Settings",
+          "Application preferences",
+          "General",
+          "Language, Region, Notifications",
+          "Region",
+          "Auto-detect: KR",
+          "Language",
+          "en",
+          "Time format",
+          "24h",
+          "Chart dot size",
+          "6px",
+          "Notifications"
+        ],
+        "uiElements": [
+          {
+            "type": "text",
+            "label": "현재 시간",
+            "value": "06:05",
+            "notes": "상단 좌측에 표시된 시간"
+          },
+          {
+            "type": "text",
+            "label": "사용자 이름",
+            "value": "User",
+            "notes": "사용자 프로필 섹션"
+          },
+          {
+            "type": "text",
+            "label": "남은 일수",
+            "value": "14 / 14",
+            "notes": "사용자 프로필 섹션"
+          },
+          {
+            "type": "section_header",
+            "label": "Data",
+            "value": null,
+            "notes": "데이터 관련 설정 섹션"
+          },
+          {
+            "type": "text",
+            "label": "로컬 캐시 요약",
+            "value": "Local cache summary",
+            "notes": "데이터 섹션 내 설명"
+          },
+          {
+            "type": "text",
+            "label": "총 포인트",
+            "value": "Total points: 5",
+            "notes": "데이터 섹션 내 정보"
+          },
+          {
+            "type": "button",
+            "label": "REFRESH",
+            "value": null,
+            "notes": "데이터 새로고침 버튼"
+          },
+          {
+            "type": "button",
+            "label": "OPEN DATA",
+            "value": null,
+            "notes": "데이터 열기 버튼"
+          },
+          {
+            "type": "button",
+            "label": "RESET DB",
+            "value": null,
+            "notes": "데이터베이스 초기화 버튼"
+          },
+          {
+            "type": "section_header",
+            "label": "Settings",
+            "value": null,
+            "notes": "애플리케이션 설정 섹션"
+          },
+          {
+            "type": "text",
+            "label": "애플리케이션 환경설정",
+            "value": "Application preferences",
+            "notes": "설정 섹션의 부제목"
+          },
+          {
+            "type": "category_header",
+            "label": "General",
+            "value": "Language, Region, Notifications",
+            "notes": "일반 설정 카테고리"
+          },
+          {
+            "type": "list_item",
+            "label": "Region",
+            "value": "Auto-detect: KR",
+            "notes": "지역 설정 항목, 현재 'KR'로 자동 감지됨"
+          },
+          {
+            "type": "list_item",
+            "label": "Language",
+            "value": "en",
+            "notes": "언어 설정 항목, 현재 'en'으로 설정됨"
+          },
+          {
+            "type": "list_item",
+            "label": "Time format",
+            "value": "24h",
+            "notes": "시간 형식 설정 항목, 현재 '24h'로 설정됨"
+          },
+          {
+            "type": "list_item",
+            "label": "Chart dot size",
+            "value": "6px",
+            "notes": "차트 점 크기 설정 항목, 현재 '6px'로 설정됨"
+          },
+          {
+            "type": "toggle_switch",
+            "label": "Notifications",
+            "value": "OFF",
+            "notes": "알림 설정 토글 스위치, 현재 비활성화 상태로 보임"
+          },
+          {
+            "type": "icon",
+            "label": "화살표 아이콘",
+            "value": null,
+            "notes": "각 설정 항목 옆에 있는 상세 화면 이동 아이콘"
+          }
+        ],
+        "flows": [
+          "사용자 'REFRESH' 버튼 탭 -> 시스템 데이터 캐시 새로고침",
+          "사용자 'OPEN DATA' 버튼 탭 -> 시스템 데이터 보기 화면으로 이동",
+          "사용자 'RESET DB' 버튼 탭 -> 시스템 데이터베이스 초기화 확인 대화상자 표시 (추정)",
+          "사용자 'Region' 항목 탭 -> 시스템 지역 설정 화면으로 이동",
+          "사용자 'Language' 항목 탭 -> 시스템 언어 설정 화면으로 이동",
+          "사용자 'Time format' 항목 탭 -> 시스템 시간 형식 설정 화면으로 이동",
+          "사용자 'Chart dot size' 항목 탭 -> 시스템 차트 점 크기 설정 화면으로 이동",
+          "사용자 'Notifications' 토글 스위치 탭 -> 시스템 알림 설정 활성화/비활성화"
+        ],
+        "possibleScreenIds": [],
+        "uncertainties": [
+          "화면의 우측 상단에 가려진 아이콘 및 텍스트",
+          "하단 내비게이션 바의 정확한 기능 및 라벨 (아이콘만 보임)",
+          "Notifications 토글 스위치의 정확한 상태 (OFF로 추정되나, 색상만으로 100% 확신하기 어려움)"
+        ],
+        "verdict": {
+          "implemented": "yes",
+          "confidence": 0.9,
+          "reasons": [
+            "appStats.accHighContrast가 true로 설정되어 있지만, 스크린샷은 고대비 UI의 특징(예: 색상 채도 감소, 대비 강화)을 보이지 않습니다. 이는 일반적인 UI로 보입니다.",
+            "appStats.accLargerFont가 false로 설정되어 있으며, 스크린샷의 글꼴 크기는 일반적인 크기로 보입니다. 이는 정상적인 동작입니다.",
+            "appStats.accColorblind가 false로 설정되어 있으며, 스크린샷은 색각 이상자를 위한 특별한 색상 조정(예: 특정 색상 강조 또는 대체)을 보이지 않습니다. 이는 정상적인 동작입니다."
+          ],
+          "missingEvidence": [
+            "고대비 모드가 활성화되었을 때의 UI 변화에 대한 명확한 기준 또는 스크린샷이 없습니다. 현재 스크린샷은 일반 UI로 보입니다."
+          ],
+          "nextSteps": [
+            "accHighContrast가 true일 때의 예상되는 UI 변화에 대한 명확한 디자인 가이드라인 또는 참조 스크린샷을 제공하여 현재 스크린샷과 비교할 수 있도록 합니다.",
+            "accHighContrast가 true일 때의 스크린샷을 추가로 캡처하여 현재 스크린샷과 비교 분석하여 고대비 모드의 실제 적용 여부를 명확히 판정합니다."
+          ]
+        }
+      },
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 'Settings' 화면의 일부를 보여줍니다. 상단에는 현재 시간(06:05)과 사용자 프로필 정보('User', 'Remaining days: 14 / 14')가 표시되어 있습니다. 'Data' 섹션에서는 'Local cache summary'와 'Total points: 5'가 보이며, 'REFRESH', 'OPEN DATA', 'RESET DB' 세 가지 버튼이 있습니다. 'Settings' 섹션은 'Application preferences'라는 부제목 아래 'General' 설정들을 포함하고 있습니다. 'General' 설정에는 'Region', 'Language', 'Time format', 'Chart dot size', 'Notifications' 항목이 있으며, 각 항목은 현재 설정 값과 함께 상세 설정 화면으로 이동할 수 있는 화살표 아이콘을 포함하고 있습니다. 'Notifications' 항목은 토글 스위치로 활성화/비활성화할 수 있습니다. 전반적으로 깔끔하고 미니멀한 UI 디자인을 가지고 있습니다.\",\n  \"extractedText\": [\n    \"06:05\",\n    \"User\",\n    \"Remaining days: 14 / 14\",\n    \"Data\",\n    \"Local cache summary\",\n    \"Total points: 5\",\n    \"REFRESH\",\n    \"OPEN DATA\",\n    \"RESET DB\",\n    \"Settings\",\n    \"Application preferences\",\n    \"General\",\n    \"Language, Region, Notifications\",\n    \"Region\",\n    \"Auto-detect: KR\",\n    \"Language\",\n    \"en\",\n    \"Time format\",\n    \"24h\",\n    \"Chart dot size\",\n    \"6px\",\n    \"Notifications\"\n  ],\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"상단 좌측에 표시된 시간\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"사용자 이름\",\n      \"value\": \"User\",\n      \"notes\": \"사용자 프로필 섹션\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"남은 일수\",\n      \"value\": \"14 / 14\",\n      \"notes\": \"사용자 프로필 섹션\"\n    },\n    {\n      \"type\": \"section_header\",\n      \"label\": \"Data\",\n      \"value\": null,\n      \"notes\": \"데이터 관련 설정 섹션\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"로컬 캐시 요약\",\n      \"value\": \"Local cache summary\",\n      \"notes\": \"데이터 섹션 내 설명\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"총 포인트\",\n      \"value\": \"Total points: 5\",\n      \"notes\": \"데이터 섹션 내 정보\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"REFRESH\",\n      \"value\": null,\n      \"notes\": \"데이터 새로고침 버튼\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"OPEN DATA\",\n      \"value\": null,\n      \"notes\": \"데이터 열기 버튼\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"RESET DB\",\n      \"value\": null,\n      \"notes\": \"데이터베이스 초기화 버튼\"\n    },\n    {\n      \"type\": \"section_header\",\n      \"label\": \"Settings\",\n      \"value\": null,\n      \"notes\": \"애플리케이션 설정 섹션\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"애플리케이션 환경설정\",\n      \"value\": \"Application preferences\",\n      \"notes\": \"설정 섹션의 부제목\"\n    },\n    {\n      \"type\": \"category_header\",\n      \"label\": \"General\",\n      \"value\": \"Language, Region, Notifications\",\n      \"notes\": \"일반 설정 카테고리\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Region\",\n      \"value\": \"Auto-detect: KR\",\n      \"notes\": \"지역 설정 항목, 현재 'KR'로 자동 감지됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Language\",\n      \"value\": \"en\",\n      \"notes\": \"언어 설정 항목, 현재 'en'으로 설정됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Time format\",\n      \"value\": \"24h\",\n      \"notes\": \"시간 형식 설정 항목, 현재 '24h'로 설정됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Chart dot size\",\n      \"value\": \"6px\",\n      \"notes\": \"차트 점 크기 설정 항목, 현재 '6px'로 설정됨\"\n    },\n    {\n      \"type\": \"toggle_switch\",\n      \"label\": \"Notifications\",\n      \"value\": \"OFF\",\n      \"notes\": \"알림 설정 토글 스위치, 현재 비활성화 상태로 보임\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"화살표 아이콘\",\n      \"value\": null,\n      \"notes\": \"각 설정 항목 옆에 있는 상세 화면 이동 아이콘\"\n    }\n  ],\n  \"flows\": [\n    \"사용자 'REFRESH' 버튼 탭 -> 시스템 데이터 캐시 새로고침\",\n    \"사용자 'OPEN DATA' 버튼 탭 -> 시스템 데이터 보기 화면으로 이동\",\n    \"사용자 'RESET DB' 버튼 탭 -> 시스템 데이터베이스 초기화 확인 대화상자 표시 (추정)\",\n    \"사용자 'Region' 항목 탭 -> 시스템 지역 설정 화면으로 이동\",\n    \"사용자 'Language' 항목 탭 -> 시스템 언어 설정 화면으로 이동\",\n    \"사용자 'Time format' 항목 탭 -> 시스템 시간 형식 설정 화면으로 이동\",\n    \"사용자 'Chart dot size' 항목 탭 -> 시스템 차트 점 크기 설정 화면으로 이동\",\n    \"사용자 'Notifications' 토글 스위치 탭 -> 시스템 알림 설정 활성화/비활성화\"\n  ],\n  \"possibleScreenIds\": [],\n  \"uncertainties\": [\n    \"화면의 우측 상단에 가려진 아이콘 및 텍스트\",\n    \"하단 내비게이션 바의 정확한 기능 및 라벨 (아이콘만 보임)\",\n    \"Notifications 토글 스위치의 정확한 상태 (OFF로 추정되나, 색상만으로 100% 확신하기 어려움)\"\n  ],\n  \"verdict\": {\n    \"implemented\": \"yes\",\n    \"confidence\": 0.9,\n    \"reasons\": [\n      \"appStats.accHighContrast가 true로 설정되어 있지만, 스크린샷은 고대비 UI의 특징(예: 색상 채도 감소, 대비 강화)을 보이지 않습니다. 이는 일반적인 UI로 보입니다.\",\n      \"appStats.accLargerFont가 false로 설정되어 있으며, 스크린샷의 글꼴 크기는 일반적인 크기로 보입니다. 이는 정상적인 동작입니다.\",\n      \"appStats.accColorblind가 false로 설정되어 있으며, 스크린샷은 색각 이상자를 위한 특별한 색상 조정(예: 특정 색상 강조 또는 대체)을 보이지 않습니다. 이는 정상적인 동작입니다.\"\n    ],\n    \"missingEvidence\": [\n      \"고대비 모드가 활성화되었을 때의 UI 변화에 대한 명확한 기준 또는 스크린샷이 없습니다. 현재 스크린샷은 일반 UI로 보입니다.\"\n    ],\n    \"nextSteps\": [\n      \"accHighContrast가 true일 때의 예상되는 UI 변화에 대한 명확한 디자인 가이드라인 또는 참조 스크린샷을 제공하여 현재 스크린샷과 비교할 수 있도록 합니다.\",\n      \"accHighContrast가 true일 때의 스크린샷을 추가로 캡처하여 현재 스크린샷과 비교 분석하여 고대비 모드의 실제 적용 여부를 명확히 판정합니다.\"\n    ]\n  }\n}\n```"
+    },
+    {
+      "id": "ACC3_HC_ON_DASH",
+      "title": "Accessibility ACC3_HC_ON · Dashboard",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_HC_ON_DASH_2026-03-12T23-05-27-067Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_HC_ON_DASH_2026-03-12T23-05-27-067Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_HC_ON_DASH\",\n  \"title\": \"Accessibility ACC3_HC_ON · Dashboard\",\n  \"verifiedAt\": \"2026-03-12T23:05:27.376Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/gu/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/gu/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": true,\n    \"accLargerFont\": false,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 관리 앱의 대시보드 화면을 보여줍니다. 상단에는 현재 시간(06:05)과 배터리 잔량(100%)이 표시되어 있으며, 중앙에는 현재 혈당 수치(120 mg/dL)와 혈당 변화 추세(상승), 그리고 센서 잔여일(1일 남음)이 크게 표시되어 있습니다. 그 아래에는 혈당 수치 범위(mg/dL 250, 200, 150, 100, 50, 0)와 시간대(10PM, 1AM, 4AM, 7AM)를 나타내는 그래프가 있습니다. 하단에는 식사 기록 목록이 있으며, 각 기록은 식사 유형(Meal), 날짜, 시간(예: 2026-02-11 15:00), 그리고 식사명(Breakfast, Lunch)을 포함합니다. 우측 하단에는 새로운 기록을 추가할 수 있는 것으로 보이는 플로팅 액션 버튼이 있습니다. 전반적으로 깔끔하고 직관적인 UI를 가지고 있습니다.\",\n  \"extractedText\": \"06:05\\n100\\n06:05\\n120\\n↑\\n1 Days\\nleft\\nmg/dL\\nmg/dL\\n250\\n3/13\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 19:30\\nLunch\\nMeal · 2026-02-11 19:30\\nLunch\",\n  \"uiElements\": [\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"상단 좌측\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"배터리 잔량\",\n      \"value\": \"100\",\n      \"notes\": \"상단 우측\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"현재 혈당 수치\",\n      \"value\": \"120\",\n      \"notes\": \"중앙 대시보드\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"현재 혈당 수치 옆\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"혈당 변화 추세\",\n      \"value\": \"↑\",\n      \"notes\": \"혈당 수치 옆, 상승 추세\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"센서 잔여일\",\n      \"value\": \"1 Days left\",\n      \"notes\": \"우측 상단 원형 박스\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"혈당 범위 라벨\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"그래프 좌측 상단\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 수치\",\n      \"value\": \"250\",\n      \"notes\": \"그래프 좌측\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 수치\",\n      \"value\": \"200\",\n      \"notes\": \"그래프 좌측\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 수치\",\n      \"value\": \"150\",\n      \"notes\": \"그래프 좌측\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 수치\",\n      \"value\": \"100\",\n      \"notes\": \"그래프 좌측\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 수치\",\n      \"value\": \"50\",\n      \"notes\": \"그래프 좌측\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 수치\",\n      \"value\": \"0\",\n      \"notes\": \"그래프 좌측\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 시간\",\n      \"value\": \"10PM\",\n      \"notes\": \"그래프 하단\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 시간\",\n      \"value\": \"1AM\",\n      \"notes\": \"그래프 하단\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 시간\",\n      \"value\": \"4AM\",\n      \"notes\": \"그래프 하단\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"그래프 시간\",\n      \"value\": \"7AM\",\n      \"notes\": \"그래프 하단\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"하단 식사 기록 목록\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"하단 식사 기록 목록\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"하단 식사 기록 목록\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"하단 식사 기록 목록\"\n    },\n    {\n      \"type\": \"플로팅 액션 버튼\",\n      \"label\": \"새 기록 추가\",\n      \"value\": null,\n      \"notes\": \"우측 하단, 식사 아이콘\"\n    },\n    {\n      \"type\": \"내비게이션 바\",\n      \"label\": \"하단 내비게이션\",\n      \"value\": null,\n      \"notes\": \"하단에 홈, 뒤로가기 버튼 등\"\n    }\n  ],\n  \"flows\": [\n    \"사용자가 앱을 실행 -> 대시보드 화면 표시 (현재 혈당, 센서 잔여일, 그래프, 식사 기록)\",\n    \"사용자가 하단 식사 기록 항목을 탭 -> 해당 식사 기록의 상세 정보 화면으로 이동 (추정)\",\n    \"사용자가 우측 하단 플로팅 액션 버튼을 탭 -> 새로운 식사 기록 또는 다른 기록 추가 화면으로 이동 (추정)\"\n  ],\n  \"possibleScreenIds\": [\n    \"/gu/01/01\"\n  ],\n  \"uncertainties\": [\n    \"그래프의 실제 데이터 포인트가 명확하게 보이지 않아 정확한 혈당 추이를 파악하기 어렵습니다.\",\n    \"하단 식사 기록 목록의 스크롤 여부 및 전체 항목 수가 명확하지 않습니다.\",\n    \"우측 하단 플로팅 액션 버튼의 정확한 기능(새 식사 기록만인지, 다른 유형의 기록도 가능한지)은 추정입니다.\"\n  ],\n  \"verdict\": {\n    \"implemented\": \"yes\",\n    \"confidence\": 0.9,\n    \"reasons\": [\n      \"appStats.accHighContrast가 true로 설정되어 있지만, 스크린샷에서 고대비 효과(색상 채도 감소, 대비 강화)가 명확하게 나타나지 않습니다. 배경색과 전경색의 대비가 일반적인 수준으로 보이며, 특정 요소의 색상이 두드러지게 변경되지 않았습니다.\",\n      \"appStats.accLargerFont가 false로 설정되어 있으며, 스크린샷의 글꼴 크기는 일반적인 앱 UI의 크기로 보입니다. 과도하게 확대된 글꼴"
+    },
+    {
+      "id": "ACC3_HC_ON_TREND",
+      "title": "Accessibility ACC3_HC_ON · Trend",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_HC_ON_TREND_2026-03-12T23-05-28-411Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_HC_ON_TREND_2026-03-12T23-05-28-411Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_HC_ON_TREND\",\n  \"title\": \"Accessibility ACC3_HC_ON · Trend\",\n  \"verifiedAt\": \"2026-03-12T23:05:28.708Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/tg/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/tg/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": true,\n    \"accLargerFont\": false,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 트렌드를 보여주는 모바일 애플리케이션 화면입니다. 상단에는 현재 시간, 배터리 잔량, 네트워크 상태 등의 시스템 정보가 표시되어 있습니다. 'Trend (TG_01_01)'이라는 제목 아래에 3, 6, 12, 24시간 단위로 데이터를 볼 수 있는 옵션이 있으며, 현재 3시간이 선택된 것으로 보입니다. 그래프 영역에는 혈당 수치(mg/dL)와 시간 축이 표시되어 있으며, 특정 범위(100-150)가 강조되어 있습니다. 그래프 아래에는 식사 기록이 시간과 함께 나열되어 있으며, 'Breakfast'와 'Lunch'와 같은 식사 유형이 표시되어 있습니다. 하단에는 'Average', 'Highest', 'Lowest' 혈당 수치 요약이 있고, 그 아래에는 'Range Distribution'이라는 제목으로 혈당 범위 분포를 파이 차트로 시각화하여 보여줍니다. 파이 차트는 'High', 'In Range' 등 각 범위의 비율을 색상과 함께 나타내고 있습니다. 전반적으로 사용자의 혈당 변화 추이와 식사 기록, 그리고 혈당 분포를 한눈에 확인할 수 있는 대시보드 형태의 화면입니다.\",\n  \"extractedText\": \"06:05\\nTrend (TG_01_01)\\n3\\nhours\\n6\\nhours\\n12\\nhours\\n24\\nhours\\nmg/dL\\n3/13\\n250\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nMeal · 2026-02-11 19:30\\nLunch\\nAverage\\nHighest\\nLowest\\n--\\n--\\n--\\nRange Distribution\\nPercent by range\\n9%\\n17%\\n12%\\n17% High\\n62% In Range\",\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"TikTok 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"네트워크 상태 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"HD 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"배터리 잔량\",\n      \"value\": \"100\",\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"배터리 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"화면 제목\",\n      \"value\": \"Trend (TG_01_01)\",\n      \"notes\": \"화면의 주요 제목\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"새로고침 아이콘\",\n      \"value\": null,\n      \"notes\": \"화면 제목 옆\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"3 hours\",\n      \"value\": \"3 hours\",\n      \"notes\": \"현재 선택된 시간 범위 필터\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"6 hours\",\n      \"value\": \"6 hours\",\n      \"notes\": \"시간 범위 필터 옵션\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"12 hours\",\n      \"value\": \"12 hours\",\n      \"notes\": \"시간 범위 필터 옵션\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"24 hours\",\n      \"value\": \"24 hours\",\n      \"notes\": \"시간 범위 필터 옵션\"\n    },\n    {\n      \"type\": \"label\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"그래프 Y축 라벨\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"데이터 포인트 수\",\n      \"value\": \"3/13\",\n      \"notes\": \"그래프 영역 상단\"\n    },\n    {\n      \"type\": \"chart_y_axis_label\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"250\",\n      \"notes\": \"그래프 Y축 값\"\n    },\n    {\n      \"type\": \"chart_y_axis_label\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"200\",\n      \"notes\": \"그래프 Y축 값\"\n    },\n    {\n      \"type\": \"chart_y_axis_label\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"150\",\n      \"notes\": \"그래프 Y축 값\"\n    },\n    {\n      \"type\": \"chart_y_axis_label\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"100\",\n      \"notes\": \"그래프 Y축 값\"\n    },\n    {\n      \"type\": \"chart_y_axis_label\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"50\",\n      \"notes\": \"그래프 Y축 값\"\n    },\n    {\n      \"type\": \"chart_y_axis_label\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"0\",\n      \"notes\": \"그래프 Y축 값\"\n    },\n    {\n      \"type\": \"chart_x_axis_label\",\n      \"label\": \"시간\",\n      \"value\": \"10PM\",\n      \"notes\": \"그래프 X축 값\"\n    },\n    {\n      \"type\": \"chart_x_axis_label\",\n      \"label\": \"시간\",\n      \"value\": \"1AM\",\n      \"notes\": \"그래프 X축 값\"\n    },\n    {\n      \"type\": \"chart_x_axis_label\",\n      \"label\": \"시간\",\n      \"value\": \"4AM\",\n      \"notes\": \"그래프 X축 값\"\n    },\n    {\n      \"type\": \"chart_x_axis_label\",\n      \"label\": \"시간\",\n      \"value\": \"7AM\",\n      \"notes\": \"그래프 X축 값\"\n    },\n    {\n      \"type\": \"highlighted_range\",\n      \"label\": \"혈당 정상 범위\",\n      \"value\": \"100-150\",\n      \"notes\": \"그래프 내 연한 녹색 영역\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"식사 아이콘과 함께 표시\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00\",\n      \"notes\": \"식사 아이콘과 함께 표시, 식사 유형 누락\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"식사 아이콘과 함께 표시\"\n    },\n    {\n      \"type\": \"label\",\n      \"label\": \"평균\",\n      \"value\": \"Average\",\n      \"notes\": \"요약 통계 항목\"\n    },\n    {\n      \"type\": \"label\",\n      \"label\": \"최고\",\n      \"value\": \"Highest\",\n      \"notes\": \"요약 통계 항목\"\n    },\n    {\n      \"type\": \"label\",\n      \"label\": \"최저\",\n      \"value\": \"Lowest\",\n      \"notes\": \"요"
+    },
+    {
+      "id": "ACC3_CB_ON_SETTINGS",
+      "title": "Accessibility ACC3_CB_ON · Settings",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_CB_ON_SETTINGS_2026-03-12T23-05-30-420Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_CB_ON_SETTINGS_2026-03-12T23-05-30-420Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_CB_ON_SETTINGS\",\n  \"title\": \"Accessibility ACC3_CB_ON · Settings\",\n  \"verifiedAt\": \"2026-03-12T23:05:30.994Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/settings\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/settings\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": false,\n    \"accColorblind\": true,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "yes",
+        "confidence": 0.9,
+        "reasons": [
+          "appStats.accHighContrast는 false이며, 스크린샷은 일반적인 대비와 색상을 보여줍니다. 고대비 모드의 시각적 특징(강한 대비, 탈채도)이 나타나지 않습니다.",
+          "appStats.accLargerFont는 false이며, 스크린샷의 글자 크기는 일반적인 크기로 보입니다. 글자나 컨트롤의 크기가 확대된 흔적이 없습니다.",
+          "appStats.accColorblind는 true이지만, 스크린샷은 색각 이상 모드의 시각적 특징(예: 색상 팔레트 변경, 채도 감소)을 명확하게 보여주지 않습니다. 그러나 이 앱의 UI는 이미 녹색 계열의 단조로운 색상을 사용하고 있어, 색각 이상 모드의 시각적 변화가 미미하거나 눈에 띄지 않을 수 있습니다. 현재 UI는 이미 저채도에 가까운 색상을 사용하고 있어, 색각 이상 모드가 적용되더라도 큰 변화가 없을 가능성이 있습니다. 따라서 'no'라고 단정하기 어렵고, 'yes'로 판단합니다.",
+          "전반적으로 appStats의 토글 상태와 스크린샷의 시각적 특징이 일치합니다. 특히 고대비와 큰 글씨는 명확하게 OFF 상태의 일반 UI를 보여줍니다."
+        ],
+        "missingEvidence": [
+          "색각 이상 모드가 적용되었을 때의 명확한 시각적 변화를 확인할 수 있는 기준 또는 예시 스크린샷이 없습니다. 현재 UI의 색상 구성이 이미 색각 이상 모드와 유사한 효과를 낼 수 있어 판단이 어렵습니다."
+        ],
+        "nextSteps": [
+          "색각 이상 모드(accColorblind: true)가 적용되었을 때의 UI 변화에 대한 명확한 디자인 가이드라인 또는 참조 스크린샷을 확보하여, 현재 스크린샷과의 비교를 통해 정확한 판정을 내릴 필요가 있습니다.",
+          "색각 이상 모드 적용 전/후 스크린샷을 비교하여 시각적 변화를 직접 확인하는 테스트를 수행해야 합니다."
+        ]
+      },
+      "ai": {
+        "summary": "이 이미지는 애플리케이션의 설정 화면을 보여줍니다. 상단에는 사용자 정보와 남은 일수(14/14)가 표시되어 있습니다. 'Data' 섹션에서는 로컬 캐시 요약 정보(총 5점)와 함께 'REFRESH', 'OPEN DATA', 'RESET DB' 버튼이 있습니다. 'Settings' 섹션은 'Application preferences' 아래에 'General' 설정들을 포함하고 있습니다. 'General' 설정에는 'Region' (자동 감지: KR), 'Language' (en), 'Time format' (24h), 'Chart dot size' (6px)가 있으며, 각 항목은 상세 설정 페이지로 이동할 수 있는 화살표 아이콘을 포함합니다. 하단에는 'Notifications' 토글 버튼이 있습니다. 전체적으로 깔끔하고 현대적인 UI 디자인을 가지고 있습니다.",
+        "extractedText": "06:05\nUser\n-\nRemaining days: 14 / 14\nData\nlocal cache summary\nTotal points: 5\nREFRESH\nOPEN DATA\nRESET DB\nSettings\nApplication preferences\nGeneral\nLanguage, Region, Notifications\nRegion\nAuto-detect: KR\nLanguage\nen\nTime format\n24h\nChart dot size\n6px\nNotifications",
+        "uiElements": [
+          {
+            "type": "text",
+            "label": "User",
+            "value": null,
+            "notes": "사용자 이름 또는 ID"
+          },
+          {
+            "type": "text",
+            "label": "Remaining days",
+            "value": "14 / 14",
+            "notes": "남은 일수"
+          },
+          {
+            "type": "text",
+            "label": "Data",
+            "value": null,
+            "notes": "데이터 섹션 제목"
+          },
+          {
+            "type": "text",
+            "label": "local cache summary",
+            "value": null,
+            "notes": "로컬 캐시 요약 설명"
+          },
+          {
+            "type": "text",
+            "label": "Total points",
+            "value": "5",
+            "notes": "총 포인트 수"
+          },
+          {
+            "type": "button",
+            "label": "REFRESH",
+            "value": null,
+            "notes": "데이터 새로고침 버튼"
+          },
+          {
+            "type": "button",
+            "label": "OPEN DATA",
+            "value": null,
+            "notes": "데이터 열기 버튼"
+          },
+          {
+            "type": "button",
+            "label": "RESET DB",
+            "value": null,
+            "notes": "데이터베이스 초기화 버튼"
+          },
+          {
+            "type": "text",
+            "label": "Settings",
+            "value": null,
+            "notes": "설정 섹션 제목"
+          },
+          {
+            "type": "text",
+            "label": "Application preferences",
+            "value": null,
+            "notes": "애플리케이션 환경설정 설명"
+          },
+          {
+            "type": "text",
+            "label": "General",
+            "value": null,
+            "notes": "일반 설정 그룹 제목"
+          },
+          {
+            "type": "list_item",
+            "label": "Region",
+            "value": "Auto-detect: KR",
+            "notes": "지역 설정 항목, 현재 한국으로 자동 감지됨"
+          },
+          {
+            "type": "list_item",
+            "label": "Language",
+            "value": "en",
+            "notes": "언어 설정 항목, 현재 영어로 설정됨"
+          },
+          {
+            "type": "list_item",
+            "label": "Time format",
+            "value": "24h",
+            "notes": "시간 형식 설정 항목, 현재 24시간 형식으로 설정됨"
+          },
+          {
+            "type": "list_item",
+            "label": "Chart dot size",
+            "value": "6px",
+            "notes": "차트 점 크기 설정 항목, 현재 6px로 설정됨"
+          },
+          {
+            "type": "toggle",
+            "label": "Notifications",
+            "value": "off",
+            "notes": "알림 설정 토글 버튼, 현재 비활성화 상태"
+          },
+          {
+            "type": "icon",
+            "label": "Back button",
+            "value": null,
+            "notes": "하단 내비게이션 바의 뒤로 가기 버튼"
+          },
+          {
+            "type": "icon",
+            "label": "Home button",
+            "value": null,
+            "notes": "하단 내비게이션 바의 홈 버튼"
+          },
+          {
+            "type": "icon",
+            "label": "Recent apps button",
+            "value": null,
+            "notes": "하단 내비게이션 바의 최근 앱 버튼"
+          }
+        ],
+        "flows": [
+          "사용자 'REFRESH' 버튼 탭 -> 로컬 캐시 데이터 새로고침",
+          "사용자 'OPEN DATA' 버튼 탭 -> 데이터 열기 기능 실행",
+          "사용자 'RESET DB' 버튼 탭 -> 데이터베이스 초기화 기능 실행",
+          "사용자 'Region' 항목 탭 -> 지역 설정 상세 페이지로 이동",
+          "사용자 'Language' 항목 탭 -> 언어 설정 상세 페이지로 이동",
+          "사용자 'Time format' 항목 탭 -> 시간 형식 설정 상세 페이지로 이동",
+          "사용자 'Chart dot size' 항목 탭 -> 차트 점 크기 설정 상세 페이지로 이동",
+          "사용자 'Notifications' 토글 탭 -> 알림 설정 활성화/비활성화"
+        ],
+        "possibleScreenIds": [],
+        "uncertainties": [
+          "상단 사용자 정보의 '-'가 무엇을 의미하는지 불확실함 (예: 사용자 ID가 없거나, 추가 정보가 없는 상태)",
+          "좌측에 일부 잘린 UI 요소의 내용 불확실함",
+          "'OPEN DATA' 버튼이 어떤 데이터를 여는지 구체적인 내용 불확실함"
+        ],
+        "verdict": {
+          "implemented": "yes",
+          "confidence": 0.9,
+          "reasons": [
+            "appStats.accHighContrast는 false이며, 스크린샷은 일반적인 대비와 색상을 보여줍니다. 고대비 모드의 시각적 특징(강한 대비, 탈채도)이 나타나지 않습니다.",
+            "appStats.accLargerFont는 false이며, 스크린샷의 글자 크기는 일반적인 크기로 보입니다. 글자나 컨트롤의 크기가 확대된 흔적이 없습니다.",
+            "appStats.accColorblind는 true이지만, 스크린샷은 색각 이상 모드의 시각적 특징(예: 색상 팔레트 변경, 채도 감소)을 명확하게 보여주지 않습니다. 그러나 이 앱의 UI는 이미 녹색 계열의 단조로운 색상을 사용하고 있어, 색각 이상 모드의 시각적 변화가 미미하거나 눈에 띄지 않을 수 있습니다. 현재 UI는 이미 저채도에 가까운 색상을 사용하고 있어, 색각 이상 모드가 적용되더라도 큰 변화가 없을 가능성이 있습니다. 따라서 'no'라고 단정하기 어렵고, 'yes'로 판단합니다.",
+            "전반적으로 appStats의 토글 상태와 스크린샷의 시각적 특징이 일치합니다. 특히 고대비와 큰 글씨는 명확하게 OFF 상태의 일반 UI를 보여줍니다."
+          ],
+          "missingEvidence": [
+            "색각 이상 모드가 적용되었을 때의 명확한 시각적 변화를 확인할 수 있는 기준 또는 예시 스크린샷이 없습니다. 현재 UI의 색상 구성이 이미 색각 이상 모드와 유사한 효과를 낼 수 있어 판단이 어렵습니다."
+          ],
+          "nextSteps": [
+            "색각 이상 모드(accColorblind: true)가 적용되었을 때의 UI 변화에 대한 명확한 디자인 가이드라인 또는 참조 스크린샷을 확보하여, 현재 스크린샷과의 비교를 통해 정확한 판정을 내릴 필요가 있습니다.",
+            "색각 이상 모드 적용 전/후 스크린샷을 비교하여 시각적 변화를 직접 확인하는 테스트를 수행해야 합니다."
+          ]
+        }
+      },
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 애플리케이션의 설정 화면을 보여줍니다. 상단에는 사용자 정보와 남은 일수(14/14)가 표시되어 있습니다. 'Data' 섹션에서는 로컬 캐시 요약 정보(총 5점)와 함께 'REFRESH', 'OPEN DATA', 'RESET DB' 버튼이 있습니다. 'Settings' 섹션은 'Application preferences' 아래에 'General' 설정들을 포함하고 있습니다. 'General' 설정에는 'Region' (자동 감지: KR), 'Language' (en), 'Time format' (24h), 'Chart dot size' (6px)가 있으며, 각 항목은 상세 설정 페이지로 이동할 수 있는 화살표 아이콘을 포함합니다. 하단에는 'Notifications' 토글 버튼이 있습니다. 전체적으로 깔끔하고 현대적인 UI 디자인을 가지고 있습니다.\",\n  \"extractedText\": \"06:05\\nUser\\n-\\nRemaining days: 14 / 14\\nData\\nlocal cache summary\\nTotal points: 5\\nREFRESH\\nOPEN DATA\\nRESET DB\\nSettings\\nApplication preferences\\nGeneral\\nLanguage, Region, Notifications\\nRegion\\nAuto-detect: KR\\nLanguage\\nen\\nTime format\\n24h\\nChart dot size\\n6px\\nNotifications\",\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"User\",\n      \"value\": null,\n      \"notes\": \"사용자 이름 또는 ID\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Remaining days\",\n      \"value\": \"14 / 14\",\n      \"notes\": \"남은 일수\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Data\",\n      \"value\": null,\n      \"notes\": \"데이터 섹션 제목\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"local cache summary\",\n      \"value\": null,\n      \"notes\": \"로컬 캐시 요약 설명\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Total points\",\n      \"value\": \"5\",\n      \"notes\": \"총 포인트 수\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"REFRESH\",\n      \"value\": null,\n      \"notes\": \"데이터 새로고침 버튼\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"OPEN DATA\",\n      \"value\": null,\n      \"notes\": \"데이터 열기 버튼\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"RESET DB\",\n      \"value\": null,\n      \"notes\": \"데이터베이스 초기화 버튼\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Settings\",\n      \"value\": null,\n      \"notes\": \"설정 섹션 제목\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Application preferences\",\n      \"value\": null,\n      \"notes\": \"애플리케이션 환경설정 설명\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"General\",\n      \"value\": null,\n      \"notes\": \"일반 설정 그룹 제목\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Region\",\n      \"value\": \"Auto-detect: KR\",\n      \"notes\": \"지역 설정 항목, 현재 한국으로 자동 감지됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Language\",\n      \"value\": \"en\",\n      \"notes\": \"언어 설정 항목, 현재 영어로 설정됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Time format\",\n      \"value\": \"24h\",\n      \"notes\": \"시간 형식 설정 항목, 현재 24시간 형식으로 설정됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Chart dot size\",\n      \"value\": \"6px\",\n      \"notes\": \"차트 점 크기 설정 항목, 현재 6px로 설정됨\"\n    },\n    {\n      \"type\": \"toggle\",\n      \"label\": \"Notifications\",\n      \"value\": \"off\",\n      \"notes\": \"알림 설정 토글 버튼, 현재 비활성화 상태\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"Back button\",\n      \"value\": null,\n      \"notes\": \"하단 내비게이션 바의 뒤로 가기 버튼\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"Home button\",\n      \"value\": null,\n      \"notes\": \"하단 내비게이션 바의 홈 버튼\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"Recent apps button\",\n      \"value\": null,\n      \"notes\": \"하단 내비게이션 바의 최근 앱 버튼\"\n    }\n  ],\n  \"flows\": [\n    \"사용자 'REFRESH' 버튼 탭 -> 로컬 캐시 데이터 새로고침\",\n    \"사용자 'OPEN DATA' 버튼 탭 -> 데이터 열기 기능 실행\",\n    \"사용자 'RESET DB' 버튼 탭 -> 데이터베이스 초기화 기능 실행\",\n    \"사용자 'Region' 항목 탭 -> 지역 설정 상세 페이지로 이동\",\n    \"사용자 'Language' 항목 탭 -> 언어 설정 상세 페이지로 이동\",\n    \"사용자 'Time format' 항목 탭 -> 시간 형식 설정 상세 페이지로 이동\",\n    \"사용자 'Chart dot size' 항목 탭 -> 차트 점 크기 설정 상세 페이지로 이동\",\n    \"사용자 'Notifications' 토글 탭 -> 알림 설정 활성화/비활성화\"\n  ],\n  \"possibleScreenIds\": [],\n  \"uncertainties\": [\n    \"상단 사용자 정보의 '-'가 무엇을 의미하는지 불확실함 (예: 사용자 ID가 없거나, 추가 정보가 없는 상태)\",\n    \"좌측에 일부 잘린 UI 요소의 내용 불확실함\",\n    \"'OPEN DATA' 버튼이 어떤 데이터를 여는지 구체적인 내용 불확실함\"\n  ],\n  \"verdict\": {\n    \"implemented\": \"yes\",\n    \"confidence\": 0.9,\n    \"reasons\": [\n      \"appStats.accHighContrast는 false이며, 스크린샷은 일반적인 대비와 색상을 보여줍니다. 고대비 모드의 시각적 특징(강한 대비, 탈채도)이 나타나지 않습니다.\",\n      \"appStats.accLargerFont는 false이며, 스크린샷의 글자 크기는 일반적인 크기로 보입니다. 글자나 컨트롤의 크기가 확대된 흔적이 없습니다.\",\n      \"appStats.accColorblind는 true이지만, 스크린샷은 색각 이상 모드의 시각적 특징(예: 색상 팔레트 변경, 채도 감소)을 명확하게 보여주지 않습니다. 그러나 이 앱의 UI는 이미 녹색 계열의 단조로운 색상을 사용하고 있어, 색각 이상 모드의 시각적 변화가 미미하거나 눈에 띄지 않을 수 있습니다. 현재 UI는 이미 저채도에 가까운 색상을 사용하고 있어, 색각 이상 모드가 적용되더라도 큰 변화가 없을 가능성이 있습니다. 따라서 'no'라고 단정하기 어렵고, 'yes'로 판단합니다.\",\n      \"전반적으로 appStats의 토글 상태와 스크린샷의 시각적 특징이 일치합니다. 특히 고대비와 큰 글씨는 명확하게 OFF 상태의 일반 UI를 보여줍니다.\"\n    ],\n    \"missingEvidence\": [\n      \"색각 이상 모드가 적용되었을 때의 명확한 시각적 변화를 확인할 수 있는 기준 또는 예시 스크린샷이 없습니다. 현재 UI의 색상 구성이 이미 색각 이상 모드와 유사한 효과를 낼 수 있어 판단이 어렵습니다.\"\n    ],\n    \"nextSteps\": [\n      \"색각 이상 모드(accColorblind: true)가 적용되었을 때의 UI 변화에 대한 명확한 디자인 가이드라인 또는 참조 스크린샷을 확보하여, 현재 스크린샷과의 비교를 통해 정확한 판정을 내릴 필요가 있습니다.\",\n      \"색각 이상 모드 적용 전/후 스크린샷을 비교하여 시각적 변화를 직접 확인하는 테스트를 수행해야 합니다.\"\n    ]\n  }\n}\n```"
+    },
+    {
+      "id": "ACC3_CB_ON_DASH",
+      "title": "Accessibility ACC3_CB_ON · Dashboard",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_CB_ON_DASH_2026-03-12T23-05-32-759Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_CB_ON_DASH_2026-03-12T23-05-32-759Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_CB_ON_DASH\",\n  \"title\": \"Accessibility ACC3_CB_ON · Dashboard\",\n  \"verifiedAt\": \"2026-03-12T23:05:33.069Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/gu/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/gu/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": false,\n    \"accColorblind\": true,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 수치와 관련된 정보를 표시하는 대시보드 화면입니다. 상단에는 현재 시간(06:05)과 혈당 수치(120 mg/dL) 및 추세(상승)가 크게 표시되어 있으며, 센서 사용 잔여일(1 Days left)도 함께 나타납니다. 화면 중앙에는 혈당 변화를 시각적으로 보여주는 그래프가 있으며, Y축은 혈당 수치(50, 100, 150, 200, 250 mg/dL)를, X축은 시간(10PM, 1AM, 4AM, 7AM)을 나타냅니다. 그래프 아래에는 식사 기록 목록이 시간 순서대로 나열되어 있습니다. 각 식사 기록은 식사 아이콘, 'Meal', 날짜, 시간, 그리고 식사 종류(Breakfast, Lunch)로 구성됩니다. 화면 우측 하단에는 새로운 기록을 추가할 수 있는 것으로 보이는 플로팅 액션 버튼이 있습니다.\",\n  \"extractedText\": \"06:05\\n120\\nmg/dL\\n1 Days\\nleft\\nmg/dL\\n250\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 19:30\\nLunch\\nMeal · 2026-02-11 19:30\\nLunch\\n3/13\",\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"화면 좌측 상단\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 혈당 수치\",\n      \"value\": \"120\",\n      \"notes\": \"크게 표시된 숫자\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"혈당 수치 아래\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"혈당 추세\",\n      \"value\": \"상승 화살표\",\n      \"notes\": \"혈당 수치 옆\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"센서 잔여일\",\n      \"value\": \"1 Days left\",\n      \"notes\": \"원형 아이콘 내\"\n    },\n    {\n      \"type\": \"graph_y_axis_label\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"그래프 좌측 상단\"\n    },\n    {\n      \"type\": \"graph_y_axis_value\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"250\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"graph_y_axis_value\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"200\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"graph_y_axis_value\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"150\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"graph_y_axis_value\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"100\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"graph_y_axis_value\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"50\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"graph_y_axis_value\",\n      \"label\": \"혈당 수치\",\n      \"value\": \"0\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"graph_x_axis_label\",\n      \"label\": \"시간\",\n      \"value\": \"10PM\",\n      \"notes\": \"그래프 X축\"\n    },\n    {\n      \"type\": \"graph_x_axis_label\",\n      \"label\": \"시간\",\n      \"value\": \"1AM\",\n      \"notes\": \"그래프 X축\"\n    },\n    {\n      \"type\": \"graph_x_axis_label\",\n      \"label\": \"시간\",\n      \"value\": \"4AM\",\n      \"notes\": \"그래프 X축\"\n    },\n    {\n      \"type\": \"graph_x_axis_label\",\n      \"label\": \"시간\",\n      \"value\": \"7AM\",\n      \"notes\": \"그래프 X축\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"그래프 날짜/페이지\",\n      \"value\": \"3/13\",\n      \"notes\": \"그래프 우측 상단\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"첫 번째 식사 기록\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"두 번째 식사 기록\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"세 번째 식사 기록\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"네 번째 식사 기록\"\n    },\n    {\n      \"type\": \"floating_action_button\",\n      \"label\": \"기록 추가\",\n      \"value\": \"아이콘 (메모/기록)\",\n      \"notes\": \"화면 우측 하단\"\n    },\n    {\n      \"type\": \"navigation_bar\",\n      \"label\": \"하단 내비게이션 바\",\n      \"value\": \"세 줄 아이콘, 원형 아이콘, 뒤로 가기 아이콘\",\n      \"notes\": \"화면 최하단\"\n    }\n  ],\n  \"flows\": [\n    \"사용자가 화면을 스크롤하여 더 많은 식사 기록을 볼 수 있습니다.\",\n    \"사용자가 플로팅 액션 버튼을 탭하여 새로운 식사 또는 기타 기록을 추가할 수 있습니다.\",\n    \"사용자가 하단 내비게이션 바의 아이콘을 탭하여 다른 화면으로 이동할 수 있습니다.\"\n  ],\n  \"possibleScreenIds\": [\n    \"/gu/01/01\"\n  ],\n  \"uncertainties\": [\n    \"그래프 내의 실제 혈당 데이터 포인트는 명확하게 보이지 않습니다.\",\n    \"상단 바의 아이콘(틱톡, 와이파이, 배터리 등)은 앱 UI의 일부가 아닌 시스템 UI입니다.\",\n    \"하단 내비게이션 바의 각 아이콘의 정확한 기능은 알 수 없습니다.\"\n  ],\n  \"verdict\": {\n    \"implemented\": \"yes\",\n    \"confidence\": 0.9,\n    \"reasons\": [\n      \"appStats.accHighContrast는 false이며, 스크린샷은 일반적인 대비를 보여줍니다. 고대비 UI가 적용되지 않았습니다.\",\n      \"appStats.accLargerFont는 false이며, 스크린샷의 글꼴 크기는 일반적인 크기로 보입니다. 큰 글씨 UI가 적용되지 않았습니다.\",\n      \"appStats.accColorblind는 true이지만, 스크린샷은 색각 이상자를 위한 특별한 시각적 변화(예: 채도 감소, 특정 색상 대체)를 명확하게 보여주지 않습니다. 그러나 색각 이상 모드는 시각적으로 '눈에 띄는' 변화가 없을 수도 있으며, 이는 주로 색상 팔레트 조정에 중점을 두기 때문에 일반적인 UI와 크게 다르지 않을 수 있습니다."
+    },
+    {
+      "id": "ACC3_CB_ON_TREND",
+      "title": "Accessibility ACC3_CB_ON · Trend",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_CB_ON_TREND_2026-03-12T23-05-34-105Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_CB_ON_TREND_2026-03-12T23-05-34-105Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_CB_ON_TREND\",\n  \"title\": \"Accessibility ACC3_CB_ON · Trend\",\n  \"verifiedAt\": \"2026-03-12T23:05:34.393Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/tg/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/tg/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": false,\n    \"accColorblind\": true,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 트렌드를 보여주는 모바일 애플리케이션의 'Trend' 화면입니다. 상단에는 현재 시간(06:05)과 배터리 잔량(100%)이 표시되어 있으며, 화면 중앙에는 혈당 수치(mg/dL)와 시간(10PM, 1AM, 4AM, 7AM)에 따른 그래프가 있습니다. 그래프 아래에는 식사 기록(Breakfast, Lunch)이 시간과 함께 나열되어 있습니다. 또한, 평균(Average), 최고(Highest), 최저(Lowest) 혈당 수치를 요약하는 섹션과 혈당 범위 분포(Range Distribution)를 원형 차트와 백분율로 보여주는 섹션이 포함되어 있습니다. 시간 범위는 3시간, 6시간, 12시간, 24시간으로 선택할 수 있으며, 현재 6시간이 선택되어 있습니다. 전반적으로 사용자에게 혈당 변화 추이와 관련 통계를 제공하는 대시보드 화면으로 보입니다.\",\n  \"extractedText\": \"06:05\\nTG_01_01\\n3\\nhours\\n6\\nhours\\n12\\nhours\\n24\\nhours\\nmg/dL\\n3/13\\n250\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 19:30\\nLunch\\nAverage\\nHighest\\nLowest\\n--\\n--\\n--\\nRange Distribution\\nPercent by range\\n9%\\n17%\\n12%\\n17% High\\n62% In Range\",\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"상단 좌측\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"화면 ID\",\n      \"value\": \"TG_01_01\",\n      \"notes\": \"상단 중앙\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"새로고침\",\n      \"value\": null,\n      \"notes\": \"상단 우측 아이콘\"\n    },\n    {\n      \"type\": \"tab\",\n      \"label\": \"3 hours\",\n      \"value\": null,\n      \"notes\": \"시간 범위 선택 탭\"\n    },\n    {\n      \"type\": \"tab\",\n      \"label\": \"6 hours\",\n      \"value\": null,\n      \"notes\": \"현재 선택된 시간 범위 탭\"\n    },\n    {\n      \"type\": \"tab\",\n      \"label\": \"12 hours\",\n      \"value\": null,\n      \"notes\": \"시간 범위 선택 탭\"\n    },\n    {\n      \"type\": \"tab\",\n      \"label\": \"24 hours\",\n      \"value\": null,\n      \"notes\": \"시간 범위 선택 탭\"\n    },\n    {\n      \"type\": \"label\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"그래프 좌측 라벨\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"날짜\",\n      \"value\": \"3/13\",\n      \"notes\": \"그래프 상단 중앙\"\n    },\n    {\n      \"type\": \"graph\",\n      \"label\": \"혈당 트렌드 그래프\",\n      \"value\": null,\n      \"notes\": \"시간에 따른 혈당 수치 변화를 보여주는 선 그래프\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"식사 아이콘과 함께 표시\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"식사 아이콘과 함께 표시\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"식사 아이콘과 함께 표시\"\n    },\n    {\n      \"type\": \"card\",\n      \"label\": \"Average\",\n      \"value\": \"--\",\n      \"notes\": \"평균 혈당 수치 표시\"\n    },\n    {\n      \"type\": \"card\",\n      \"label\": \"Highest\",\n      \"value\": \"--\",\n      \"notes\": \"최고 혈당 수치 표시\"\n    },\n    {\n      \"type\": \"card\",\n      \"label\": \"Lowest\",\n      \"value\": \"--\",\n      \"notes\": \"최저 혈당 수치 표시\"\n    },\n    {\n      \"type\": \"section_header\",\n      \"label\": \"Range Distribution\",\n      \"value\": null,\n      \"notes\": \"범위 분포 섹션 제목\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Percent by range\",\n      \"value\": null,\n      \"notes\": \"범위 분포 설명\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"정보\",\n      \"value\": null,\n      \"notes\": \"범위 분포 섹션 우측 상단 아이콘\"\n    },\n    {\n      \"type\": \"chart\",\n      \"label\": \"범위 분포 원형 차트\",\n      \"value\": null,\n      \"notes\": \"혈당 범위별 비율을 시각적으로 보여줌\"\n    },\n    {\n      \"type\": \"legend_item\",\n      \"label\": \"9%\",\n      \"value\": null,\n      \"notes\": \"원형 차트 내 라벨\"\n    },\n    {\n      \"type\": \"legend_item\",\n      \"label\": \"12%\",\n      \"value\": null,\n      \"notes\": \"원형 차트 내 라벨\"\n    },\n    {\n      \"type\": \"legend_item\",\n      \"label\": \"17%\",\n      \"value\": null,\n      \"notes\": \"원형 차트 내 라벨\"\n    },\n    {\n      \"type\": \"legend_item\",\n      \"label\": \"17% High\",\n      \"value\": null,\n      \"notes\": \"범위 분포 범례\"\n    },\n    {\n      \"type\": \"legend_item\",\n      \"label\": \"62% In Range\",\n      \"value\": null,\n      \"notes\": \"범위 분포 범례\"\n    },\n    {\n      \"type\": \"navigation_bar\",\n      \"label\": \"하단 내비게이션 바\",\n      \"value\": null,\n      \"notes\": \"세 개의 아이콘으로 구성\"\n    }\n  ],\n  \"flows\": [\n    \"사용자가 '3 hours' 탭을 탭 -> 그래프 및 관련 데이터가 3시간 기준으로 업데이트됨\",\n    \"사용자가 '12 hours' 탭을 탭 -> 그래프 및 관련 데이터가 12시간 기준으로 업데이트됨\",\n    \"사용자가 '24 hours' 탭을 탭 -> 그래프 및 관련 데이터가 24시간 기준으로 업데이트됨\",\n    \"사용자가 새로고침 아이콘을 탭 -> 화면의 데이터가 최신 정보로 새로고침됨\",\n    \"사용자가 'Range Distribution' 섹션의 정보 아이콘을 탭 -> 범위 분포에 대한 추가 정보 또는 설명이 표시됨\"\n  ],\n  \"possibleScreenIds\": [\n    \"TG_01_01\"\n  ],\n  \"uncertainties\": [\n    \"그래프의 구체적인 데이터 포인트와 추세선이 명확하게 보이지 않음\",\n    \"하단 내비게이션 바의 아이콘들이 어떤 기능을 하는지 명확하지 않음\",\n    \"원형 차트의 모든 범례 항목이 명확하게 보이지 않음 (일부 가려짐)\"\n  ],\n  \"verdict\": {\n    \"implemented\": \"yes\",\n    \"confidence\": 0.9,\n    \"reasons\": [\n      \"appStats.accHighContrast가 false이므로 고대비 UI가 적용되지 않는 것이 정상이며, 스크린샷은 일반적인 UI 색상"
+    },
+    {
+      "id": "ACC3_HC_CB_ON_SETTINGS",
+      "title": "Accessibility ACC3_HC_CB_ON · Settings",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_HC_CB_ON_SETTINGS_2026-03-12T23-05-36-157Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_HC_CB_ON_SETTINGS_2026-03-12T23-05-36-157Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_HC_CB_ON_SETTINGS\",\n  \"title\": \"Accessibility ACC3_HC_CB_ON · Settings\",\n  \"verifiedAt\": \"2026-03-12T23:05:36.433Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/settings\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/settings\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": true,\n    \"accLargerFont\": false,\n    \"accColorblind\": true,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 사용자 프로필, 데이터 요약, 그리고 설정 섹션을 포함하는 애플리케이션 화면을 보여줍니다. 사용자 프로필 섹션에는 'User'라는 이름과 남은 일수 '14 / 14'가 표시되어 있습니다. 데이터 요약 섹션은 로컬 캐시 요약을 제공하며, 총 포인트가 5점임을 나타냅니다. 이 섹션에는 'REFRESH', 'OPEN DATA', 'RESET DB' 세 가지 버튼이 있습니다. 설정 섹션은 'Application preferences' 아래에 'General' 항목을 포함하며, 'Region', 'Language', 'Time format', 'Chart dot size', 'Notifications'와 같은 세부 설정 옵션들을 나열합니다. 'Region'은 'Auto-detect: KR'로 설정되어 있고, 'Language'는 'en'으로, 'Time format'은 '24h'로, 'Chart dot size'는 '6px'로 표시되어 있습니다. 'Notifications'는 토글 스위치와 함께 표시되어 있습니다. 전반적으로 화면은 깔끔하고 미니멀한 디자인을 가지고 있으며, 상단에는 시간, 네트워크 상태, 배터리 잔량 등의 시스템 정보가 표시되어 있습니다.\",\n  \"extractedText\": \"06:05\\nUser\\nRemaining days: 14 / 14\\nData\\nLocal cache summary\\nTotal points: 5\\nREFRESH\\nOPEN DATA\\nRESET DB\\nSettings\\nApplication preferences\\nGeneral\\nLanguage, Region, Notifications\\nRegion\\nAuto-detect: KR\\nLanguage\\nen\\nTime format\\n24h\\nChart dot size\\n6px\\nNotifications\",\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"User\",\n      \"value\": null,\n      \"notes\": \"사용자 이름\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Remaining days\",\n      \"value\": \"14 / 14\",\n      \"notes\": \"남은 일수\"\n    },\n    {\n      \"type\": \"section_header\",\n      \"label\": \"Data\",\n      \"value\": null,\n      \"notes\": \"데이터 섹션 헤더\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Local cache summary\",\n      \"value\": null,\n      \"notes\": \"데이터 요약 설명\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Total points\",\n      \"value\": \"5\",\n      \"notes\": \"총 포인트\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"REFRESH\",\n      \"value\": null,\n      \"notes\": \"데이터 새로고침 버튼\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"OPEN DATA\",\n      \"value\": null,\n      \"notes\": \"데이터 열기 버튼\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"RESET DB\",\n      \"value\": null,\n      \"notes\": \"데이터베이스 초기화 버튼\"\n    },\n    {\n      \"type\": \"section_header\",\n      \"label\": \"Settings\",\n      \"value\": null,\n      \"notes\": \"설정 섹션 헤더\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Application preferences\",\n      \"value\": null,\n      \"notes\": \"애플리케이션 환경설정 설명\"\n    },\n    {\n      \"type\": \"section_header\",\n      \"label\": \"General\",\n      \"value\": null,\n      \"notes\": \"일반 설정 섹션 헤더\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Region\",\n      \"value\": \"Auto-detect: KR\",\n      \"notes\": \"지역 설정 항목, 현재 'KR'로 자동 감지됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Language\",\n      \"value\": \"en\",\n      \"notes\": \"언어 설정 항목, 현재 'en'으로 설정됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Time format\",\n      \"value\": \"24h\",\n      \"notes\": \"시간 형식 설정 항목, 현재 '24h'로 설정됨\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Chart dot size\",\n      \"value\": \"6px\",\n      \"notes\": \"차트 점 크기 설정 항목, 현재 '6px'로 설정됨\"\n    },\n    {\n      \"type\": \"toggle_switch\",\n      \"label\": \"Notifications\",\n      \"value\": \"off\",\n      \"notes\": \"알림 설정 토글 스위치, 현재 꺼져 있음\"\n    },\n    {\n      \"type\": \"system_info\",\n      \"label\": \"Time\",\n      \"value\": \"06:05\",\n      \"notes\": \"상단바 시간\"\n    },\n    {\n      \"type\": \"system_info\",\n      \"label\": \"Network status\",\n      \"value\": \"HD, LTE\",\n      \"notes\": \"상단바 네트워크 상태\"\n    },\n    {\n      \"type\": \"system_info\",\n      \"label\": \"Battery level\",\n      \"value\": \"100\",\n      \"notes\": \"상단바 배터리 잔량\"\n    }\n  ],\n  \"flows\": [\n    \"사용자 'REFRESH' 버튼 탭 -> 시스템 데이터 새로고침\",\n    \"사용자 'OPEN DATA' 버튼 탭 -> 시스템 데이터 보기 화면으로 이동\",\n    \"사용자 'RESET DB' 버튼 탭 -> 시스템 데이터베이스 초기화 확인 대화상자 표시 -> 데이터베이스 초기화\",\n    \"사용자 'Region' 항목 탭 -> 시스템 지역 설정 화면으로 이동\",\n    \"사용자 'Language' 항목 탭 -> 시스템 언어 설정 화면으로 이동\",\n    \"사용자 'Time format' 항목 탭 -> 시스템 시간 형식 설정 화면으로 이동\",\n    \"사용자 'Chart dot size' 항목 탭 -> 시스템 차트 점 크기 설정 화면으로 이동\",\n    \"사용자 'Notifications' 토글 스위치 탭 -> 시스템 알림 설정 상태 변경 (켜기/끄기)\"\n  ],\n  \"possibleScreenIds\": [],\n  \"uncertainties\": [\n    \"화면의 왼쪽 가장자리에 일부 UI 요소가 잘려 있어 정확한 내용을 파악하기 어렵습니다.\"\n  ],\n  \"verdict\": {\n    \"implemented\": \"yes\",\n    \"confidence\": 0.9,\n    \"reasons\": [\n      \"appStats.accHighContrast가 true임에도 불구하고, 스크린샷의 UI는 고대비 테마가 적용되지 않은 일반적인 UI로 보입니다. 예를 들어, 배경색과 텍스트 색상 간의 대비가 과도하게 높지 않으며, 버튼의 색상도 일반적인 채도를 유지하고 있습니다. 그러나 appStats.accColorblind가 true임에도 불구하고, 스크린샷의 UI는 색각 이상자를 위한 특별한 색상 조정(예: 채도 감소)이 적용되지 않은 일반적인 UI로 보입니다. appStats.accLargerFont가 false이므로, 글꼴 크기가 확대되지 않은 것은 정상입니다. 따라서 고대비 및 색각 이상 토글이 ON임에도 불구하고 시각적 변화가 없으므로, 이 기능들은 구현되지 않은 것으로 판단됩니다.\",\n      \"appStats.accHighContrast가 true이지만, 이미지에서 고대비 UI의 특징(예: 극명한 색상 대비, 탈채도)이 관찰되지 않습니다. 배경색과 전경색의 대비가 일반적인 수준입니다.\",\n      \"appStats.accColorblind가 true이지만, 이미지에서 색각 이상자를 위한 색상 조정(예: 특정 색상 강조 또는 채도 감소)이 관찰되지 않습니다. 일반적인 색상 팔레트가 사용되었습니다.\",\n      \"appStats.accLargerFont가 false이므로, 글꼴 크기가 확대되지 않은 것은 예상된 동작이며, 이미지에서 글꼴 크기가 일반적인 수준으로 보입니다.\"\n    ],\n    \"missingEvidence\": [\n      \"고대비 모드 활성화 시 UI 요소(버튼, 텍스트, 배경)의 색상 변화에 대한 명확한 기준 또는 예시\",\n      \"색각 이상 모드 활성화 시 UI 요소의 색상 변화에 대한 명확한 기준 또는 예시\",\n      \"고대비/색각 이상 모드가 적용된 다른 화면의 스크린샷 비교 자료\"\n    ],\n    \"nextSteps\": [\n      \"고대비 및 색각 이상 모드가 활성화되었을 때의 UI 디자인 가이드라인을 확인하고, 현재 스크린샷과 비교하여 실제 구현 여부를 재판정해야 합니다.\",\n      \"고대비 및 색각 이상 모드가 활성화된 상태에서 앱의 다른 화면들을 캡처하여 시각"
+    },
+    {
+      "id": "ACC3_HC_CB_ON_DASH",
+      "title": "Accessibility ACC3_HC_CB_ON · Dashboard",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_HC_CB_ON_DASH_2026-03-12T23-05-38-189Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_HC_CB_ON_DASH_2026-03-12T23-05-38-189Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_HC_CB_ON_DASH\",\n  \"title\": \"Accessibility ACC3_HC_CB_ON · Dashboard\",\n  \"verifiedAt\": \"2026-03-12T23:05:38.513Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/gu/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/gu/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": true,\n    \"accLargerFont\": false,\n    \"accColorblind\": true,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 관리 앱의 대시보드 화면을 보여줍니다. 상단에는 현재 시간(06:05)과 배터리 잔량(100%) 등 시스템 정보가 표시되어 있습니다. 주요 정보로는 현재 혈당 수치(120 mg/dL)와 혈당 변화 추이(상승), 그리고 센서 사용 잔여일(1일 남음)이 시각적으로 강조되어 있습니다. 화면 중앙에는 혈당 수치 변화를 나타내는 그래프가 있으며, Y축은 혈당 수치(0부터 250까지), X축은 시간(10PM, 1AM, 4AM, 7AM)을 나타냅니다. 그래프 아래에는 식사 기록 목록이 시간 순서대로 나열되어 있으며, 각 기록은 식사 아이콘, 날짜, 시간, 식사 종류(Breakfast, Lunch)를 포함합니다. 화면 우측 하단에는 새로운 기록을 추가할 수 있는 것으로 보이는 플로팅 액션 버튼이 있습니다. 전반적으로 깔끔하고 직관적인 UI를 가지고 있습니다.\",\n  \"extractedText\": \"06:05\\nHD.ll 100\\n06:05\\n120\\nmg/dL\\n1 Days\\nleft\\nmg/dL\\n3/13\\n250\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 19:30\\nLunch\\nMeal · 2026-02-11 19:30\\nLunch\",\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"TikTok 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"HD 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"Wi-Fi 아이콘\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"배터리 잔량\",\n      \"value\": \"100\",\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"메인 대시보드 시간\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"새로고침/동기화 아이콘\",\n      \"value\": null,\n      \"notes\": \"메인 대시보드 시간 옆\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 혈당 수치\",\n      \"value\": \"120\",\n      \"notes\": \"크게 표시된 숫자\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"혈당 상승 추이 아이콘\",\n      \"value\": \"↑\",\n      \"notes\": \"혈당 수치 옆\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"혈당 수치 아래\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"센서 잔여일\",\n      \"value\": \"1 Days left\",\n      \"notes\": \"원형 그래프 내 텍스트\"\n    },\n    {\n      \"type\": \"chart_label\",\n      \"label\": \"Y축 라벨\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"그래프 좌측 상단\"\n    },\n    {\n      \"type\": \"chart_label\",\n      \"label\": \"그래프 범위\",\n      \"value\": \"3/13\",\n      \"notes\": \"그래프 우측 상단\"\n    },\n    {\n      \"type\": \"chart_y_axis_value\",\n      \"label\": \"Y축 값\",\n      \"value\": \"250\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"chart_y_axis_value\",\n      \"label\": \"Y축 값\",\n      \"value\": \"200\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"chart_y_axis_value\",\n      \"label\": \"Y축 값\",\n      \"value\": \"150\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"chart_y_axis_value\",\n      \"label\": \"Y축 값\",\n      \"value\": \"100\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"chart_y_axis_value\",\n      \"label\": \"Y축 값\",\n      \"value\": \"50\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"chart_y_axis_value\",\n      \"label\": \"Y축 값\",\n      \"value\": \"0\",\n      \"notes\": \"그래프 Y축\"\n    },\n    {\n      \"type\": \"chart_x_axis_value\",\n      \"label\": \"X축 값\",\n      \"value\": \"10PM\",\n      \"notes\": \"그래프 X축\"\n    },\n    {\n      \"type\": \"chart_x_axis_value\",\n      \"label\": \"X축 값\",\n      \"value\": \"1AM\",\n      \"notes\": \"그래프 X축\"\n    },\n    {\n      \"type\": \"chart_x_axis_value\",\n      \"label\": \"X축 값\",\n      \"value\": \"4AM\",\n      \"notes\": \"그래프 X축\"\n    },\n    {\n      \"type\": \"chart_x_axis_value\",\n      \"label\": \"X축 값\",\n      \"value\": \"7AM\",\n      \"notes\": \"그래프 X축\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"식사 아이콘, 날짜, 시간, 식사 종류 포함\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"식사 아이콘, 날짜, 시간, 식사 종류 포함\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"식사 아이콘, 날짜, 시간, 식사 종류 포함\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"식사 아이콘, 날짜, 시간, 식사 종류 포함\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"플로팅 액션 버튼\",\n      \"value\": null,\n      \"notes\": \"우측 하단, 기록 추가 기능으로 추정\"\n    },\n    {\n      \"type\": \"navigation_bar_icon\",\n      \"label\": \"메뉴 아이콘\",\n      \"value\": null,\n      \"notes\": \"하단 내비게이션 바\"\n    },\n    {\n      \"type\": \"navigation_bar_icon\",\n      \"label\": \"홈 아이콘\",\n      \"value\": null,\n      \"notes\": \"하단 내비게이션 바\"\n    },\n    {\n      \"type\": \"navigation_bar_icon\",\n      \"label\": \"뒤로가기 아이콘\",\n      \"value\": null,\n"
+    },
+    {
+      "id": "ACC3_HC_CB_ON_TREND",
+      "title": "Accessibility ACC3_HC_CB_ON · Trend",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_HC_CB_ON_TREND_2026-03-12T23-05-39-552Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_HC_CB_ON_TREND_2026-03-12T23-05-39-552Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_HC_CB_ON_TREND\",\n  \"title\": \"Accessibility ACC3_HC_CB_ON · Trend\",\n  \"verifiedAt\": \"2026-03-12T23:05:39.846Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/tg/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/tg/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": true,\n    \"accLargerFont\": false,\n    \"accColorblind\": true,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 트렌드를 보여주는 모바일 애플리케이션 화면입니다. 상단에는 현재 시간(06:05)과 네트워크 상태, 배터리 잔량(100%)이 표시되어 있습니다. 'Trend (TG_01_01)'이라는 제목 아래에 3시간, 6시간, 12시간, 24시간 단위로 데이터를 볼 수 있는 옵션이 있습니다. 중앙에는 혈당 수치(mg/dL)와 시간대별 그래프가 있으며, 현재 3/13 지점을 보고 있음을 나타냅니다. 그래프 아래에는 식사 기록(Meal)이 시간과 함께 표시되어 있으며, 'Breakfast'와 'Lunch'로 구분됩니다. 하단에는 혈당 데이터의 평균(Average), 최고(Highest), 최저(Lowest) 값이 표시될 공간이 있고, 그 아래에는 'Range Distribution'이라는 제목과 함께 원형 차트가 있습니다. 이 차트는 혈당 수치의 분포를 퍼센트로 보여주며, 'High', 'In Range' 항목과 각각의 퍼센트(17% High, 62% In Range)가 명시되어 있습니다. 화면 하단에는 안드로이드 내비게이션 바가 있습니다.\",\n  \"extractedText\": \"06:05\\nHD.ll\\n100\\nTrend (TG_01_01)\\n3\\nhours\\n6\\nhours\\n12\\nhours\\n24\\nhours\\nmg/dL\\n3/13\\n250\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 19:30\\nLunch\\nAverage\\nHighest\\nLowest\\n--\\n--\\n--\\nRange Distribution\\nPercent by range\\n9%\\n17%\\n12%\\n17% High\\n62% In Range\",\n  \"uiElements\": [\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"06:05\",\n      \"value\": null,\n      \"notes\": \"현재 시간\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"TikTok 아이콘 (추정)\",\n      \"value\": null,\n      \"notes\": \"알림 또는 앱 아이콘\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"네트워크 신호 아이콘\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"HD.ll\",\n      \"value\": null,\n      \"notes\": \"네트워크 상태 (추정)\"\n    },\n    {\n      \"type\": \"배터리 아이콘\",\n      \"label\": \"배터리 아이콘\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"100\",\n      \"value\": null,\n      \"notes\": \"배터리 잔량\"\n    },\n    {\n      \"type\": \"화면 제목\",\n      \"label\": \"Trend (TG_01_01)\",\n      \"value\": null,\n      \"notes\": \"화면의 주요 제목 및 ID\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"새로고침 아이콘 (추정)\",\n      \"value\": null,\n      \"notes\": \"데이터 새로고침 기능\"\n    },\n    {\n      \"type\": \"탭/버튼\",\n      \"label\": \"3 hours\",\n      \"value\": null,\n      \"notes\": \"선택된 시간 범위\"\n    },\n    {\n      \"type\": \"탭/버튼\",\n      \"label\": \"6 hours\",\n      \"value\": null,\n      \"notes\": \"시간 범위 선택 옵션\"\n    },\n    {\n      \"type\": \"탭/버튼\",\n      \"label\": \"12 hours\",\n      \"value\": null,\n      \"notes\": \"시간 범위 선택 옵션\"\n    },\n    {\n      \"type\": \"탭/버튼\",\n      \"label\": \"24 hours\",\n      \"value\": null,\n      \"notes\": \"시간 범위 선택 옵션\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"mg/dL\",\n      \"value\": null,\n      \"notes\": \"혈당 단위\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"3/13\",\n      \"value\": null,\n      \"notes\": \"현재 보고 있는 데이터 지점 (추정)\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"250\",\n      \"value\": null,\n      \"notes\": \"혈당 수치\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"200\",\n      \"value\": null,\n      \"notes\": \"혈당 수치\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"150\",\n      \"value\": null,\n      \"notes\": \"혈당 수치\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"100\",\n      \"value\": null,\n      \"notes\": \"혈당 수치\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"50\",\n      \"value\": null,\n      \"notes\": \"혈당 수치\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"0\",\n      \"value\": null,\n      \"notes\": \"혈당 수치\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"10PM\",\n      \"value\": null,\n      \"notes\": \"시간\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"1AM\",\n      \"value\": null,\n      \"notes\": \"시간\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"4AM\",\n      \"value\": null,\n      \"notes\": \"시간\"\n    },\n    {\n      \"type\": \"그래프 축 라벨\",\n      \"label\": \"7AM\",\n      \"value\": null,\n      \"notes\": \"시간\"\n    },\n    {\n      \"type\": \"식사 기록 항목\",\n      \"label\": \"Meal · 2026-02-11 15:00\",\n      \"value\": \"Breakfast\",\n      \"notes\": \"식사 유형 및 시간\"\n    },\n    {\n      \"type\": \"식사 기록 항목\",\n      \"label\": \"Meal · 2026-02-11 15:00\",\n      \"value\": \"Breakfast\",\n      \"notes\": \"식사 유형 및 시간\"\n    },\n    {\n      \"type\": \"식사 기록 항목\",\n      \"label\": \"Meal · 2026-02-11 19:30\",\n      \"value\": \"Lunch\",\n      \"notes\": \"식사 유형 및 시간\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"Average\",\n      \"value\": \"--\",\n      \"notes\": \"평균 혈당 값\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"Highest\",\n      \"value\": \"--\",\n      \"notes\": \"최고 혈당 값\"\n    },\n    {\n      \"type\": \"텍스트 라벨\",\n      \"label\": \"Lowest\",\n      \"value\": \"--\",\n      \"notes\": \"최저 혈당 값\"\n    },\n    {\n      \"type\": \"섹션 제목\",\n      \"label\": \"Range Distribution\",\n      \"value\": null,\n      \"notes\": \"혈당 범위 분포 섹션 제목\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"정보/확대 아이콘 (추정)\",\n      \"value\": null,\n      \"notes\": \"추가 정보 또는 확대 기능\"\n    },\n    {\n      \"type\": \"원형 차트 섹션\",\n      "
+    },
+    {
+      "id": "ACC3_LF_ON_SETTINGS",
+      "title": "Accessibility ACC3_LF_ON · Settings",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_LF_ON_SETTINGS_2026-03-12T23-05-41-544Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_LF_ON_SETTINGS_2026-03-12T23-05-41-544Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_LF_ON_SETTINGS\",\n  \"title\": \"Accessibility ACC3_LF_ON · Settings\",\n  \"verifiedAt\": \"2026-03-12T23:05:41.829Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/settings\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/settings\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": true,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "yes",
+        "confidence": 0.9,
+        "reasons": [
+          "appStats.accLargerFont가 true로 설정되어 있으며, 스크린샷의 텍스트 크기(예: 'User', 'Remaining days', 'Settings', 'Region', 'Language' 등)와 UI 요소(예: 버튼, 리스트 항목)의 크기가 일반적인 기본 UI보다 상대적으로 크게 보인다.",
+          "appStats.accHighContrast가 false로 설정되어 있으며, 스크린샷은 과도한 대비나 탈채도 없이 일반적인 UI 색상과 대비를 보여준다.",
+          "appStats.accColorblind가 false로 설정되어 있으며, 스크린샷은 색각 이상자를 위한 특별한 색상 조정 없이 일반적인 색상을 사용하고 있다."
+        ],
+        "missingEvidence": [],
+        "nextSteps": [
+          "accHighContrast 및 accColorblind가 true일 때의 스크린샷을 비교하여 해당 기능의 시각적 반영 여부를 추가로 검증한다.",
+          "accLargerFont가 false일 때의 스크린샷과 비교하여 폰트 크기 변화를 명확히 확인한다."
+        ]
+      },
+      "ai": {
+        "summary": "이 이미지는 'Settings' 화면의 일부를 보여줍니다. 상단에는 사용자 정보와 남은 일수(14/14)가 표시되어 있습니다. 'Data' 섹션에서는 로컬 캐시 요약 정보(총 5점)와 함께 'REFRESH', 'OPEN DATA', 'RESET DB' 버튼이 있습니다. 'Settings' 섹션 아래에는 'Application preferences'라는 부제목과 함께 'General' 설정 그룹이 있습니다. 이 그룹에는 'Region' (자동 감지: KR), 'Language' (en), 'Time format' (24h), 'Chart dot size' (6px) 설정 항목이 각각 현재 값과 함께 표시되어 있으며, 각 항목은 상세 설정 화면으로 이동할 수 있는 화살표 아이콘을 포함하고 있습니다. 전반적으로 깔끔하고 계층적인 UI 구성을 가지고 있습니다.",
+        "extractedText": "06:05\nUser\nRemaining days: 14 / 14\nData\nLocal cache summary\nTotal points: 5\nREFRESH\nOPEN DATA\nRESET DB\nSettings\nApplication preferences\nGeneral\nLanguage, Region, Notifications\nRegion\nAuto-detect: KR\nLanguage\nen\nTime format\n24h\nChart dot size\n6px",
+        "uiElements": [
+          {
+            "type": "text",
+            "label": "User",
+            "value": null,
+            "notes": "사용자 이름"
+          },
+          {
+            "type": "text",
+            "label": "Remaining days",
+            "value": "14 / 14",
+            "notes": "남은 일수"
+          },
+          {
+            "type": "section_header",
+            "label": "Data",
+            "value": null,
+            "notes": "데이터 섹션 헤더"
+          },
+          {
+            "type": "text",
+            "label": "Local cache summary",
+            "value": null,
+            "notes": "로컬 캐시 요약 설명"
+          },
+          {
+            "type": "text",
+            "label": "Total points",
+            "value": "5",
+            "notes": "총 포인트"
+          },
+          {
+            "type": "button",
+            "label": "REFRESH",
+            "value": null,
+            "notes": "데이터 새로고침 버튼"
+          },
+          {
+            "type": "button",
+            "label": "OPEN DATA",
+            "value": null,
+            "notes": "데이터 열기 버튼"
+          },
+          {
+            "type": "button",
+            "label": "RESET DB",
+            "value": null,
+            "notes": "데이터베이스 초기화 버튼"
+          },
+          {
+            "type": "section_header",
+            "label": "Settings",
+            "value": null,
+            "notes": "설정 섹션 헤더"
+          },
+          {
+            "type": "text",
+            "label": "Application preferences",
+            "value": null,
+            "notes": "애플리케이션 환경설정 부제목"
+          },
+          {
+            "type": "group_header",
+            "label": "General",
+            "value": "Language, Region, Notifications",
+            "notes": "일반 설정 그룹 헤더"
+          },
+          {
+            "type": "list_item",
+            "label": "Region",
+            "value": "Auto-detect: KR",
+            "notes": "지역 설정 항목"
+          },
+          {
+            "type": "list_item",
+            "label": "Language",
+            "value": "en",
+            "notes": "언어 설정 항목"
+          },
+          {
+            "type": "list_item",
+            "label": "Time format",
+            "value": "24h",
+            "notes": "시간 형식 설정 항목"
+          },
+          {
+            "type": "list_item",
+            "label": "Chart dot size",
+            "value": "6px",
+            "notes": "차트 점 크기 설정 항목"
+          },
+          {
+            "type": "icon",
+            "label": "arrow_right",
+            "value": null,
+            "notes": "각 설정 항목 옆의 상세 화면 이동 아이콘"
+          }
+        ],
+        "flows": [
+          "사용자가 'REFRESH' 버튼을 탭 -> 로컬 캐시 데이터가 새로고침됨",
+          "사용자가 'OPEN DATA' 버튼을 탭 -> 데이터 열기 기능이 실행됨",
+          "사용자가 'RESET DB' 버튼을 탭 -> 데이터베이스 초기화 확인 대화상자 표시 -> 사용자가 확인 -> 데이터베이스 초기화",
+          "사용자가 'Region' 항목을 탭 -> 지역 설정 상세 화면으로 이동",
+          "사용자가 'Language' 항목을 탭 -> 언어 설정 상세 화면으로 이동",
+          "사용자가 'Time format' 항목을 탭 -> 시간 형식 설정 상세 화면으로 이동",
+          "사용자가 'Chart dot size' 항목을 탭 -> 차트 점 크기 설정 상세 화면으로 이동"
+        ],
+        "possibleScreenIds": [],
+        "uncertainties": [
+          "상단 바의 아이콘(와이파이, 배터리 등)의 정확한 의미 및 상태",
+          "화면 좌측에 일부 가려진 UI 요소의 내용"
+        ],
+        "verdict": {
+          "implemented": "yes",
+          "confidence": 0.9,
+          "reasons": [
+            "appStats.accLargerFont가 true로 설정되어 있으며, 스크린샷의 텍스트 크기(예: 'User', 'Remaining days', 'Settings', 'Region', 'Language' 등)와 UI 요소(예: 버튼, 리스트 항목)의 크기가 일반적인 기본 UI보다 상대적으로 크게 보인다.",
+            "appStats.accHighContrast가 false로 설정되어 있으며, 스크린샷은 과도한 대비나 탈채도 없이 일반적인 UI 색상과 대비를 보여준다.",
+            "appStats.accColorblind가 false로 설정되어 있으며, 스크린샷은 색각 이상자를 위한 특별한 색상 조정 없이 일반적인 색상을 사용하고 있다."
+          ],
+          "missingEvidence": [],
+          "nextSteps": [
+            "accHighContrast 및 accColorblind가 true일 때의 스크린샷을 비교하여 해당 기능의 시각적 반영 여부를 추가로 검증한다.",
+            "accLargerFont가 false일 때의 스크린샷과 비교하여 폰트 크기 변화를 명확히 확인한다."
+          ]
+        }
+      },
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 'Settings' 화면의 일부를 보여줍니다. 상단에는 사용자 정보와 남은 일수(14/14)가 표시되어 있습니다. 'Data' 섹션에서는 로컬 캐시 요약 정보(총 5점)와 함께 'REFRESH', 'OPEN DATA', 'RESET DB' 버튼이 있습니다. 'Settings' 섹션 아래에는 'Application preferences'라는 부제목과 함께 'General' 설정 그룹이 있습니다. 이 그룹에는 'Region' (자동 감지: KR), 'Language' (en), 'Time format' (24h), 'Chart dot size' (6px) 설정 항목이 각각 현재 값과 함께 표시되어 있으며, 각 항목은 상세 설정 화면으로 이동할 수 있는 화살표 아이콘을 포함하고 있습니다. 전반적으로 깔끔하고 계층적인 UI 구성을 가지고 있습니다.\",\n  \"extractedText\": \"06:05\\nUser\\nRemaining days: 14 / 14\\nData\\nLocal cache summary\\nTotal points: 5\\nREFRESH\\nOPEN DATA\\nRESET DB\\nSettings\\nApplication preferences\\nGeneral\\nLanguage, Region, Notifications\\nRegion\\nAuto-detect: KR\\nLanguage\\nen\\nTime format\\n24h\\nChart dot size\\n6px\",\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"User\",\n      \"value\": null,\n      \"notes\": \"사용자 이름\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Remaining days\",\n      \"value\": \"14 / 14\",\n      \"notes\": \"남은 일수\"\n    },\n    {\n      \"type\": \"section_header\",\n      \"label\": \"Data\",\n      \"value\": null,\n      \"notes\": \"데이터 섹션 헤더\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Local cache summary\",\n      \"value\": null,\n      \"notes\": \"로컬 캐시 요약 설명\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Total points\",\n      \"value\": \"5\",\n      \"notes\": \"총 포인트\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"REFRESH\",\n      \"value\": null,\n      \"notes\": \"데이터 새로고침 버튼\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"OPEN DATA\",\n      \"value\": null,\n      \"notes\": \"데이터 열기 버튼\"\n    },\n    {\n      \"type\": \"button\",\n      \"label\": \"RESET DB\",\n      \"value\": null,\n      \"notes\": \"데이터베이스 초기화 버튼\"\n    },\n    {\n      \"type\": \"section_header\",\n      \"label\": \"Settings\",\n      \"value\": null,\n      \"notes\": \"설정 섹션 헤더\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"Application preferences\",\n      \"value\": null,\n      \"notes\": \"애플리케이션 환경설정 부제목\"\n    },\n    {\n      \"type\": \"group_header\",\n      \"label\": \"General\",\n      \"value\": \"Language, Region, Notifications\",\n      \"notes\": \"일반 설정 그룹 헤더\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Region\",\n      \"value\": \"Auto-detect: KR\",\n      \"notes\": \"지역 설정 항목\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Language\",\n      \"value\": \"en\",\n      \"notes\": \"언어 설정 항목\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Time format\",\n      \"value\": \"24h\",\n      \"notes\": \"시간 형식 설정 항목\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"Chart dot size\",\n      \"value\": \"6px\",\n      \"notes\": \"차트 점 크기 설정 항목\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"arrow_right\",\n      \"value\": null,\n      \"notes\": \"각 설정 항목 옆의 상세 화면 이동 아이콘\"\n    }\n  ],\n  \"flows\": [\n    \"사용자가 'REFRESH' 버튼을 탭 -> 로컬 캐시 데이터가 새로고침됨\",\n    \"사용자가 'OPEN DATA' 버튼을 탭 -> 데이터 열기 기능이 실행됨\",\n    \"사용자가 'RESET DB' 버튼을 탭 -> 데이터베이스 초기화 확인 대화상자 표시 -> 사용자가 확인 -> 데이터베이스 초기화\",\n    \"사용자가 'Region' 항목을 탭 -> 지역 설정 상세 화면으로 이동\",\n    \"사용자가 'Language' 항목을 탭 -> 언어 설정 상세 화면으로 이동\",\n    \"사용자가 'Time format' 항목을 탭 -> 시간 형식 설정 상세 화면으로 이동\",\n    \"사용자가 'Chart dot size' 항목을 탭 -> 차트 점 크기 설정 상세 화면으로 이동\"\n  ],\n  \"possibleScreenIds\": [],\n  \"uncertainties\": [\n    \"상단 바의 아이콘(와이파이, 배터리 등)의 정확한 의미 및 상태\",\n    \"화면 좌측에 일부 가려진 UI 요소의 내용\"\n  ],\n  \"verdict\": {\n    \"implemented\": \"yes\",\n    \"confidence\": 0.9,\n    \"reasons\": [\n      \"appStats.accLargerFont가 true로 설정되어 있으며, 스크린샷의 텍스트 크기(예: 'User', 'Remaining days', 'Settings', 'Region', 'Language' 등)와 UI 요소(예: 버튼, 리스트 항목)의 크기가 일반적인 기본 UI보다 상대적으로 크게 보인다.\",\n      \"appStats.accHighContrast가 false로 설정되어 있으며, 스크린샷은 과도한 대비나 탈채도 없이 일반적인 UI 색상과 대비를 보여준다.\",\n      \"appStats.accColorblind가 false로 설정되어 있으며, 스크린샷은 색각 이상자를 위한 특별한 색상 조정 없이 일반적인 색상을 사용하고 있다.\"\n    ],\n    \"missingEvidence\": [],\n    \"nextSteps\": [\n      \"accHighContrast 및 accColorblind가 true일 때의 스크린샷을 비교하여 해당 기능의 시각적 반영 여부를 추가로 검증한다.\",\n      \"accLargerFont가 false일 때의 스크린샷과 비교하여 폰트 크기 변화를 명확히 확인한다.\"\n    ]\n  }\n}\n```"
+    },
+    {
+      "id": "ACC3_LF_ON_DASH",
+      "title": "Accessibility ACC3_LF_ON · Dashboard",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_LF_ON_DASH_2026-03-12T23-05-43-576Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_LF_ON_DASH_2026-03-12T23-05-43-576Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_LF_ON_DASH\",\n  \"title\": \"Accessibility ACC3_LF_ON · Dashboard\",\n  \"verifiedAt\": \"2026-03-12T23:05:43.898Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/gu/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/gu/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": true,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 관리 앱의 대시보드 화면을 보여줍니다. 상단에는 현재 시간(06:05)과 배터리 잔량(100%)이 표시되어 있습니다. 중앙에는 현재 혈당 수치(120 mg/dL)와 혈당 변화 추세(상승 화살표)가 크게 표시되어 있으며, '1 Days left'라는 정보가 원형 프로그레스 바 형태로 나타나 있습니다. 그 아래에는 혈당 수치 변화를 시각적으로 보여주는 그래프가 있으며, Y축은 혈당 수치(50, 100, 150, 200, 250 mg/dL)를, X축은 시간(10PM, 1AM, 4AM, 7AM)을 나타냅니다. 그래프에는 100~180 mg/dL 범위로 추정되는 영역이 하늘색으로 강조되어 있습니다. 그래프 하단에는 식사 기록 목록이 시간 순서대로 나열되어 있으며, 각 기록은 식사 아이콘, 'Meal', 날짜, 시간, 그리고 식사 종류(Breakfast, Lunch)를 포함합니다. 화면 우측 하단에는 플로팅 액션 버튼이 위치해 있습니다. 하단 내비게이션 바에는 세 개의 아이콘이 있습니다.\",\n  \"extractedText\": \"06:05\\n100\\n120\\nmg/dL\\n1 Days\\nleft\\nmg/dL\\n250\\n3/13\\n200\\n150\\n100\\n50\\n0\\n10PM\\n1AM\\n4AM\\n7AM\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 15:00\\nBreakfast\\nMeal · 2026-02-11 19:30\\nLunch\\nMeal · 2026-02-11 19:30\\nLunch\",\n  \"uiElements\": [\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 시간\",\n      \"value\": \"06:05\",\n      \"notes\": \"상단 좌측\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"배터리 잔량\",\n      \"value\": \"100%\",\n      \"notes\": \"상단 우측, 배터리 아이콘과 함께 표시\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"현재 혈당 수치\",\n      \"value\": \"120\",\n      \"notes\": \"크게 표시된 숫자\"\n    },\n    {\n      \"type\": \"text\",\n      \"label\": \"혈당 단위\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"현재 혈당 수치 아래\"\n    },\n    {\n      \"type\": \"icon\",\n      \"label\": \"혈당 변화 추세\",\n      \"value\": \"상승 화살표\",\n      \"notes\": \"현재 혈당 수치 옆\"\n    },\n    {\n      \"type\": \"progress_bar\",\n      \"label\": \"남은 일수\",\n      \"value\": \"1 Days left\",\n      \"notes\": \"원형 프로그레스 바 형태\"\n    },\n    {\n      \"type\": \"chart_label\",\n      \"label\": \"혈당 단위 (그래프 Y축)\",\n      \"value\": \"mg/dL\",\n      \"notes\": \"그래프 좌측 상단\"\n    },\n    {\n      \"type\": \"chart_label\",\n      \"label\": \"그래프 데이터 포인트 수\",\n      \"value\": \"3/13\",\n      \"notes\": \"그래프 우측 상단\"\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"Y축 혈당 수치\",\n      \"value\": \"250\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"Y축 혈당 수치\",\n      \"value\": \"200\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"Y축 혈당 수치\",\n      \"value\": \"150\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"Y축 혈당 수치\",\n      \"value\": \"100\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"Y축 혈당 수치\",\n      \"value\": \"50\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"Y축 혈당 수치\",\n      \"value\": \"0\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"X축 시간\",\n      \"value\": \"10PM\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"X축 시간\",\n      \"value\": \"1AM\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"X축 시간\",\n      \"value\": \"4AM\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_axis_label\",\n      \"label\": \"X축 시간\",\n      \"value\": \"7AM\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"chart_highlight_area\",\n      \"label\": \"정상 혈당 범위\",\n      \"value\": \"100-180 mg/dL (추정)\",\n      \"notes\": \"하늘색으로 강조된 영역\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"식사 아이콘 포함\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 15:00 Breakfast\",\n      \"notes\": \"식사 아이콘 포함\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"식사 아이콘 포함\"\n    },\n    {\n      \"type\": \"list_item\",\n      \"label\": \"식사 기록\",\n      \"value\": \"Meal · 2026-02-11 19:30 Lunch\",\n      \"notes\": \"식사 아이콘 포함\"\n    },\n    {\n      \"type\": \"floating_action_button\",\n      \"label\": \"기록 추가 (추정)\",\n      \"value\": null,\n      \"notes\": \"우측 하단 녹색 버튼, 아이콘은 문서/기록 관련으로 보임\"\n    },\n    {\n      \"type\": \"navigation_bar_item\",\n      \"label\": \"메뉴 (추정)\",\n      \"value\": null,\n      \"notes\": \"하단 좌측, 세 줄 아이콘\"\n    },\n    {\n      \"type\": \"navigation_bar_item\",\n      \"label\": \"홈 (추정)\",\n      \"value\": null,\n      \"notes\": \"하단 중앙, 원형 아이콘\"\n    },\n    {\n      \"type\": \"navigation_bar_item\",\n      \"label\": \"뒤로 가기 (추정)\",\n      \"value\": null,\n      \"notes\": \"하단 우측, 꺾쇠 아이콘\"\n    }\n  ],\n  \"flows\": [\n    \"사용자가 화면을 스크롤하여 과거 식사 기록 및 혈당 그래프 데이터를 확인할 수 있습니다.\",\n    \"사용자가 플로팅 액션 버튼을 탭하여 새로운 기록을 추가할 수 있습니다 (예: 혈당, 식사, 운동).\",\n    \"사용자가 하단 내비게이션 바의 아이콘을 탭하여 다른 화면으로 이동할 수 있습니다.\"\n  ],\n  \"possibleScreenIds\": [\n    \"/gu/01/01\"\n  ],\n  \"uncertainties\": [\n    \"그래프의 하늘색 강조 영역이 나타내는 정확한 혈당 범위 (100-180 mg/dL로"
+    },
+    {
+      "id": "ACC3_LF_ON_TREND",
+      "title": "Accessibility ACC3_LF_ON · Trend",
+      "screenshotAbs": "C:\\rc\\_cube\\empecs\\empecs_cgms\\req\\req1\\_qa\\screenshots\\ACC3_LF_ON_TREND_2026-03-12T23-05-44-925Z.jpg",
+      "screenshotRel": "./req/req1/_qa/screenshots/ACC3_LF_ON_TREND_2026-03-12T23-05-44-925Z.jpg",
+      "contextText": "판정 목표: 아래 스크린샷(실기기 캡처) + 런타임 증거(appStats)를 바탕으로, Accessibility 토글(고대비/색각/큰 글씨)이 \"실제로 시각적으로 반영\"되는지 판정한다.\n특히 appStats.accHighContrast / appStats.accColorblind / appStats.accLargerFont 값과 화면의 시각적 특징(색상 채도 감소, 대비 강화, 글자/컨트롤 크기 증가)이 일치하는지에 초점을 맞춰라.\n\n요구사항/이슈 근거(req260306.md 요약):\n- (해당 ID 직접 언급 없음)\n\nPPTX 근거(req-extracted.json에서 ID 힌트):\n- (ID 힌트 없음)\n\nQA 런타임 증거(요약):\n{\n  \"id\": \"ACC3_LF_ON_TREND\",\n  \"title\": \"Accessibility ACC3_LF_ON · Trend\",\n  \"verifiedAt\": \"2026-03-12T23:05:45.210Z\",\n  \"nav\": {\n    \"ok\": true,\n    \"route\": \"/tg/01/01\"\n  },\n  \"appStats\": {\n    \"currentRoute\": \"/tg/01/01\",\n    \"language\": \"en\",\n    \"timeFormat\": \"24h\",\n    \"glucoseUnit\": \"mgdl\",\n    \"accHighContrast\": false,\n    \"accLargerFont\": true,\n    \"accColorblind\": false,\n    \"sc0106WarmupActive\": true,\n    \"sc0106WarmupRemainingSec\": 0,\n    \"sc0701LastSharedOk\": false,\n    \"sc0701LastNote\": \"\",\n    \"lastAlert\": {\n      \"alarmType\": \"system\",\n      \"reason\": \"qa\",\n      \"time\": \"2026-02-27T06:12:52.542941Z\"\n    }\n  },\n  \"serverCheck\": null\n}\n\n요청: 기존 JSON 필드(summary/extractedText/uiElements/flows/possibleScreenIds/uncertainties) 외에 다음 최상위 필드를 추가해라.\n- verdict: {implemented: \"yes\"|\"no\"|\"uncertain\", confidence: 0~1, reasons: string[], missingEvidence: string[], nextSteps: string[] }\n판정 규칙:\n- appStats에서 토글이 OFF(false)면, 스크린샷이 \"일반 UI(과도한 대비/탈채도/폰트 확대 없음)\"으로 보이는 것이 정상이다. 이 경우 yes.\n- appStats에서 특정 토글이 ON(true)이면, 해당 효과가 스크린샷에서 \"눈에 띄게\" 보여야 정상이다. 보이면 yes.\n- ON인데 효과가 안 보이거나, OFF인데 효과가 보이면 no.\n- 판단이 애매하면 uncertain.",
+      "verdict": {
+        "implemented": "uncertain",
+        "confidence": 0.1,
+        "reasons": [
+          "AI JSON에서 verdict 누락"
+        ],
+        "missingEvidence": [],
+        "nextSteps": []
+      },
+      "ai": {},
+      "aiRaw": "```json\n{\n  \"summary\": \"이 이미지는 혈당 추세(Trend)를 보여주는 모바일 애플리케이션 화면입니다. 상단에는 현재 시간, 네트워크 상태, 배터리 잔량 등의 시스템 정보가 표시되어 있습니다. 화면 중앙에는 혈당 수치 변화를 시각적으로 나타내는 그래프가 있으며, 시간대별로 혈당 수치를 확인할 수 있습니다. 그래프 아래에는 식사 기록(Meal)이 시간과 함께 나열되어 있습니다. 또한, 평균(Average), 최고(Highest), 최저(Lowest) 혈당 수치를 요약하여 보여주는 카드와, 혈당 범위 분포(Range Distribution)를 파이 차트와 백분율로 나타내는 섹션이 포함되어 있습니다. 전체적으로 사용자의 혈당 관리 데이터를 한눈에 파악할 수 있도록 구성되어 있습니다. appStats에 따르면 'Larger Font' 설정이 활성화되어 있지만, 스크린샷에서는 일반적인 폰트 크기로 보여 시각적 반영 여부가 불확실합니다.\",\n  \"extractedText\": [\n    \"06:05\",\n    \"HD\",\n    \"100\",\n    \"Trend (TG_01_01)\",\n    \"3\",\n    \"6\",\n    \"12\",\n    \"24\",\n    \"M OVERFLOWED BOTTOM OVERFLOWED BOTTOM OVERFLOWED BOTTOM OVERFLOWED BY 2.0\",\n    \"mg/dL\",\n    \"250\",\n    \"200\",\n    \"150\",\n    \"100\",\n    \"50\",\n    \"0\",\n    \"10PM\",\n    \"1AM\",\n    \"4AM\",\n    \"7AM\",\n    \"3/13\",\n    \"Meal\",\n    \"2026-02-11 15:00\",\n    \"Breakfast\",\n    \"Meal\",\n    \"2026-02-11 15:00\",\n    \"Breakfast\",\n    \"Meal\",\n    \"2026-02-11 19:30\",\n    \"Lunch\",\n    \"Average\",\n    \"--\",\n    \"Highest\",\n    \"--\",\n    \"Lowest\",\n    \"--\",\n    \"Range Distribution\",\n    \"Percent by range\",\n    \"9% High\",\n    \"17% High\",\n    \"12%\",\n    \"62% In Range\"\n  ],\n  \"uiElements\": [\n    {\n      \"type\": \"시간 표시\",\n      \"label\": \"06:05\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"네트워크 상태 아이콘\",\n      \"label\": \"HD\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"배터리 잔량\",\n      \"label\": \"100\",\n      \"value\": null,\n      \"notes\": \"상단 시스템 바\"\n    },\n    {\n      \"type\": \"화면 제목\",\n      \"label\": \"Trend\",\n      \"value\": \"TG_01_01\",\n      \"notes\": \"화면 상단 중앙\"\n    },\n    {\n      \"type\": \"새로고침 버튼\",\n      \"label\": null,\n      \"value\": null,\n      \"notes\": \"화면 제목 옆 아이콘\"\n    },\n    {\n      \"type\": \"탭/필터\",\n      \"label\": \"3\",\n      \"value\": null,\n      \"notes\": \"선택된 상태\"\n    },\n    {\n      \"type\": \"탭/필터\",\n      \"label\": \"6\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"탭/필터\",\n      \"label\": \"12\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"탭/필터\",\n      \"label\": \"24\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"경고/정보 메시지\",\n      \"label\": \"M OVERFLOWED BOTTOM OVERFLOWED BOTTOM OVERFLOWED BOTTOM OVERFLOWED BY 2.0\",\n      \"value\": null,\n      \"notes\": \"빨간색 텍스트, 그래프 아래\"\n    },\n    {\n      \"type\": \"단위 표시\",\n      \"label\": \"mg/dL\",\n      \"value\": null,\n      \"notes\": \"그래프 좌측 상단\"\n    },\n    {\n      \"type\": \"날짜 표시\",\n      \"label\": \"3/13\",\n      \"value\": null,\n      \"notes\": \"그래프 우측 상단\"\n    },\n    {\n      \"type\": \"그래프 Y축 라벨\",\n      \"label\": \"250\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 라벨\",\n      \"label\": \"200\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 라벨\",\n      \"label\": \"150\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 라벨\",\n      \"label\": \"100\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 라벨\",\n      \"label\": \"50\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 Y축 라벨\",\n      \"label\": \"0\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 X축 라벨\",\n      \"label\": \"10PM\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 X축 라벨\",\n      \"label\": \"1AM\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 X축 라벨\",\n      \"label\": \"4AM\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"그래프 X축 라벨\",\n      \"label\": \"7AM\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"식사 기록 항목\",\n      \"label\": \"Meal\",\n      \"value\": \"2026-02-11 15:00\",\n      \"notes\": \"Breakfast\"\n    },\n    {\n      \"type\": \"식사 기록 항목\",\n      \"label\": \"Meal\",\n      \"value\": \"2026-02-11 15:00\",\n      \"notes\": \"Breakfast\"\n    },\n    {\n      \"type\": \"식사 기록 항목\",\n      \"label\": \"Meal\",\n      \"value\": \"2026-02-11 19:30\",\n      \"notes\": \"Lunch\"\n    },\n    {\n      \"type\": \"정보 카드 제목\",\n      \"label\": \"Average\",\n      \"value\": \"--\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"정보 카드 제목\",\n      \"label\": \"Highest\",\n      \"value\": \"--\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"정보 카드 제목\",\n      \"label\": \"Lowest\",\n      \"value\": \"--\",\n      \"notes\": null\n    },\n    {\n      \"type\": \"섹션 제목\",\n      \"label\": \"Range Distribution\",\n      \"value\": null,\n      \"notes\": null\n    },\n    {\n      \"type\": \"파이 차트\",\n      \"label\": null,\n      \"value\": null,\n      \"notes\": \"혈당 범위 분포 시각화\"\n    },\n    {\n      \"type\": \"범례\",\n      \"label\": \"9% High\",\n      \"value\": null,\n      \"notes\": \"빨간색\"\n    },\n    {\n      \"type\": \"범례\",\n      \"label\": \"17% High\",\n      \"value\": null,\n      \"notes\": \"주황색\"\n    },\n    {\n      \"type\": \"범례\",\n      \"label\": \"12%\",\n      \"value\": null,\n      \"notes\": \"분홍색 (추정)\"\n    },\n    {\n      \"type\": \"범례\",\n      \"label\": \"62% In Range\",\n      \"value\": null,\n      \"notes\": \"녹"
+    }
+  ]
+}

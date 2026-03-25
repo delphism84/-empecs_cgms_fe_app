@@ -1,0 +1,2943 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CGMS 26.03.06 PPTX 기반 QA 리포트 (req260306.md 기준)</title>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial; margin: 16px; }
+    h1 { margin: 0 0 10px; font-size: 18px; }
+    .meta { color: #555; margin: 0 0 16px; font-size: 12px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #e5e5e5; padding: 8px; vertical-align: top; }
+    th { background: #fafafa; position: sticky; top: 0; z-index: 1; }
+    pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 12px; }
+    .id { font-weight: 700; white-space: nowrap; }
+    .result { font-weight: 800; }
+    tr.pass td.result { color: #0a7a2f; }
+    tr.fail td.result { color: #b00020; }
+    tr.na td.result { color: #666; }
+    .server details > summary { cursor: pointer; font-weight: 700; }
+    .shot { width: 220px; border-radius: 8px; border: 1px solid #ddd; }
+    details pre { max-height: 280px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>CGMS 26.03.06 PPTX 기반 QA 리포트 (req260306.md 기준)</h1>
+  <div class="meta">generated: 2026-03-12T08:00:49.630Z</div>
+  <table>
+    <thead>
+      <tr>
+        <th>요구항목</th>
+        <th>설명</th>
+        <th>검수(절차/명령)</th>
+        <th>결과</th>
+        <th>검수시각</th>
+        <th>화면캡처(JPG)</th>
+        <th>서버체크</th>
+        <th>증거</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr class="pass">
+          <td class="id">AR_01_01</td>
+          <td>AR_01_01 alerts</td>
+          <td><pre></pre></td>
+          <td class="result">PASS</td>
+          <td>2026. 3. 12. 오후 1:34:00</td>
+          <td><a href="req/req1/_qa/screenshots/AR_01_01_2026-03-12T04-33-59-762Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/AR_01_01_2026-03-12T04-33-59-762Z.jpg" alt="AR_01_01"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:00.049Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:00.456028Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/ar/root&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:33:58.967011Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1791,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:00.049Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:00.456028Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/ar/root&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="na">
+          <td class="id">AR_01_02</td>
+          <td>AR_01_02</td>
+          <td><pre></pre></td>
+          <td class="result">NA</td>
+          <td>2026. 3. 12. 오후 1:34:02</td>
+          <td><a href="req/req1/_qa/screenshots/AR_01_02_2026-03-12T04-34-01-210Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/AR_01_02_2026-03-12T04-34-01-210Z.jpg" alt="AR_01_02"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:01.503Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:01.964851Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/ar/root&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:34:00.456028Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1790,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:01.503Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:01.964851Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/ar/root&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="na">
+          <td class="id">AR_01_03</td>
+          <td>AR_01_03</td>
+          <td><pre></pre></td>
+          <td class="result">NA</td>
+          <td>2026. 3. 12. 오후 1:34:03</td>
+          <td><a href="req/req1/_qa/screenshots/AR_01_03_2026-03-12T04-34-02-652Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/AR_01_03_2026-03-12T04-34-02-652Z.jpg" alt="AR_01_03"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:02.942Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:03.347341Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/ar/root&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:34:01.964851Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1788,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:02.942Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:03.347341Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/ar/root&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="na">
+          <td class="id">AR_01_04</td>
+          <td>AR_01_04</td>
+          <td><pre></pre></td>
+          <td class="result">NA</td>
+          <td>2026. 3. 12. 오후 1:34:04</td>
+          <td><a href="req/req1/_qa/screenshots/AR_01_04_2026-03-12T04-34-04-106Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/AR_01_04_2026-03-12T04-34-04-106Z.jpg" alt="AR_01_04"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:04.410Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:04.820648Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/ar/root&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:34:03.347341Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1787,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:04.410Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:04.820648Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/ar/root&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="na">
+          <td class="id">AR_01_05</td>
+          <td>AR_01_05</td>
+          <td><pre></pre></td>
+          <td class="result">NA</td>
+          <td>2026. 3. 12. 오후 1:34:06</td>
+          <td><a href="req/req1/_qa/screenshots/AR_01_05_2026-03-12T04-34-05-532Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/AR_01_05_2026-03-12T04-34-05-532Z.jpg" alt="AR_01_05"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:05.824Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:06.263652Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/ar/root&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:34:04.820648Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1785,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:05.824Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:06.263652Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/ar/root&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="na">
+          <td class="id">AR_01_06</td>
+          <td>AR_01_06</td>
+          <td><pre></pre></td>
+          <td class="result">NA</td>
+          <td>2026. 3. 12. 오후 1:34:07</td>
+          <td><a href="req/req1/_qa/screenshots/AR_01_06_2026-03-12T04-34-06-981Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/AR_01_06_2026-03-12T04-34-06-981Z.jpg" alt="AR_01_06"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:07.266Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:07.695877Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/ar/root&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:34:06.263652Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1784,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:07.266Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:07.695877Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/ar/root&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="na">
+          <td class="id">AR_01_08</td>
+          <td>AR_01_08</td>
+          <td><pre></pre></td>
+          <td class="result">NA</td>
+          <td>2026. 3. 12. 오후 1:34:09</td>
+          <td><a href="req/req1/_qa/screenshots/AR_01_08_2026-03-12T04-34-08-416Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/AR_01_08_2026-03-12T04-34-08-416Z.jpg" alt="AR_01_08"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:08.720Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:09.137047Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/ar/root&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:34:07.695877Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1782,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:08.720Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:09.137047Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/ar/root&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="pass">
+          <td class="id">LO_02_02</td>
+          <td>LO_02_02</td>
+          <td><pre></pre></td>
+          <td class="result">PASS</td>
+          <td>2026. 3. 12. 오후 1:34:10</td>
+          <td><a href="req/req1/_qa/screenshots/LO_02_02_2026-03-12T04-34-10-028Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/LO_02_02_2026-03-12T04-34-10-028Z.jpg" alt="LO_02_02"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:10.302Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:10.733786Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/lo/02/02&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:34:09.137047Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-12T04:34:09.643907Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1781,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:10.302Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:10.733786Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/lo/02/02&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="na">
+          <td class="id">LO_02_03</td>
+          <td>LO_02_03</td>
+          <td><pre></pre></td>
+          <td class="result">NA</td>
+          <td>2026. 3. 12. 오후 1:34:12</td>
+          <td><a href="req/req1/_qa/screenshots/LO_02_03_2026-03-12T04-34-11-473Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/LO_02_03_2026-03-12T04-34-11-473Z.jpg" alt="LO_02_03"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:34:11.755Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:34:12.223516Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/lo/02/03&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:34:10.733786Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-03-12T04:34:11.203457Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-12T04:34:09.643907Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1779,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:34:11.755Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:34:12.223516Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/lo/02/03&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="pass">
+          <td class="id">SC_01_01</td>
+          <td>SC_01_01 scan (only)</td>
+          <td><pre></pre></td>
+          <td class="result">PASS</td>
+          <td>2026. 3. 12. 오후 2:21:02</td>
+          <td><a href="req/req1/_qa/screenshots/SC_01_01_2026-03-12T05-21-01-750Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/SC_01_01_2026-03-12T05-21-01-750Z.jpg" alt="SC_01_01"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T05:21:02.037Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T05:21:02.555172Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/sc/01/01/scan&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T05:21:01.040946Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-03-12T04:34:11.203457Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T05:20:58.751995Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-12T04:34:09.643907Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 0,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T05:21:02.037Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T05:21:02.555172Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/sc/01/01/scan&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="pass">
+          <td class="id">SC_01_06</td>
+          <td>SC_01_06 warmup</td>
+          <td><pre></pre></td>
+          <td class="result">PASS</td>
+          <td>2026. 3. 12. 오후 1:33:53</td>
+          <td><a href="req/req1/_qa/screenshots/SC_01_06_2026-03-12T04-33-52-232Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/SC_01_06_2026-03-12T04-33-52-232Z.jpg" alt="SC_01_06"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:33:52.540Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:33:53.044212Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/sc/01/06&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-10T07:32:50.426895Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-04T09:54:12.548185Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-10T07:32:40.657816Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1798,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-10T07:32:47.647234Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:33:52.540Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:33:53.044212Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/sc/01/06&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="pass">
+          <td class="id">SC_02_01</td>
+          <td>SC_02_01 sensor</td>
+          <td><pre></pre></td>
+          <td class="result">PASS</td>
+          <td>2026. 3. 12. 오후 1:33:57</td>
+          <td><a href="req/req1/_qa/screenshots/SC_02_01_2026-03-12T04-33-56-890Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/SC_02_01_2026-03-12T04-33-56-890Z.jpg" alt="SC_02_01"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:33:57.158Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:33:57.551930Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/sc/02/01&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:33:56.171333Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1794,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-10T07:32:47.647234Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:33:57.158Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:33:57.551930Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/sc/02/01&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="pass">
+          <td class="id">SC_03_01</td>
+          <td>SC_03_01 status (scan removed)</td>
+          <td><pre></pre></td>
+          <td class="result">PASS</td>
+          <td>2026. 3. 12. 오후 2:23:10</td>
+          <td><a href="req/req1/_qa/screenshots/SC_03_01_2026-03-12T05-23-10-127Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/SC_03_01_2026-03-12T05-23-10-127Z.jpg" alt="SC_03_01"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T05:23:10.421Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T05:23:10.955004Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/sc/03/01&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T05:21:02.555172Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-03-12T04:34:11.203457Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T05:23:09.182556Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T05:20:58.751995Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-12T04:34:09.643907Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 0,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T05:23:10.421Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T05:23:10.955004Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/sc/03/01&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+
+        <tr class="pass">
+          <td class="id">SC_07_01</td>
+          <td>SC_07_01 share</td>
+          <td><pre></pre></td>
+          <td class="result">PASS</td>
+          <td>2026. 3. 12. 오후 1:33:59</td>
+          <td><a href="req/req1/_qa/screenshots/SC_07_01_2026-03-12T04-33-58-263Z.jpg" target="_blank" rel="noopener"><img class="shot" src="req/req1/_qa/screenshots/SC_07_01_2026-03-12T04-33-58-263Z.jpg" alt="SC_07_01"/></a></td>
+          <td><details><summary>OK</summary><pre>{
+  &quot;ok&quot;: true,
+  &quot;checkedAt&quot;: &quot;2026-03-12T04:33:58.529Z&quot;,
+  &quot;checks&quot;: {
+    &quot;health&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;service&quot;: &quot;ble-emu&quot;,
+        &quot;port&quot;: 8788
+      }
+    },
+    &quot;sensors&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 1
+      }
+    },
+    &quot;alarms&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;count&quot;: 5
+      }
+    },
+    &quot;logTx&quot;: {
+      &quot;ok&quot;: true,
+      &quot;result&quot;: {
+        &quot;ok&quot;: true,
+        &quot;uploaded&quot;: true,
+        &quot;at&quot;: &quot;2026-03-12T04:33:58.967011Z&quot;
+      }
+    }
+  }
+}</pre></details></td>
+          <td><details><summary>evidence</summary><pre>{
+  &quot;appStats&quot;: {
+    &quot;ok&quot;: true,
+    &quot;currentRoute&quot;: &quot;/sc/07/01&quot;,
+    &quot;apiBaseUrl&quot;: &quot;https://empecs.lunarsystem.co.kr&quot;,
+    &quot;guestMode&quot;: false,
+    &quot;language&quot;: &quot;en&quot;,
+    &quot;region&quot;: &quot;US&quot;,
+    &quot;autoRegion&quot;: false,
+    &quot;timeFormat&quot;: &quot;12h&quot;,
+    &quot;always24h&quot;: false,
+    &quot;glucoseUnit&quot;: &quot;mmol&quot;,
+    &quot;alarmsMuteAll&quot;: false,
+    &quot;chartDotSize&quot;: 6,
+    &quot;lastLogTxAt&quot;: &quot;2026-03-12T04:33:57.551930Z&quot;,
+    &quot;lastLogTxOk&quot;: true,
+    &quot;lastLockScreenAt&quot;: &quot;2026-02-11T05:08:36.136675Z&quot;,
+    &quot;lastLockScreenOk&quot;: true,
+    &quot;lastLockScreenValue&quot;: 123,
+    &quot;lastLockScreenTrend&quot;: &quot;↗&quot;,
+    &quot;lo0101ViewedAt&quot;: &quot;2026-03-10T07:08:39.402635Z&quot;,
+    &quot;lo0101SheetOpenedAt&quot;: &quot;2026-02-04T03:59:07.903067Z&quot;,
+    &quot;lo0101LastProvider&quot;: &quot;&quot;,
+    &quot;lo0101LastProviderAt&quot;: &quot;&quot;,
+    &quot;lo0102ViewedAt&quot;: &quot;2026-02-27T06:12:59.799617Z&quot;,
+    &quot;lo0103ViewedAt&quot;: &quot;2026-02-04T09:56:56.355179Z&quot;,
+    &quot;lo0104ViewedAt&quot;: &quot;2026-02-27T06:13:02.042529Z&quot;,
+    &quot;lo0108EnteredAt&quot;: &quot;2026-03-05T01:23:06.331525Z&quot;,
+    &quot;lo0201ViewedAt&quot;: &quot;2026-02-27T06:13:04.282711Z&quot;,
+    &quot;lo0201Choice&quot;: &quot;start&quot;,
+    &quot;lo0203ViewedAt&quot;: &quot;2026-02-04T09:57:02.830733Z&quot;,
+    &quot;lo0203Phone&quot;: &quot;010-0000-0000&quot;,
+    &quot;lo0203VerifiedAt&quot;: &quot;&quot;,
+    &quot;lo0205ViewedAt&quot;: &quot;2026-02-04T09:57:04.965028Z&quot;,
+    &quot;sc0201ViewedAt&quot;: &quot;2026-02-04T10:04:39.475936Z&quot;,
+    &quot;sc0201RenderedAt&quot;: &quot;2026-03-12T04:33:56.506251Z&quot;,
+    &quot;sc0301ViewedAt&quot;: &quot;2026-03-12T04:33:55.075708Z&quot;,
+    &quot;sc0401ViewedAt&quot;: &quot;2026-02-04T10:04:43.165875Z&quot;,
+    &quot;sc0501ViewedAt&quot;: &quot;2026-02-04T10:04:45.629947Z&quot;,
+    &quot;sc0601ViewedAt&quot;: &quot;2026-02-11T01:27:44.243810Z&quot;,
+    &quot;sc0801ViewedAt&quot;: &quot;2026-02-04T10:04:48.063121Z&quot;,
+    &quot;gu0101RenderedAt&quot;: &quot;2026-03-12T04:33:34.344910Z&quot;,
+    &quot;gu0101Value&quot;: 117,
+    &quot;gu0102Trend&quot;: &quot;flat&quot;,
+    &quot;gu0103Color&quot;: &quot;in&quot;,
+    &quot;tg0101ViewedAt&quot;: &quot;2026-02-11T05:55:23.096518Z&quot;,
+    &quot;tg0102ViewedAt&quot;: &quot;2026-02-11T01:27:30.138969Z&quot;,
+    &quot;rp0101ViewedAt&quot;: &quot;2026-02-27T06:12:53.748796Z&quot;,
+    &quot;rp0101RenderedAt&quot;: &quot;2026-02-27T06:12:55.166064Z&quot;,
+    &quot;pd0101ViewedAt&quot;: &quot;2026-02-11T01:42:20.679194Z&quot;,
+    &quot;pd0101RefreshedAt&quot;: &quot;2026-02-11T01:42:20.685313Z&quot;,
+    &quot;pd0101ItemsCount&quot;: 1,
+    &quot;me0101ViewedAt&quot;: &quot;2026-02-11T01:37:55.147953Z&quot;,
+    &quot;me0101SavedAt&quot;: &quot;&quot;,
+    &quot;me0101SavedType&quot;: &quot;&quot;,
+    &quot;me0101FoodShotAt&quot;: &quot;2026-02-11T01:37:54.105085Z&quot;,
+    &quot;me0101FoodShotAsset&quot;: &quot;assets/images/img_rectangle104.png&quot;,
+    &quot;lo0202ViewedAt&quot;: &quot;2026-03-10T07:32:49.291971Z&quot;,
+    &quot;lo0202AgreedAt&quot;: &quot;&quot;,
+    &quot;lo0204ViewedAt&quot;: &quot;2026-02-11T01:27:39.997157Z&quot;,
+    &quot;passcodeEnabled&quot;: false,
+    &quot;biometricEnabled&quot;: true,
+    &quot;biometricDebugBypass&quot;: true,
+    &quot;sc0101Consent&quot;: true,
+    &quot;sc0101Low&quot;: 70,
+    &quot;sc0101High&quot;: 180,
+    &quot;sc0102HasDevice&quot;: true,
+    &quot;registeredDevicesCount&quot;: 1,
+    &quot;lastRegisteredSn&quot;: &quot;12345&quot;,
+    &quot;lastMac&quot;: &quot;&quot;,
+    &quot;um0101ViewedAt&quot;: &quot;2026-02-04T00:37:55.657624Z&quot;,
+    &quot;lo0107ViewedAt&quot;: &quot;2026-02-04T03:44:40.202329Z&quot;,
+    &quot;sc0104ViewedAt&quot;: &quot;2026-02-04T00:46:01.592971Z&quot;,
+    &quot;sc0105ManualSnAt&quot;: &quot;2026-02-04T00:46:02.543692Z&quot;,
+    &quot;sc0105ManualSnValue&quot;: &quot;00033&quot;,
+    &quot;sc0103ViewedAt&quot;: &quot;2026-02-04T01:00:52.579692Z&quot;,
+    &quot;sc0106WarmupStartAt&quot;: &quot;2026-03-12T04:33:51.588233Z&quot;,
+    &quot;sc0106WarmupEndsAt&quot;: &quot;2026-03-12T05:03:51.588233Z&quot;,
+    &quot;sc0106WarmupActive&quot;: true,
+    &quot;sc0106WarmupDoneAt&quot;: &quot;&quot;,
+    &quot;sc0106WarmupRemainingSec&quot;: 1792,
+    &quot;sc0602ViewedAt&quot;: &quot;2026-02-04T01:49:09.474331Z&quot;,
+    &quot;sc0602Reason&quot;: &quot;expired&quot;,
+    &quot;sc0701ViewedAt&quot;: &quot;2026-02-04T02:42:59.142716Z&quot;,
+    &quot;sc0701Enabled&quot;: true,
+    &quot;sc0701Preset&quot;: &quot;7D&quot;,
+    &quot;sc0701From&quot;: &quot;2026-01-29T00:00:00.000&quot;,
+    &quot;sc0701To&quot;: &quot;2026-02-04T00:00:00.000&quot;,
+    &quot;sc0701ItemSummary&quot;: true,
+    &quot;sc0701ItemDistribution&quot;: true,
+    &quot;sc0701ItemGraph&quot;: true,
+    &quot;sc0701ItemUserProfile&quot;: false,
+    &quot;sc0701MethodEmail&quot;: true,
+    &quot;sc0701MethodSms&quot;: false,
+    &quot;sc0701Format&quot;: &quot;PDF&quot;,
+    &quot;sc0701Revocable&quot;: true,
+    &quot;sc0701LastSharedAt&quot;: &quot;&quot;,
+    &quot;sc0701LastSharedOk&quot;: false,
+    &quot;sc0701LastNote&quot;: &quot;&quot;,
+    &quot;sc0701RenderedAt&quot;: &quot;2026-03-12T04:33:57.935053Z&quot;,
+    &quot;eqsn&quot;: &quot;LOCAL&quot;,
+    &quot;lastUserId&quot;: &quot;&quot;,
+    &quot;lastTrid&quot;: 57,
+    &quot;maxTridLocalAny&quot;: 0,
+    &quot;maxTridLocalUser&quot;: 0,
+    &quot;glucoseCountLocal&quot;: 720,
+    &quot;lastAlert&quot;: {
+      &quot;id&quot;: 1055,
+      &quot;title&quot;: &quot;System alert&quot;,
+      &quot;body&quot;: &quot;System alert (qa)&quot;,
+      &quot;payload&quot;: &quot;alarm:system:qa&quot;,
+      &quot;critical&quot;: false,
+      &quot;alarmType&quot;: &quot;system&quot;,
+      &quot;reason&quot;: &quot;qa&quot;,
+      &quot;sound&quot;: true,
+      &quot;vibrate&quot;: true,
+      &quot;overrideDnd&quot;: false,
+      &quot;time&quot;: &quot;2026-02-27T06:12:52.542941Z&quot;
+    }
+  },
+  &quot;serverCheck&quot;: {
+    &quot;ok&quot;: true,
+    &quot;checkedAt&quot;: &quot;2026-03-12T04:33:58.529Z&quot;,
+    &quot;checks&quot;: {
+      &quot;health&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;service&quot;: &quot;ble-emu&quot;,
+          &quot;port&quot;: 8788
+        }
+      },
+      &quot;sensors&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 1
+        }
+      },
+      &quot;alarms&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;count&quot;: 5
+        }
+      },
+      &quot;logTx&quot;: {
+        &quot;ok&quot;: true,
+        &quot;result&quot;: {
+          &quot;ok&quot;: true,
+          &quot;uploaded&quot;: true,
+          &quot;at&quot;: &quot;2026-03-12T04:33:58.967011Z&quot;
+        }
+      }
+    }
+  },
+  &quot;screenshotNav&quot;: {
+    &quot;ok&quot;: true,
+    &quot;route&quot;: &quot;/sc/07/01&quot;
+  }
+}</pre></details></td>
+        </tr>
+      
+    </tbody>
+  </table>
+</body>
+</html>

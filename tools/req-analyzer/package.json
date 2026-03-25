@@ -1,0 +1,24 @@
+{
+  "name": "req-analyzer",
+  "version": "1.0.0",
+  "description": "Analyze Excel/PPTX requirement docs into AI-friendly artifacts",
+  "main": "src/cli.js",
+  "bin": {
+    "req-analyze": "src/cli.js"
+  },
+  "scripts": {
+    "analyze": "node src/cli.js",
+    "analyze:req1": "node src/cli.js ../../req/req1",
+    "extract:260213": "node src/extract-kcol-review.js ../../docs/req/디앤에스CGMS_앱_기능구성도_동작_확인_26_02_13.xlsx --header \"26.02.13 엠펙스 검토 사항\" --out ../../req260213.md",
+    "qa:reverse:260306": "node src/qa-reverse-analyze.js --qa ../../req/req1/_qa/qa-results.json --req ../../docs/req260305/_analysis_260306/req-extracted.json --md ../../req260306.md --out ../../req260306-qa-ai.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "fast-xml-parser": "^5.3.4",
+    "jszip": "^3.10.1",
+    "openai": "^6.17.0"
+  }
+}

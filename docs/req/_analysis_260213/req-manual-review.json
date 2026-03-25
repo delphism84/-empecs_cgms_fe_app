@@ -1,0 +1,16 @@
+[
+  {
+    "file": "C:\\rc\\_cube\\empecs\\empecs_cgms\\docs\\req\\디앤에스CGMS_앱_기능구성도_동작_확인_26_02_13.xlsx",
+    "type": "xlsx-sheet",
+    "name": "전체 블록도(요약)",
+    "reason": "텍스트가 매우 적음(0자), 그림 요소 1개(드로잉), 파일 내 미디어 17개(xl/media)",
+    "stats": {
+      "textChars": 0,
+      "hasDrawing": true,
+      "drawingPicCount": 1,
+      "mediaCount": 17,
+      "sheetPath": "xl/worksheets/sheet2.xml",
+      "drawingImages": 1
+    }
+  }
+]

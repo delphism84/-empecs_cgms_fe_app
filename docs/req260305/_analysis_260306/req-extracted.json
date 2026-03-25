@@ -1,0 +1,2827 @@
+{
+  "generatedAt": "2026-03-10T01:12:08.578Z",
+  "input": "C:\\rc\\_cube\\empecs\\empecs_cgms\\docs\\req260305\\CGM App동작 확인_260306.pptx",
+  "files": [
+    {
+      "file": "C:\\rc\\_cube\\empecs\\empecs_cgms\\docs\\req260305\\CGM App동작 확인_260306.pptx",
+      "kind": "pptx",
+      "summary": {
+        "slideCount": 12,
+        "mediaCount": 26
+      },
+      "slides": [
+        {
+          "index": 1,
+          "title": "Slide 1",
+          "slidePath": "ppt/slides/slide1.xml",
+          "stats": {
+            "textChars": 90,
+            "picCount": 5,
+            "mediaCount": 26
+          },
+          "text": "Sensor  Scan & Connect  [Start Scan]  Warm-Up 화면 표시  Warm-Up 완료 후 [Continue] 버튼 생성  버튼 터치 후 메인 화면 이동 1 2 1. 동작 확인 사항",
+          "images": [
+            {
+              "path": "ppt/media/image1.png",
+              "cached": false,
+              "hash": "cdfea05d298bd02619bb9c19f5f0dc42d25f76954c3023e3c978ed03cb60a7d9",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정) 앱의 'Sensor' 화면(SC_02_01)을 보여줍니다. 화면 상단에는 센서의 사용 기간 정보가 표시되며, 남은 기간과 유효 기간, 시작 날짜 및 시간이 명시되어 있습니다. 'New' 섹션 아래에는 센서의 상태, 스캔 및 연결, 일련 번호, 시작 시간, 데이터 공유, 센서 제거 방법 등 센서와 관련된 다양한 기능 및 정보 항목들이 나열되어 있습니다. 각 항목은 상세 정보를 확인하거나 관련 기능을 실행할 수 있도록 화살표 아이콘과 함께 구성되어 있습니다. 화면 하단에는 'Home', 'Trend', 'Report', 'Sensor', 'Alarm', 'Settings' 탭으로 구성된 내비게이션 바가 있습니다.",
+                "extractedText": "LOCAL\nSensor (SC_02_01)\nUsage period\nRemaining: 11d 0h (valid 14d)\nStart: 2026/03/02 11:08\nNew\nStatus\nBattery, signal, warm-up\nScan & Connect\nBLE scan/connect · battery/usage\nSerial Number\nCurrent sensor SN\nStart Time\nYYYY/MM/DD HH:mm\nShare Data\nShare with caregiver\nHow to remove\nSensor removal guide\nHome\nTrend\nReport\nSensor\nAlarm\nSettings",
+                "uiElements": [
+                  {
+                    "type": "화면 제목",
+                    "label": "Sensor",
+                    "value": null,
+                    "notes": "화면의 주요 기능 또는 페이지 이름"
+                  },
+                  {
+                    "type": "화면 ID",
+                    "label": "SC_02_01",
+                    "value": null,
+                    "notes": "화면의 고유 식별자"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Usage period",
+                    "value": null,
+                    "notes": "센서 사용 기간을 나타내는 섹션 제목"
+                  },
+                  {
+                    "type": "진행 바",
+                    "label": "Remaining: 11d 0h (valid 14d)",
+                    "value": "11d 0h",
+                    "notes": "센서의 남은 사용 기간 및 총 유효 기간"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Start: 2026/03/02 11:08",
+                    "value": "2026/03/02 11:08",
+                    "notes": "센서 사용 시작 날짜 및 시간"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "New",
+                    "value": null,
+                    "notes": "새로운 기능 또는 정보 섹션"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Status",
+                    "value": "Battery, signal, warm-up",
+                    "notes": "센서의 배터리, 신호, 워밍업 상태를 확인하는 항목"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Scan & Connect",
+                    "value": "BLE scan/connect · battery/usage",
+                    "notes": "블루투스 저에너지(BLE) 스캔 및 연결, 배터리/사용량 확인 항목"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Serial Number",
+                    "value": "Current sensor SN",
+                    "notes": "현재 센서의 일련 번호를 확인하는 항목"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Start Time",
+                    "value": "YYYY/MM/DD HH:mm",
+                    "notes": "센서 시작 시간을 설정하거나 확인하는 항목"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Share Data",
+                    "value": "Share with caregiver",
+                    "notes": "보호자와 데이터를 공유하는 항목"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "How to remove",
+                    "value": "Sensor removal guide",
+                    "notes": "센서 제거 방법을 안내하는 항목"
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Home",
+                    "value": null,
+                    "notes": "홈 화면으로 이동"
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Trend",
+                    "value": null,
+                    "notes": "추세 화면으로 이동"
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Report",
+                    "value": null,
+                    "notes": "보고서 화면으로 이동"
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Sensor",
+                    "value": null,
+                    "notes": "현재 화면, 센서 화면으로 이동"
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Alarm",
+                    "value": null,
+                    "notes": "알람 화면으로 이동"
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Settings",
+                    "value": null,
+                    "notes": "설정 화면으로 이동"
+                  }
+                ],
+                "flows": [
+                  "사용자 액션: 'Status' 항목 탭 -> 시스템 반응: 센서 상태 상세 화면으로 이동",
+                  "사용자 액션: 'Scan & Connect' 항목 탭 -> 시스템 반응: BLE 스캔 및 연결 화면으로 이동",
+                  "사용자 액션: 'Serial Number' 항목 탭 -> 시스템 반응: 센서 일련 번호 상세 화면으로 이동",
+                  "사용자 액션: 'Start Time' 항목 탭 -> 시스템 반응: 센서 시작 시간 설정/확인 화면으로 이동",
+                  "사용자 액션: 'Share Data' 항목 탭 -> 시스템 반응: 데이터 공유 설정 화면으로 이동",
+                  "사용자 액션: 'How to remove' 항목 탭 -> 시스템 반응: 센서 제거 가이드 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바에서 'Home' 탭 탭 -> 시스템 반응: 홈 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바에서 'Trend' 탭 탭 -> 시스템 반응: 추세 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바에서 'Report' 탭 탭 -> 시스템 반응: 보고서 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바에서 'Alarm' 탭 탭 -> 시스템 반응: 알람 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바에서 'Settings' 탭 탭 -> 시스템 반응: 설정 화면으로 이동"
+                ],
+                "possibleScreenIds": [
+                  "SC_02_01"
+                ],
+                "uncertainties": [
+                  "상단 좌측의 'LOCAL' 텍스트의 정확한 의미와 기능",
+                  "상단 우측의 아이콘들(Wi-Fi, 배터리 등)의 정확한 상태 및 기능",
+                  "각 목록 항목을 탭했을 때 이동하는 화면의 정확한 ID 및 상세 내용"
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image2.png",
+              "cached": false,
+              "hash": "bf58819f4950b84f9c5422f437b32a6c3d9a364bc3d31bad928e410d658d54b5",
+              "ai": {
+                "summary": "이 이미지는 'SC_01_01 - Scan & Connect' 화면을 보여주는 모바일 애플리케이션의 스크린샷입니다. 사용자는 이 화면에서 블루투스 스캐너를 통해 주변의 CGM(연속 혈당 측정기) 장치를 검색하고 연결할 수 있습니다. 화면 상단에는 현재 시간이 '11:09'로 표시되어 있으며, 'LOCAL'이라는 라벨과 화면 ID 'SC_01_01'이 명시되어 있습니다. 'Scanner' 섹션 아래에는 'Ready' 상태와 함께 'Start scan' 버튼이 있어 스캔을 시작할 수 있습니다. 스캔 결과로 'EmpecsCGM_DDXX'와 'Empecs Demo CGMS'와 같은 장치 목록이 RSSI 값과 MAC 주소와 함께 표시되며, 각 장치 옆에는 'Connect' 버튼이 있습니다. 또한, 화면 하단에는 'QR & Connect (UM_01_01)' 버튼이 있어 QR 코드를 통해 연결하는 기능도 제공합니다.",
+                "extractedText": "11:09\nLOCAL\nSC_01_01 · Scan & Connect\nScanner\nReady\nStart scan\nEmpecsCGM_DDXX\nRSSI -87 dBm · E4:06:BF:FC:0D:8B\nConnect\nEmpecs Demo CGMS\nRSSI -94 dBm · E4:06:BF:FC:51:42\nConnect\nEmpecs Demo CGMS\nRSSI -89 dBm · E4:06:BF:FC:52:34\nConnect\nQR & Connect (UM_01_01)",
+                "uiElements": [
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "11:09",
+                    "value": null,
+                    "notes": "현재 시간"
+                  },
+                  {
+                    "type": "라벨",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "현재 환경 또는 상태를 나타내는 라벨"
+                  },
+                  {
+                    "type": "화면 제목",
+                    "label": "SC_01_01 · Scan & Connect",
+                    "value": null,
+                    "notes": "화면 ID와 제목"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Scanner",
+                    "value": null,
+                    "notes": "스캐너 관련 기능 섹션"
+                  },
+                  {
+                    "type": "상태 표시",
+                    "label": "Ready",
+                    "value": null,
+                    "notes": "스캐너의 현재 상태"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Start scan",
+                    "value": null,
+                    "notes": "스캔 시작 버튼"
+                  },
+                  {
+                    "type": "장치 목록 항목",
+                    "label": "EmpecsCGM_DDXX",
+                    "value": "RSSI -87 dBm · E4:06:BF:FC:0D:8B",
+                    "notes": "발견된 CGM 장치 이름, RSSI, MAC 주소"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Connect",
+                    "value": null,
+                    "notes": "EmpecsCGM_DDXX 장치 연결 버튼"
+                  },
+                  {
+                    "type": "장치 목록 항목",
+                    "label": "Empecs Demo CGMS",
+                    "value": "RSSI -94 dBm · E4:06:BF:FC:51:42",
+                    "notes": "발견된 CGM 장치 이름, RSSI, MAC 주소"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Connect",
+                    "value": null,
+                    "notes": "첫 번째 Empecs Demo CGMS 장치 연결 버튼"
+                  },
+                  {
+                    "type": "장치 목록 항목",
+                    "label": "Empecs Demo CGMS",
+                    "value": "RSSI -89 dBm · E4:06:BF:FC:52:34",
+                    "notes": "발견된 CGM 장치 이름, RSSI, MAC 주소"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Connect",
+                    "value": null,
+                    "notes": "두 번째 Empecs Demo CGMS 장치 연결 버튼"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "QR & Connect (UM_01_01)",
+                    "value": null,
+                    "notes": "QR 코드를 통한 연결 버튼"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "블루투스 아이콘",
+                    "value": null,
+                    "notes": "스캐너 섹션 옆에 위치한 블루투스 아이콘"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "와이파이/네트워크 아이콘",
+                    "value": null,
+                    "notes": "상단 상태 바에 위치"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "배터리 아이콘",
+                    "value": null,
+                    "notes": "상단 상태 바에 위치"
+                  }
+                ],
+                "flows": [
+                  "사용자 액션: 'Start scan' 버튼 탭 -> 시스템 반응: 주변 CGM 장치 검색 시작 -> 다음 상태: 검색된 장치 목록 표시",
+                  "사용자 액션: 장치 목록에서 특정 장치 옆의 'Connect' 버튼 탭 -> 시스템 반응: 해당 장치에 연결 시도 -> 다음 상태: 연결 성공/실패 메시지 또는 연결된 상태 표시",
+                  "사용자 액션: 'QR & Connect (UM_01_01)' 버튼 탭 -> 시스템 반응: QR 코드 스캔 화면으로 전환 -> 다음 상태: QR 코드 스캔 대기 또는 스캔 결과에 따른 연결 시도"
+                ],
+                "possibleScreenIds": [
+                  "SC_01_01",
+                  "UM_01_01"
+                ],
+                "uncertainties": [
+                  "상단 상태 바의 아이콘 중 일부(예: 화살표, 점)의 정확한 의미를 알 수 없음",
+                  "각 장치 목록 항목의 'Connect' 버튼을 탭했을 때의 정확한 연결 과정 및 성공/실패 시나리오에 대한 정보 부족",
+                  "QR & Connect (UM_01_01) 버튼을 눌렀을 때의 'UM_01_01' 화면의 구체적인 내용"
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image3.png",
+              "cached": false,
+              "hash": "a83a5a9d515104c946519395501a03c98a3aae549b8ca120291e72a658893f27",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정기) 앱의 'Warm-Up' 화면을 보여줍니다. 센서 초기 연결 워밍업 과정을 나타내며, 현재 'Warming up...' 상태임을 표시합니다. 화면 중앙에는 29분 58초의 카운트다운 타이머가 크게 표시되어 있습니다. 워밍업 시작 시간과 종료 시간이 'Started at:'과 'Ends at:' 필드에 각각 '2026-03-05T02:09:24.850029Z'와 '2026-03-05T02:39:24.850029Z'로 상세하게 기록되어 있습니다. 상단에는 'LOCAL' 태그와 화면 ID 'SC_01_06'이 표시되어 있으며, 이는 개발 또는 테스트 환경임을 시사합니다. 이 화면은 사용자가 센서 연결 후 데이터를 받기 전까지 기다려야 하는 필수적인 초기화 단계를 시각적으로 안내하는 역할을 합니다.",
+                "extractedText": "11:09\nLOCAL\nSC_01_06 · Warm-Up\nInitial sensor connection warm-up\nWarming up...\n29:58\nStarted at: 2026-03-05T02:09:24.850029Z\nEnds at: 2026-03-05T02:39:24.850029Z",
+                "uiElements": [
+                  {
+                    "type": "상태 표시기",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "앱의 현재 환경이 로컬임을 나타냄"
+                  },
+                  {
+                    "type": "화면 제목",
+                    "label": "SC_01_06 · Warm-Up",
+                    "value": null,
+                    "notes": "화면 ID와 제목"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Initial sensor connection warm-up",
+                    "value": null,
+                    "notes": "초기 센서 연결 워밍업 섹션 제목"
+                  },
+                  {
+                    "type": "상태 메시지",
+                    "label": "Warming up...",
+                    "value": null,
+                    "notes": "현재 워밍업 진행 중임을 나타내는 메시지"
+                  },
+                  {
+                    "type": "카운트다운 타이머",
+                    "label": "29:58",
+                    "value": "29분 58초",
+                    "notes": "남은 워밍업 시간을 표시"
+                  },
+                  {
+                    "type": "텍스트 필드",
+                    "label": "Started at:",
+                    "value": "2026-03-05T02:09:24.850029Z",
+                    "notes": "워밍업 시작 시간"
+                  },
+                  {
+                    "type": "텍스트 필드",
+                    "label": "Ends at:",
+                    "value": "2026-03-05T02:39:24.850029Z",
+                    "notes": "워밍업 종료 예정 시간"
+                  }
+                ],
+                "flows": [
+                  "앱 실행 -> 센서 연결 시도 -> Initial sensor connection warm-up 화면 진입 -> 'Warming up...' 메시지 및 카운트다운 타이머 표시 -> 타이머가 00:00이 되면 워밍업 완료 및 다음 화면으로 전환(추정)"
+                ],
+                "possibleScreenIds": [
+                  "SC_01_06"
+                ],
+                "uncertainties": []
+              }
+            }
+          ],
+          "sample": "Sensor  Scan & Connect  [Start Scan]  Warm-Up 화면 표시  Warm-Up 완료 후 [Continue] 버튼 생성  버튼 터치 후 메인 화면 이동 1 2 1. 동작 확인 사항"
+        },
+        {
+          "index": 2,
+          "title": "Slide 2",
+          "slidePath": "ppt/slides/slide2.xml",
+          "stats": {
+            "textChars": 60,
+            "picCount": 1,
+            "mediaCount": 26
+          },
+          "text": "Warm-Up 중 알람 발생 Warm-Up 중에는 데이터만 수집하고 알람이 발생하지 않음  알람 발생이 되면 안됨 1. 동작 확인 중 문제 사항",
+          "images": [
+            {
+              "path": "ppt/media/image6.png",
+              "cached": false,
+              "hash": "4ec00bd5ed00b5bc5b2e61a22f1799a908808566bc0956ff0d0c5386969fc868",
+              "ai": {
+                "summary": "이 이미지는 EMPECS CGMS 앱의 초기 센서 연결 워밍업 화면을 보여줍니다. 화면 상단에는 'Very low glucose' 경고와 함께 현재 혈당 수치(Glucose 29.8 <= 55.0)가 표시되어 있습니다. 중앙에는 'Warming up...' 메시지와 함께 02:45의 카운트다운 타이머가 크게 표시되어 진행 상황을 나타냅니다. 워밍업 시작 및 종료 시간 정보도 함께 제공됩니다. 이 화면은 사용자가 앱을 처음 사용하거나 센서를 새로 연결했을 때 센서가 데이터를 정확하게 측정하기 위해 준비하는 과정을 시각적으로 보여주는 것으로 추정됩니다. 하단에는 안드로이드 내비게이션 바가 있습니다.",
+                "extractedText": [
+                  "EMPECS CGMS",
+                  "Very low glucose",
+                  "Glucose 29.8 <= 55.0",
+                  "Initial sensor connection warm-up",
+                  "Warming up...",
+                  "02:45",
+                  "Started at: 2026-03-05T04:39:59.585101Z",
+                  "Ends at: 2026-03-05T09:39:59.585101Z"
+                ],
+                "uiElements": [
+                  {
+                    "type": "앱 이름",
+                    "label": "EMPECS CGMS",
+                    "value": null,
+                    "notes": "앱의 상단 바에 표시된 이름"
+                  },
+                  {
+                    "type": "경고 메시지",
+                    "label": "Very low glucose",
+                    "value": null,
+                    "notes": "혈당 수치에 대한 경고"
+                  },
+                  {
+                    "type": "혈당 수치 표시",
+                    "label": "Glucose 29.8 <= 55.0",
+                    "value": "29.8",
+                    "notes": "현재 혈당 수치와 기준치(추정)"
+                  },
+                  {
+                    "type": "상태 메시지",
+                    "label": "Initial sensor connection warm-up",
+                    "value": null,
+                    "notes": "초기 센서 연결 워밍업 진행 중임을 알림"
+                  },
+                  {
+                    "type": "진행 상태 메시지",
+                    "label": "Warming up...",
+                    "value": null,
+                    "notes": "워밍업 진행 중임을 나타내는 텍스트"
+                  },
+                  {
+                    "type": "진행 바",
+                    "label": null,
+                    "value": null,
+                    "notes": "워밍업 진행률을 시각적으로 보여주는 바 (일부만 채워져 있음)"
+                  },
+                  {
+                    "type": "카운트다운 타이머",
+                    "label": "02:45",
+                    "value": "02:45",
+                    "notes": "남은 워밍업 시간을 분:초 형식으로 표시"
+                  },
+                  {
+                    "type": "시작 시간",
+                    "label": "Started at:",
+                    "value": "2026-03-05T04:39:59.585101Z",
+                    "notes": "워밍업 시작 시간"
+                  },
+                  {
+                    "type": "종료 시간",
+                    "label": "Ends at:",
+                    "value": "2026-03-05T09:39:59.585101Z",
+                    "notes": "워밍업 종료 예정 시간"
+                  },
+                  {
+                    "type": "내비게이션 바",
+                    "label": null,
+                    "value": null,
+                    "notes": "안드로이드 시스템 내비게이션 바 (최근 앱, 홈, 뒤로 가기 버튼)"
+                  }
+                ],
+                "flows": [
+                  "앱 실행 -> 초기 센서 연결 워밍업 화면 표시 -> 'Warming up...' 메시지 및 카운트다운 타이머 시작 -> 타이머가 00:00이 될 때까지 대기 -> 워밍업 완료 후 다음 화면으로 전환 (추정)",
+                  "앱 실행 -> 'Very low glucose' 경고 표시 -> 사용자가 경고를 인지하고 조치 (추정)"
+                ],
+                "possibleScreenIds": [],
+                "uncertainties": [
+                  "화면 상단의 'Very low glucose' 경고가 워밍업 진행 중에도 계속 표시되는 것인지, 아니면 워밍업과 별개로 현재 혈당 상태를 나타내는 것인지 불분명합니다.",
+                  "워밍업 진행 바의 정확한 진행률을 알 수 없습니다.",
+                  "워밍업 완료 후 어떤 화면으로 전환되는지 알 수 없습니다.",
+                  "하단 내비게이션 바의 아이콘들이 명확하게 보이지 않습니다."
+                ]
+              }
+            }
+          ],
+          "sample": "Warm-Up 중 알람 발생 Warm-Up 중에는 데이터만 수집하고 알람이 발생하지 않음  알람 발생이 되면 안됨 1. 동작 확인 중 문제 사항"
+        },
+        {
+          "index": 3,
+          "title": "Slide 3",
+          "slidePath": "ppt/slides/slide3.xml",
+          "stats": {
+            "textChars": 104,
+            "picCount": 2,
+            "mediaCount": 26
+          },
+          "text": "SC_03_01 의 Scan&Connect 와 SC_01_01 Scan&Connect 의 스캔 차이 EmpecsCGM_DDXX 가 SC_01_01 에서는 잡히지만 SC_03_01 에서는 잡히지 않음 2. 동작 확인 중 문제 사항",
+          "images": [
+            {
+              "path": "ppt/media/image7.png",
+              "cached": false,
+              "hash": "df01105175251eaa7788f693722e8c7860a4c7c31611964a11c4d4839c64233d",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정기) 앱의 연결 상태 화면을 보여줍니다. 화면은 크게 'Basic', 'Scan & Connect', 'Reconnect' 세 섹션으로 구성되어 있습니다. 'Basic' 섹션에서는 연결 활성화 여부, 기기 이름(CGMS), 배터리 잔량(78%), 신호 강도(-62 dBm), 패킷 수(0)와 같은 기본 정보를 표시합니다. 'Scan & Connect' 섹션에서는 주변 CGM 기기를 스캔하고 연결할 수 있으며, 현재 'Ready' 상태로 'EMEPC-CGM-01'과 'EMEPC-CGM-02' 두 기기가 감지되어 각각 'Connect' 버튼을 통해 연결할 수 있습니다. 'Reconnect' 섹션에서는 자동 재연결 기능을 설정하고 재시도 간격(3분)을 조절할 수 있습니다.",
+                "extractedText": [
+                  "10:12",
+                  "LOCAL",
+                  "SC_03_01 - Connection Status",
+                  "Basic",
+                  "Enable connection",
+                  "Device name",
+                  "CGMS",
+                  "Battery (%)",
+                  "78%",
+                  "Signal strength (dBm)",
+                  "-62",
+                  "Packets",
+                  "0",
+                  "Scan & Connect",
+                  "Start scan",
+                  "Ready",
+                  "EMEPC-CGM-01",
+                  "RSSI -58 dBm",
+                  "AA:BB:CC:11:22:33",
+                  "Connect",
+                  "EMEPC-CGM-02",
+                  "RSSI -72 dBm",
+                  "DD:EE:FF:44:55:66",
+                  "Connect",
+                  "Reconnect",
+                  "Auto reconnect",
+                  "Retry interval (min)",
+                  "3"
+                ],
+                "uiElements": [
+                  {
+                    "type": "화면 제목",
+                    "label": "SC_03_01 - Connection Status",
+                    "value": null,
+                    "notes": "연결 상태 화면의 ID 및 제목"
+                  },
+                  {
+                    "type": "정보 아이콘",
+                    "label": "정보",
+                    "value": null,
+                    "notes": "Basic 섹션에 대한 추가 정보 제공 가능성"
+                  },
+                  {
+                    "type": "토글 버튼",
+                    "label": "Enable connection",
+                    "value": "Off (추정)",
+                    "notes": "연결 활성화 여부 제어"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Device name",
+                    "value": "CGMS",
+                    "notes": "연결된 기기 이름"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Battery (%)",
+                    "value": "78%",
+                    "notes": "연결된 기기의 배터리 잔량"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Signal strength (dBm)",
+                    "value": "-62",
+                    "notes": "연결된 기기의 신호 강도"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Packets",
+                    "value": "0",
+                    "notes": "전송된 패킷 수"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Start scan",
+                    "value": null,
+                    "notes": "주변 기기 스캔 시작"
+                  },
+                  {
+                    "type": "상태 텍스트",
+                    "label": "Ready",
+                    "value": null,
+                    "notes": "스캔 준비 상태"
+                  },
+                  {
+                    "type": "기기 목록 항목",
+                    "label": "EMEPC-CGM-01",
+                    "value": "RSSI -58 dBm, AA:BB:CC:11:22:33",
+                    "notes": "감지된 CGM 기기 1"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Connect",
+                    "value": null,
+                    "notes": "EMEPC-CGM-01에 연결"
+                  },
+                  {
+                    "type": "기기 목록 항목",
+                    "label": "EMEPC-CGM-02",
+                    "value": "RSSI -72 dBm, DD:EE:FF:44:55:66",
+                    "notes": "감지된 CGM 기기 2"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Connect",
+                    "value": null,
+                    "notes": "EMEPC-CGM-02에 연결"
+                  },
+                  {
+                    "type": "토글 버튼",
+                    "label": "Auto reconnect",
+                    "value": "On",
+                    "notes": "자동 재연결 기능 활성화 여부 제어"
+                  },
+                  {
+                    "type": "드롭다운/입력 필드",
+                    "label": "Retry interval (min)",
+                    "value": "3",
+                    "notes": "재연결 시도 간격 설정"
+                  }
+                ],
+                "flows": [
+                  "사용자: 'Enable connection' 토글을 켜거나 끔 -> 시스템: CGM 기기와의 연결을 활성화/비활성화함",
+                  "사용자: 'Start scan' 버튼 탭 -> 시스템: 주변 CGM 기기를 검색하고 'Scan & Connect' 섹션에 목록을 업데이트함",
+                  "사용자: 'EMEPC-CGM-01' 또는 'EMEPC-CGM-02' 옆의 'Connect' 버튼 탭 -> 시스템: 해당 CGM 기기에 연결을 시도함",
+                  "사용자: 'Auto reconnect' 토글을 켜거나 끔 -> 시스템: 연결이 끊어졌을 때 자동으로 재연결을 시도할지 여부를 설정함",
+                  "사용자: 'Retry interval (min)' 값을 변경 -> 시스템: 자동 재연결 시도 간격을 업데이트함"
+                ],
+                "possibleScreenIds": [
+                  "SC_03_01"
+                ],
+                "uncertainties": [
+                  "상단 바의 아이콘(와이파이, 배터리 등)의 정확한 상태 및 의미",
+                  "'Enable connection' 토글의 현재 상태 (이미지상으로는 꺼져 있는 것으로 보이나 명확하지 않음)",
+                  "'Basic' 섹션의 정보 아이콘 탭 시 동작",
+                  "하단 내비게이션 바의 아이콘 기능"
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image8.png",
+              "cached": false,
+              "hash": "6df37096402b6a66db37a19a107205ccb4470e85723a5200479c7f78a281ea71",
+              "ai": {
+                "summary": "이 이미지는 'SC_01_01 - Scan & Connect' 화면을 보여주는 모바일 애플리케이션의 스크린샷입니다. 이 화면은 블루투스 스캐너를 사용하여 CGM(연속 혈당 측정기) 장치를 검색하고 연결하는 기능을 제공합니다. 사용자는 'Start scan' 버튼을 눌러 스캔을 시작할 수 있으며, 스캔 결과로 발견된 장치 목록에서 특정 장치('EmpecsCGM_DDXX')를 선택하여 'Connect' 버튼으로 연결할 수 있습니다. 또한, QR 코드 스캔을 통해 장치를 연결하는 옵션도 제공됩니다. 현재 스캐너 상태는 'Ready'로 표시되며, 장치 정보에는 RSSI 값과 MAC 주소가 포함되어 있습니다. 상단에는 'LOCAL' 모드와 'Loading...' 상태가 표시되어 있습니다.",
+                "extractedText": [
+                  "10:12",
+                  "LOCAL",
+                  "SC_01_01 · Scan & Connect",
+                  "Loading...",
+                  "Scanner",
+                  "Ready",
+                  "Start scan",
+                  "EmpecsCGM_DDXX",
+                  "RSSI -91 dBm · E4:06:BF:FC:0D:8B",
+                  "Connect",
+                  "QR & Connect (UM_01_01)"
+                ],
+                "uiElements": [
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "10:12",
+                    "value": null,
+                    "notes": "현재 시간"
+                  },
+                  {
+                    "type": "상태 표시",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "애플리케이션의 현재 모드"
+                  },
+                  {
+                    "type": "화면 제목",
+                    "label": "SC_01_01 · Scan & Connect",
+                    "value": null,
+                    "notes": "현재 화면의 ID 및 제목"
+                  },
+                  {
+                    "type": "상태 표시",
+                    "label": "Loading...",
+                    "value": null,
+                    "notes": "상단 우측에 표시되는 로딩 상태"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Scanner",
+                    "value": null,
+                    "notes": "스캐너 관련 정보 섹션"
+                  },
+                  {
+                    "type": "상태 표시",
+                    "label": "Ready",
+                    "value": null,
+                    "notes": "스캐너의 현재 상태"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "블루투스 아이콘",
+                    "value": null,
+                    "notes": "블루투스 활성화 상태를 나타내는 아이콘"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Start scan",
+                    "value": null,
+                    "notes": "스캔 시작 버튼"
+                  },
+                  {
+                    "type": "장치 이름",
+                    "label": "EmpecsCGM_DDXX",
+                    "value": null,
+                    "notes": "검색된 CGM 장치의 이름"
+                  },
+                  {
+                    "type": "장치 정보",
+                    "label": "RSSI -91 dBm",
+                    "value": null,
+                    "notes": "장치의 신호 강도"
+                  },
+                  {
+                    "type": "장치 정보",
+                    "label": "E4:06:BF:FC:0D:8B",
+                    "value": null,
+                    "notes": "장치의 MAC 주소"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "연결 아이콘",
+                    "value": null,
+                    "notes": "장치 연결 상태를 나타내는 아이콘 (추정)"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Connect",
+                    "value": null,
+                    "notes": "선택된 장치에 연결하는 버튼"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "QR & Connect (UM_01_01)",
+                    "value": null,
+                    "notes": "QR 코드를 사용하여 연결하는 버튼, 관련 화면 ID 포함"
+                  }
+                ],
+                "flows": [
+                  "사용자: 'Start scan' 버튼 탭 -> 시스템: 블루투스 장치 스캔 시작 -> 시스템: 검색된 장치 목록 업데이트 (예: 'EmpecsCGM_DDXX' 표시)",
+                  "사용자: 'EmpecsCGM_DDXX' 장치 선택 (추정) -> 사용자: 'Connect' 버튼 탭 -> 시스템: 선택된 장치에 연결 시도 -> 시스템: 연결 상태 표시 (예: 'Loading...' 또는 'Connected')",
+                  "사용자: 'QR & Connect (UM_01_01)' 버튼 탭 -> 시스템: QR 코드 스캔 화면으로 전환 (UM_01_01 화면으로 이동)"
+                ],
+                "possibleScreenIds": [
+                  "SC_01_01",
+                  "UM_01_01"
+                ],
+                "uncertainties": [
+                  "상단 바의 배터리 및 네트워크 아이콘의 정확한 상태",
+                  "장치 목록에서 'EmpecsCGM_DDXX'가 선택된 상태인지 여부 (버튼 활성화로 추정)",
+                  "'Loading...' 상태가 어떤 동작에 대한 것인지 불분명함 (초기 로딩, 스캔 중, 연결 중 등)"
+                ]
+              }
+            }
+          ],
+          "sample": "SC_03_01 의 Scan&Connect 와 SC_01_01 Scan&Connect 의 스캔 차이 EmpecsCGM_DDXX 가 SC_01_01 에서는 잡히지만 SC_03_01 에서는 잡히지 않음 2. 동작 확인 중 문제 사항"
+        },
+        {
+          "index": 4,
+          "title": "Slide 4",
+          "slidePath": "ppt/slides/slide4.xml",
+          "stats": {
+            "textChars": 56,
+            "picCount": 2,
+            "mediaCount": 26
+          },
+          "text": "SC_03_01 상의 Usage 와 SC_02_01 Usage period 의 부분이 서로 맞지 않음 3. 동작 확인 중 문제 사항",
+          "images": [
+            {
+              "path": "ppt/media/image9.png",
+              "cached": false,
+              "hash": "16cfc71b805b40f01cb8a6d19403c1d2d629eeb707de1b411d177224b55ad398",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정기) 앱의 연결 상태 화면을 보여줍니다. 화면은 크게 Basic, Scan & Connect, Usage, Reconnect 섹션으로 구성되어 있습니다. Basic 섹션에서는 연결 활성화 토글과 함께 디바이스 이름(CGMS), 배터리 잔량(78%), 신호 강도(-60 dBm), 패킷 수(1) 등 연결된 기기의 기본 정보를 표시합니다. Scan & Connect 섹션에서는 기기 스캔 및 연결 기능을 제공하며, 현재 'Ready' 상태이고 'No devices found yet' 메시지가 표시됩니다. 'Start scan' 버튼을 통해 스캔을 시작할 수 있습니다. Usage 섹션은 연결된 기기(CGMS)의 사용 현황을 보여주며, '23% - Used 3d 4h / 14d'와 같은 사용 기간 정보를 포함합니다. 이 섹션에는 'Read status'와 'Disconnect' 버튼이 있습니다. Reconnect 섹션은 재연결 기능을 위한 것으로 보입니다. 전반적으로 이 화면은 CGM 기기의 연결 상태를 확인하고 관리하는 기능을 제공합니다.",
+                "extractedText": "10:13\nLOCAL\nSC_03_01 - Connection Status\nLoading...\nBasic\nEnable connection\nDevice name\nCGMS\nBattery (%)\n78%\nSignal strength (dBm)\n-60\nPackets\n1\nScan & Connect\nReady\nNo devices found yet\nStart scan\nUsage\nConnected device\nCGMS\n23% - Used 3d 4h / 14d\nRead status\nDisconnect\nReconnect",
+                "uiElements": [
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "10:13",
+                    "value": null,
+                    "notes": "현재 시간"
+                  },
+                  {
+                    "type": "상태 표시",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "로컬 연결 상태"
+                  },
+                  {
+                    "type": "화면 제목",
+                    "label": "SC_03_01 - Connection Status",
+                    "value": null,
+                    "notes": "현재 화면의 ID 및 제목"
+                  },
+                  {
+                    "type": "로딩 인디케이터",
+                    "label": "Loading...",
+                    "value": null,
+                    "notes": "데이터 로딩 중임을 나타냄"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Basic",
+                    "value": null,
+                    "notes": "기본 정보 섹션"
+                  },
+                  {
+                    "type": "정보 아이콘",
+                    "label": "정보 아이콘",
+                    "value": null,
+                    "notes": "Basic 섹션에 대한 추가 정보 제공 가능"
+                  },
+                  {
+                    "type": "토글 스위치 라벨",
+                    "label": "Enable connection",
+                    "value": null,
+                    "notes": "연결 활성화 기능"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "토글 스위치",
+                    "value": "On",
+                    "notes": "현재 연결 활성화 상태"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Device name",
+                    "value": "CGMS",
+                    "notes": "연결된 기기 이름"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Battery (%)",
+                    "value": "78%",
+                    "notes": "기기 배터리 잔량"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Signal strength (dBm)",
+                    "value": "-60",
+                    "notes": "기기 신호 강도"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Packets",
+                    "value": "1",
+                    "notes": "전송된 패킷 수"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Scan & Connect",
+                    "value": null,
+                    "notes": "스캔 및 연결 섹션"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "블루투스 아이콘",
+                    "value": null,
+                    "notes": "블루투스 관련 기능임을 암시"
+                  },
+                  {
+                    "type": "상태 메시지",
+                    "label": "Ready",
+                    "value": null,
+                    "notes": "스캔 준비 상태"
+                  },
+                  {
+                    "type": "정보 메시지",
+                    "label": "No devices found yet",
+                    "value": null,
+                    "notes": "아직 발견된 기기가 없음을 알림"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Start scan",
+                    "value": null,
+                    "notes": "기기 스캔 시작 버튼"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Usage",
+                    "value": null,
+                    "notes": "사용 현황 섹션"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "링크 아이콘",
+                    "value": null,
+                    "notes": "연결 상태를 나타내는 아이콘"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Connected device",
+                    "value": "CGMS",
+                    "notes": "현재 연결된 기기 이름"
+                  },
+                  {
+                    "type": "진행률 표시줄",
+                    "label": "사용 기간",
+                    "value": "23% - Used 3d 4h / 14d",
+                    "notes": "기기 사용률 및 사용 기간 정보"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Read status",
+                    "value": null,
+                    "notes": "상태 읽기 버튼"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Disconnect",
+                    "value": null,
+                    "notes": "기기 연결 해제 버튼"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Reconnect",
+                    "value": null,
+                    "notes": "재연결 섹션"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "블루투스 아이콘",
+                    "value": null,
+                    "notes": "재연결 기능이 블루투스 관련임을 암시"
+                  }
+                ],
+                "flows": [
+                  "사용자가 'Enable connection' 토글을 켜면 -> CGM 기기 연결이 활성화됨 -> Basic 섹션에 기기 정보가 업데이트됨",
+                  "사용자가 'Enable connection' 토글을 끄면 -> CGM 기기 연결이 비활성화됨 -> Basic 섹션의 기기 정보가 사라지거나 'Disconnected' 상태로 변경됨",
+                  "사용자가 'Start scan' 버튼을 누르면 -> 앱이 주변 CGM 기기를 스캔하기 시작함 -> 'No devices found yet' 메시지가 스캔 결과로 업데이트됨",
+                  "스캔 결과 기기가 발견되면 -> 'No devices found yet' 메시지가 발견된 기기 목록으로 대체됨 -> 사용자가 목록에서 기기를 선택하여 연결할 수 있음",
+                  "사용자가 'Read status' 버튼을 누르면 -> 연결된 기기의 최신 상태 정보를 읽어옴 -> Usage 섹션의 정보가 업데이트될 수 있음",
+                  "사용자가 'Disconnect' 버튼을 누르면 -> 현재 연결된 기기(CGMS)와의 연결이 해제됨 -> Usage 섹션의 'Connected device' 정보가 사라지거나 'Disconnected' 상태로 변경됨",
+                  "앱이 로딩 중일 때 -> 화면 상단에 'Loading...' 메시지가 표시됨 -> 로딩이 완료되면 메시지가 사라짐"
+                ],
+                "possibleScreenIds": [
+                  "SC_03_01"
+                ],
+                "uncertainties": [
+                  "Reconnect 섹션의 구체적인 기능 및 UI 요소가 가려져 있어 정확한 파악이 어렵습니다.",
+                  "화면 상단 알림바의 아이콘들이 작아 정확한 의미 파악이 어렵습니다."
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image10.png",
+              "cached": false,
+              "hash": "4b297cc5fbc77e603708509d06fc43e062d28978c847c41ea3fe127a88e3087a",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정기) 앱의 'Sensor' 화면을 보여줍니다. 화면 상단에는 현재 시간이 '10:16'으로 표시되어 있고, 'LOCAL'이라는 배지가 보입니다. 'Sensor (SC_02_01)'이라는 화면 제목 아래에는 센서 사용 기간 정보가 표시됩니다. 'Remaining: 13d 23h (valid 14d)'와 'Start: 2026/03/06 10:13'이 나타나며, 진행률 바가 있습니다. 'New' 섹션 아래에는 센서와 관련된 다양한 기능들이 목록 형태로 제공됩니다. 'Status', 'Scan & Connect', 'Serial Number', 'Start Time', 'Share Data', 'How to remove' 등의 항목이 있으며, 각 항목은 상세 정보나 설정 화면으로 이동할 수 있는 화살표 아이콘을 포함하고 있습니다. 하단에는 'Home', 'Trend', 'Report', 'Sensor', 'Alarm', 'Settings' 탭으로 구성된 내비게이션 바가 있습니다.",
+                "extractedText": "10:16\nLOCAL\nLoading...\nSensor (SC_02_01)\nUsage period\nRemaining: 13d 23h (valid 14d)\nStart: 2026/03/06 10:13\nNew\nStatus\nBattery, signal, warm-up\nScan & Connect\nBLE scan/connect · battery/usage\nSerial Number\nCurrent sensor SN\nStart Time\nYYYY/MM/DD HH:mm\nShare Data\nShare with caregiver\nHow to remove\nSensor removal guide\nHome\nTrend\nReport\nSensor\nAlarm\nSettings",
+                "uiElements": [
+                  {
+                    "type": "text",
+                    "label": "Current Time",
+                    "value": "10:16",
+                    "notes": "화면 상단 좌측 현재 시간"
+                  },
+                  {
+                    "type": "badge",
+                    "label": "LOCAL",
+                    "value": "LOCAL",
+                    "notes": "화면 상단 좌측 배지"
+                  },
+                  {
+                    "type": "status",
+                    "label": "Loading...",
+                    "value": "Loading...",
+                    "notes": "화면 상단 우측 로딩 상태 표시"
+                  },
+                  {
+                    "type": "screenTitle",
+                    "label": "Sensor",
+                    "value": "Sensor (SC_02_01)",
+                    "notes": "화면 제목 및 ID"
+                  },
+                  {
+                    "type": "sectionHeader",
+                    "label": "Usage period",
+                    "value": "Usage period",
+                    "notes": "센서 사용 기간 정보 섹션 헤더"
+                  },
+                  {
+                    "type": "text",
+                    "label": "Remaining",
+                    "value": "13d 23h (valid 14d)",
+                    "notes": "남은 사용 기간 및 유효 기간"
+                  },
+                  {
+                    "type": "text",
+                    "label": "Start",
+                    "value": "2026/03/06 10:13",
+                    "notes": "센서 시작 시간"
+                  },
+                  {
+                    "type": "progressBar",
+                    "label": "Usage period progress",
+                    "value": null,
+                    "notes": "센서 사용 기간 진행률 바"
+                  },
+                  {
+                    "type": "sectionHeader",
+                    "label": "New",
+                    "value": "New",
+                    "notes": "새로운 기능/설정 섹션 헤더"
+                  },
+                  {
+                    "type": "listItem",
+                    "label": "Status",
+                    "value": "Battery, signal, warm-up",
+                    "notes": "센서 상태 확인 (배터리, 신호, 워밍업)"
+                  },
+                  {
+                    "type": "listItem",
+                    "label": "Scan & Connect",
+                    "value": "BLE scan/connect · battery/usage",
+                    "notes": "BLE 스캔 및 연결 (배터리/사용량)"
+                  },
+                  {
+                    "type": "listItem",
+                    "label": "Serial Number",
+                    "value": "Current sensor SN",
+                    "notes": "현재 센서 일련번호"
+                  },
+                  {
+                    "type": "listItem",
+                    "label": "Start Time",
+                    "value": "YYYY/MM/DD HH:mm",
+                    "notes": "센서 시작 시간 설정/확인 (날짜/시간 형식)"
+                  },
+                  {
+                    "type": "listItem",
+                    "label": "Share Data",
+                    "value": "Share with caregiver",
+                    "notes": "보호자와 데이터 공유"
+                  },
+                  {
+                    "type": "listItem",
+                    "label": "How to remove",
+                    "value": "Sensor removal guide",
+                    "notes": "센서 제거 가이드"
+                  },
+                  {
+                    "type": "tab",
+                    "label": "Home",
+                    "value": "Home",
+                    "notes": "하단 내비게이션 바 홈 탭"
+                  },
+                  {
+                    "type": "tab",
+                    "label": "Trend",
+                    "value": "Trend",
+                    "notes": "하단 내비게이션 바 트렌드 탭"
+                  },
+                  {
+                    "type": "tab",
+                    "label": "Report",
+                    "value": "Report",
+                    "notes": "하단 내비게이션 바 리포트 탭"
+                  },
+                  {
+                    "type": "tab",
+                    "label": "Sensor",
+                    "value": "Sensor",
+                    "notes": "하단 내비게이션 바 센서 탭 (현재 활성화)"
+                  },
+                  {
+                    "type": "tab",
+                    "label": "Alarm",
+                    "value": "Alarm",
+                    "notes": "하단 내비게이션 바 알람 탭"
+                  },
+                  {
+                    "type": "tab",
+                    "label": "Settings",
+                    "value": "Settings",
+                    "notes": "하단 내비게이션 바 설정 탭"
+                  }
+                ],
+                "flows": [
+                  "사용자: 'Status' 항목을 탭 -> 시스템: 센서 상태 상세 화면으로 이동 (배터리, 신호, 워밍업 정보 표시)",
+                  "사용자: 'Scan & Connect' 항목을 탭 -> 시스템: BLE 스캔 및 연결 화면으로 이동 (배터리/사용량 정보 포함)",
+                  "사용자: 'Serial Number' 항목을 탭 -> 시스템: 현재 센서 일련번호 상세 화면으로 이동",
+                  "사용자: 'Start Time' 항목을 탭 -> 시스템: 센서 시작 시간 설정/확인 화면으로 이동",
+                  "사용자: 'Share Data' 항목을 탭 -> 시스템: 보호자와 데이터 공유 설정 화면으로 이동",
+                  "사용자: 'How to remove' 항목을 탭 -> 시스템: 센서 제거 가이드 화면으로 이동",
+                  "사용자: 하단 내비게이션 바의 다른 탭 (예: Home)을 탭 -> 시스템: 해당 탭에 해당하는 화면으로 이동"
+                ],
+                "possibleScreenIds": [
+                  "SC_02_01"
+                ],
+                "uncertainties": [
+                  "화면 상단 우측의 'Loading...' 상태가 언제 사라지는지, 어떤 동작을 나타내는지 불분명함",
+                  "센서 사용 기간 진행률 바의 정확한 진행률 값은 이미지에서 확인 불가",
+                  "각 리스트 항목을 탭했을 때 이동하는 화면의 구체적인 UI/UX는 이미지에 없음"
+                ]
+              }
+            }
+          ],
+          "sample": "SC_03_01 상의 Usage 와 SC_02_01 Usage period 의 부분이 서로 맞지 않음 3. 동작 확인 중 문제 사항"
+        },
+        {
+          "index": 5,
+          "title": "Slide 5",
+          "slidePath": "ppt/slides/slide5.xml",
+          "stats": {
+            "textChars": 88,
+            "picCount": 1,
+            "mediaCount": 26
+          },
+          "text": "2. 동작 확인 사항 Rapid Chang, Very Low Glucose. Low Glucose 알람 동작 확인 기본 설정 값 내에서 동작 , 현재 (26.03.05) 기준 알람 기준 값 변경 및 저장은 안됨",
+          "images": [
+            {
+              "path": "ppt/media/image11.png",
+              "cached": false,
+              "hash": "756a9e5e21d5a074b685ec0c8a076edc37994e69f09f7df2fbca5c40311a1cc6",
+              "ai": {
+                "summary": "이 이미지는 안드로이드 스마트폰의 알림 패널과 빠른 설정 패널을 보여줍니다. 상단에는 시간, 날짜, 네트워크 및 배터리 상태가 표시되어 있습니다. 빠른 설정 패널에는 Wi-Fi, 소리, Bluetooth, 위치, 비행기 모드, 설정 아이콘이 있으며, 미디어 및 디바이스 제어 옵션도 있습니다. 알림 영역에는 EMPECS CGMS 앱에서 보낸 혈당 관련 알림 3개가 표시되어 있으며, 각각 'Rapid change', 'Very low glucose', 'Low glucose' 상태를 나타냅니다. 또한, 삼성 갤럭시 S26 Ultra 광고 배너와 현재 날씨 정보, 그리고 '무음 알림' 섹션이 포함되어 있습니다. 하단에는 알림 설정 및 지우기 버튼이 있는 것으로 보입니다.",
+                "extractedText": [
+                  "10:53",
+                  "3월 5일 (목)",
+                  "95%",
+                  "미디어",
+                  "디바이스",
+                  "EMPECS CGMS",
+                  "오전 10:53",
+                  "Rapid change",
+                  "Rate 7.48 mg/dL/min ≥ 2.0",
+                  "EMPECS CGMS",
+                  "오전 10:52",
+                  "Very low glucose",
+                  "Glucose 21.200000000000003 ≤ 55.0",
+                  "EMPECS CGMS",
+                  "오전 10:52",
+                  "Low glucose",
+                  "Glucose 21.200000000000003 ≤ 70.0",
+                  "(광고)",
+                  "Galaxy S26 Ultra",
+                  "SAMSUNG",
+                  "오늘이 마지막, 더블 스토리지 할인 혜택",
+                  "날씨",
+                  "오전 9:55",
+                  "6° 상현원동",
+                  "최고 14° | 최저 -1° 초미세먼지 : 나쁨 (39)",
+                  "무음 알림",
+                  "알림 설정",
+                  "지우기",
+                  "긴급전화만 사용 가능"
+                ],
+                "uiElements": [
+                  {
+                    "type": "텍스트",
+                    "label": "시간",
+                    "value": "10:53",
+                    "notes": "현재 시간"
+                  },
+                  {
+                    "type": "텍스트",
+                    "label": "날짜",
+                    "value": "3월 5일 (목)",
+                    "notes": "현재 날짜 및 요일"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "Wi-Fi",
+                    "value": null,
+                    "notes": "Wi-Fi 활성화 상태"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "소리",
+                    "value": null,
+                    "notes": "소리 모드 (진동으로 추정)"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "Bluetooth",
+                    "value": null,
+                    "notes": "Bluetooth 활성화 상태"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "위치",
+                    "value": null,
+                    "notes": "위치 서비스 활성화 상태"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "비행기 모드",
+                    "value": null,
+                    "notes": "비행기 모드 비활성화 상태"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "설정",
+                    "value": null,
+                    "notes": "설정 화면으로 이동하는 아이콘"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "미디어",
+                    "value": null,
+                    "notes": "미디어 제어 패널 열기"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "디바이스",
+                    "value": null,
+                    "notes": "디바이스 제어 패널 열기"
+                  },
+                  {
+                    "type": "알림",
+                    "label": "EMPECS CGMS - Rapid change",
+                    "value": "Rate 7.48 mg/dL/min ≥ 2.0",
+                    "notes": "혈당 급변 알림"
+                  },
+                  {
+                    "type": "알림",
+                    "label": "EMPECS CGMS - Very low glucose",
+                    "value": "Glucose 21.200000000000003 ≤ 55.0",
+                    "notes": "매우 낮은 혈당 알림"
+                  },
+                  {
+                    "type": "알림",
+                    "label": "EMPECS CGMS - Low glucose",
+                    "value": "Glucose 21.200000000000003 ≤ 70.0",
+                    "notes": "낮은 혈당 알림"
+                  },
+                  {
+                    "type": "광고 배너",
+                    "label": "Galaxy S26 Ultra",
+                    "value": "오늘이 마지막, 더블 스토리지 할인 혜택",
+                    "notes": "삼성 갤럭시 S26 Ultra 광고"
+                  },
+                  {
+                    "type": "날씨 정보",
+                    "label": "날씨",
+                    "value": "6° 상현원동, 최고 14° | 최저 -1° 초미세먼지 : 나쁨 (39)",
+                    "notes": "현재 날씨 및 미세먼지 정보"
+                  },
+                  {
+                    "type": "섹션 헤더",
+                    "label": "무음 알림",
+                    "value": null,
+                    "notes": "무음 처리된 알림을 표시하는 섹션"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "알림 설정",
+                    "value": null,
+                    "notes": "알림 설정 화면으로 이동"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "지우기",
+                    "value": null,
+                    "notes": "모든 알림 지우기"
+                  },
+                  {
+                    "type": "텍스트",
+                    "label": "긴급전화만 사용 가능",
+                    "value": null,
+                    "notes": "하단 내비게이션 바 근처의 시스템 메시지"
+                  }
+                ],
+                "flows": [
+                  "사용자: 화면 상단에서 아래로 스와이프 -> 시스템: 알림 패널 및 빠른 설정 패널 표시",
+                  "사용자: Wi-Fi 아이콘 탭 -> 시스템: Wi-Fi 켜기/끄기 토글",
+                  "사용자: 설정 아이콘 탭 -> 시스템: 설정 화면으로 이동",
+                  "사용자: EMPECS CGMS 알림 탭 -> 시스템: 해당 앱 또는 관련 상세 화면으로 이동 (추정)",
+                  "사용자: 광고 배너 탭 -> 시스템: 광고 랜딩 페이지 또는 관련 앱 스토어 페이지로 이동 (추정)",
+                  "사용자: '지우기' 버튼 탭 -> 시스템: 모든 알림 삭제",
+                  "사용자: '알림 설정' 버튼 탭 -> 시스템: 알림 설정 화면으로 이동"
+                ],
+                "possibleScreenIds": [],
+                "uncertainties": [
+                  "소리 아이콘의 정확한 상태 (진동/무음/소리)",
+                  "EMPECS CGMS 알림 탭 시 이동하는 정확한 화면",
+                  "광고 배너 탭 시 이동하는 정확한 화면",
+                  "하단 내비게이션 바의 아이콘 의미 (홈, 뒤로가기 외)"
+                ]
+              }
+            }
+          ],
+          "sample": "2. 동작 확인 사항 Rapid Chang, Very Low Glucose. Low Glucose 알람 동작 확인 기본 설정 값 내에서 동작 , 현재 (26.03.05) 기준 알람 기준 값 변경 및 저장은 안됨"
+        },
+        {
+          "index": 6,
+          "title": "Slide 6",
+          "slidePath": "ppt/slides/slide6.xml",
+          "stats": {
+            "textChars": 150,
+            "picCount": 5,
+            "mediaCount": 26
+          },
+          "text": "3. 동작 확인 사항 Start Time 동기화 Sensor 연결 후 BT 가 연결된 시간으로 자동 기입이 되는 것이 아닌 아래와 같은 순서를 진행 해야 시간 동기화가 되는 순서 Serial Number  QR 스캔 후 SYNC  Start Time  [SAVE] 터치  Start Time 연동 ※ QR 스캔 한 시간을 기준으로 Start Time 설정 ※",
+          "images": [
+            {
+              "path": "ppt/media/image12.png",
+              "cached": false,
+              "hash": "3c3f186e98d33a3556602b5bdc5d371972f48b2a5addd1c0718f790ca8d13465",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정기) 앱의 'Sensor' 화면(SC_02_01)을 보여줍니다. 화면 상단에는 센서의 사용 기간이 진행 바와 함께 표시되며, 남은 기간과 유효 기간, 시작 시간이 명시되어 있습니다. 'New' 섹션 아래에는 센서의 상태, 스캔 및 연결, 시리얼 번호, 시작 시간, 데이터 공유, 센서 제거 방법 등 센서와 관련된 다양한 기능 및 정보에 접근할 수 있는 메뉴 항목들이 나열되어 있습니다. 각 메뉴 항목은 아이콘과 함께 간략한 설명이 제공되며, 오른쪽에는 상세 화면으로 이동할 수 있는 화살표가 있습니다. 화면 하단에는 'Home', 'Trend', 'Report', 'Sensor', 'Alarm', 'Settings' 탭으로 구성된 내비게이션 바가 있습니다.",
+                "extractedText": "LOCAL\nSensor (SC_02_01)\nUsage period\nRemaining: 11d 0h (valid 14d)\nStart: 2026/03/02 11:08\nNew\nStatus\nBattery, signal, warm-up\nScan & Connect\nBLE scan/connect · battery/usage\nSerial Number\nCurrent sensor SN\nStart Time\nYYYY/MM/DD HH:mm\nShare Data\nShare with caregiver\nHow to remove\nSensor removal guide\nHome\nTrend\nReport\nSensor\nAlarm\nSettings\n11:09\n",
+                "uiElements": [
+                  {
+                    "type": "화면 제목",
+                    "label": "Sensor",
+                    "value": null,
+                    "notes": "화면 ID (SC_02_01) 포함"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Usage period",
+                    "value": null,
+                    "notes": null
+                  },
+                  {
+                    "type": "진행 바",
+                    "label": "Usage period progress",
+                    "value": "약 20% 진행",
+                    "notes": null
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Remaining",
+                    "value": "11d 0h (valid 14d)",
+                    "notes": "남은 기간 및 유효 기간"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Start",
+                    "value": "2026/03/02 11:08",
+                    "notes": "센서 시작 시간"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "New",
+                    "value": null,
+                    "notes": null
+                  },
+                  {
+                    "type": "메뉴 항목",
+                    "label": "Status",
+                    "value": "Battery, signal, warm-up",
+                    "notes": "센서 상태 정보"
+                  },
+                  {
+                    "type": "메뉴 항목",
+                    "label": "Scan & Connect",
+                    "value": "BLE scan/connect · battery/usage",
+                    "notes": "블루투스 스캔 및 연결, 배터리/사용량"
+                  },
+                  {
+                    "type": "메뉴 항목",
+                    "label": "Serial Number",
+                    "value": "Current sensor SN",
+                    "notes": "현재 센서 시리얼 번호"
+                  },
+                  {
+                    "type": "메뉴 항목",
+                    "label": "Start Time",
+                    "value": "YYYY/MM/DD HH:mm",
+                    "notes": "센서 시작 시간 설정/확인"
+                  },
+                  {
+                    "type": "메뉴 항목",
+                    "label": "Share Data",
+                    "value": "Share with caregiver",
+                    "notes": "보호자와 데이터 공유"
+                  },
+                  {
+                    "type": "메뉴 항목",
+                    "label": "How to remove",
+                    "value": "Sensor removal guide",
+                    "notes": "센서 제거 가이드"
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Home",
+                    "value": null,
+                    "notes": null
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Trend",
+                    "value": null,
+                    "notes": null
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Report",
+                    "value": null,
+                    "notes": null
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Sensor",
+                    "value": null,
+                    "notes": "현재 활성화된 탭"
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Alarm",
+                    "value": null,
+                    "notes": null
+                  },
+                  {
+                    "type": "내비게이션 탭",
+                    "label": "Settings",
+                    "value": null,
+                    "notes": null
+                  },
+                  {
+                    "type": "상태 바 아이콘",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "화면 좌상단에 표시된 라벨"
+                  },
+                  {
+                    "type": "상태 바 시간",
+                    "label": "11:09",
+                    "value": null,
+                    "notes": null
+                  },
+                  {
+                    "type": "상태 바 아이콘",
+                    "label": "Wi-Fi",
+                    "value": null,
+                    "notes": "Wi-Fi 신호 강도 표시"
+                  },
+                  {
+                    "type": "상태 바 아이콘",
+                    "label": "Battery",
+                    "value": null,
+                    "notes": "배터리 잔량 표시"
+                  }
+                ],
+                "flows": [
+                  "사용자가 'Status' 메뉴 항목을 탭 -> 센서 상태 상세 화면으로 이동",
+                  "사용자가 'Scan & Connect' 메뉴 항목을 탭 -> BLE 스캔 및 연결 화면으로 이동",
+                  "사용자가 'Serial Number' 메뉴 항목을 탭 -> 센서 시리얼 번호 상세 화면으로 이동",
+                  "사용자가 'Start Time' 메뉴 항목을 탭 -> 센서 시작 시간 설정/확인 화면으로 이동",
+                  "사용자가 'Share Data' 메뉴 항목을 탭 -> 데이터 공유 설정 화면으로 이동",
+                  "사용자가 'How to remove' 메뉴 항목을 탭 -> 센서 제거 가이드 화면으로 이동",
+                  "사용자가 하단 내비게이션 바에서 'Home' 탭을 탭 -> 홈 화면으로 이동",
+                  "사용자가 하단 내비게이션 바에서 'Trend' 탭을 탭 -> 트렌드 화면으로 이동",
+                  "사용자가 하단 내비게이션 바에서 'Report' 탭을 탭 -> 리포트 화면으로 이동",
+                  "사용자가 하단 내비게이션 바에서 'Alarm' 탭을 탭 -> 알람 설정 화면으로 이동",
+                  "사용자가 하단 내비게이션 바에서 'Settings' 탭을 탭 -> 설정 화면으로 이동"
+                ],
+                "possibleScreenIds": [
+                  "SC_02_01"
+                ],
+                "uncertainties": [
+                  "상태 바의 일부 아이콘(예: 신호 강도, 알림 아이콘)은 해상도 문제로 정확한 판독이 어렵습니다.",
+                  "각 메뉴 항목을 탭했을 때 이동하는 상세 화면의 정확한 ID는 이미지에 명시되어 있지 않습니다."
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image13.png",
+              "cached": false,
+              "hash": "a909bf52d788e5f2017151def61162c6f6411160b691cf6d534b129de37e1a80",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정기) 앱의 시리얼 넘버 입력 및 관리 화면을 보여줍니다. 사용자는 QR 코드를 스캔하거나 수동으로 시리얼 넘버를 입력할 수 있습니다. 화면 상단에는 'SC_04_01 - Serial Number'라는 화면 ID와 제목이 표시되어 있으며, 'Loading...' 상태 표시줄이 보입니다. QR 코드 이미지가 중앙에 크게 표시되어 있으며, QR 코드에는 'Medisign CG 21'과 같은 제품 정보와 시리얼 넘버, 유효 기간 등의 정보가 포함되어 있습니다. 사용자는 시리얼 넘버를 입력 필드에 직접 입력할 수 있으며, 입력된 시리얼 넘버를 기반으로 'Model', 'Year', 'Sample', 'Serial' 필드가 자동으로 채워지는 것으로 보입니다. 'SAVE & SYNC' 버튼을 통해 입력된 정보를 저장하고 동기화할 수 있으며, 'QR SCAN' 버튼을 통해 QR 코드 스캔 기능을 사용할 수 있습니다.",
+                "extractedText": "11:20\nLOCAL\nSC_04_01 - Serial Number\nLoading...\nTianjin Empec Medical Device Co. Ltd\nMedisign CG 21\nIP28\nSTERILE R\nSN: C21ZS00033\n2027-03-29\nNo. 35, Yingcheng Street, Hangu, Binhai New Area, 300480 Tianjin, China\nSN (e.g. C21ZS00033)\nC21ZS00101\nModel C21\nYear 2025\nSample S\nSerial 00101\nSAVE & SYNC\nQR SCAN",
+                "uiElements": [
+                  {
+                    "type": "상태 표시줄",
+                    "label": "시간",
+                    "value": "11:20",
+                    "notes": "화면 상단 좌측"
+                  },
+                  {
+                    "type": "상태 표시줄",
+                    "label": "네트워크/배터리",
+                    "value": "Loading...",
+                    "notes": "화면 상단 우측, 로딩 상태 표시"
+                  },
+                  {
+                    "type": "탭/필터",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "화면 상단 좌측, 현재 선택된 상태"
+                  },
+                  {
+                    "type": "화면 제목",
+                    "label": "SC_04_01 - Serial Number",
+                    "value": null,
+                    "notes": "화면 중앙 상단"
+                  },
+                  {
+                    "type": "이미지",
+                    "label": "QR 코드",
+                    "value": null,
+                    "notes": "Medisign CG 21 제품 정보 및 시리얼 넘버 포함"
+                  },
+                  {
+                    "type": "입력 필드 라벨",
+                    "label": "SN (e.g. C21ZS00033)",
+                    "value": null,
+                    "notes": "시리얼 넘버 입력 필드에 대한 안내"
+                  },
+                  {
+                    "type": "입력 필드",
+                    "label": "SN 입력",
+                    "value": "C21ZS00101",
+                    "notes": "현재 'C21ZS00101'이 입력되어 있음"
+                  },
+                  {
+                    "type": "입력 필드",
+                    "label": "Model",
+                    "value": "C21",
+                    "notes": "시리얼 넘버에 따라 자동 채워진 것으로 추정"
+                  },
+                  {
+                    "type": "입력 필드",
+                    "label": "Year",
+                    "value": "2025",
+                    "notes": "시리얼 넘버에 따라 자동 채워진 것으로 추정"
+                  },
+                  {
+                    "type": "입력 필드",
+                    "label": "Sample",
+                    "value": "S",
+                    "notes": "시리얼 넘버에 따라 자동 채워진 것으로 추정"
+                  },
+                  {
+                    "type": "입력 필드",
+                    "label": "Serial",
+                    "value": "00101",
+                    "notes": "시리얼 넘버에 따라 자동 채워진 것으로 추정"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "SAVE & SYNC",
+                    "value": null,
+                    "notes": "입력된 정보를 저장하고 동기화"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "QR SCAN",
+                    "value": null,
+                    "notes": "QR 코드 스캔 기능 실행"
+                  }
+                ],
+                "flows": [
+                  "사용자: SN (e.g. C21ZS00033) 필드에 시리얼 넘버 'C21ZS00101'을 수동 입력 -> 시스템: Model, Year, Sample, Serial 필드가 자동으로 'C21', '2025', 'S', '00101'로 채워짐",
+                  "사용자: 'SAVE & SYNC' 버튼 클릭 -> 시스템: 입력된 시리얼 넘버 정보가 저장되고 동기화됨",
+                  "사용자: 'QR SCAN' 버튼 클릭 -> 시스템: QR 코드 스캔 화면으로 전환되거나 스캔 기능이 활성화됨",
+                  "사용자: QR 코드 스캔 (추정) -> 시스템: 스캔된 QR 코드의 정보(SN, Model, Year 등)가 해당 필드에 자동으로 입력됨"
+                ],
+                "possibleScreenIds": [
+                  "SC_04_01"
+                ],
+                "uncertainties": [
+                  "QR 코드 스캔 시 정확히 어떤 필드들이 채워지는지 명확하지 않음 (추정)",
+                  "SAVE & SYNC 버튼 클릭 후 시스템의 정확한 반응 (성공/실패 메시지 등)은 이미지에 나타나 있지 않음",
+                  "Loading... 상태 표시줄이 어떤 동작에 대한 것인지 명확하지 않음"
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image14.png",
+              "cached": false,
+              "hash": "20813f42fe69b66c1210c425acb8bc60ce4f849d1e0fd73b3519ad2c93e215fb",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정) 앱의 '시작 시간' 설정 화면을 보여줍니다. 사용자는 센서 활성화 시 자동으로 업데이트되는 시작 시간을 확인하고, 필요한 경우 수동으로 설정할 수 있습니다. 화면 상단에는 현재 시간, 네트워크 상태, 배터리 잔량 등의 시스템 정보와 함께 'LOCAL' 및 'Loading...' 상태 표시기가 있습니다. 'Start' 섹션에는 시작 시간과 날짜(2026/03/05 14:10)가 표시되며, 달력 아이콘을 통해 시간 변경이 가능할 것으로 보입니다. 'Note' 필드는 센서 활성화 시 시작 시간이 자동으로 업데이트됨을 안내합니다. 'Help' 섹션은 최신 레이아웃 요청에 따라 'Warm-up section'이 숨겨져 있음을 알립니다. 모든 설정 변경 후에는 'SAVE' 버튼을 눌러 저장할 수 있습니다.",
+                "extractedText": "2:12\nLOCAL\nSC_05_01 - Start Time\nLoading...\nStart\nStart at\n2026/03/05 14:10\nNote\nStart time is updated automatically when sensor becomes active.\nHelp\nWarm-up section is hidden per latest layout request.\nSAVE",
+                "uiElements": [
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "2:12",
+                    "value": null,
+                    "notes": "현재 시간"
+                  },
+                  {
+                    "type": "상태 표시기",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "로컬 모드 또는 연결 상태"
+                  },
+                  {
+                    "type": "화면 ID",
+                    "label": "SC_05_01 - Start Time",
+                    "value": null,
+                    "notes": "화면 제목 및 ID"
+                  },
+                  {
+                    "type": "상태 표시기",
+                    "label": "Loading...",
+                    "value": null,
+                    "notes": "로딩 중 상태"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Start",
+                    "value": null,
+                    "notes": "시작 시간 설정 섹션"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Start at",
+                    "value": "2026/03/05 14:10",
+                    "notes": "현재 설정된 시작 시간 및 날짜"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "달력 아이콘",
+                    "value": null,
+                    "notes": "시작 시간/날짜 변경 기능 예상"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Note",
+                    "value": null,
+                    "notes": "시작 시간 관련 안내 섹션"
+                  },
+                  {
+                    "type": "안내문",
+                    "label": "Start time is updated automatically when sensor becomes active.",
+                    "value": null,
+                    "notes": "시작 시간 자동 업데이트 안내"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Help",
+                    "value": null,
+                    "notes": "도움말 섹션"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "물음표 아이콘",
+                    "value": null,
+                    "notes": "도움말 상세 정보 제공 기능 예상"
+                  },
+                  {
+                    "type": "안내문",
+                    "label": "Warm-up section is hidden per latest layout request.",
+                    "value": null,
+                    "notes": "웜업 섹션 숨김 안내"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "SAVE",
+                    "value": null,
+                    "notes": "설정 저장 버튼"
+                  }
+                ],
+                "flows": [
+                  "사용자 (달력 아이콘 탭) -> 시스템 (날짜/시간 선택 UI 표시) -> 사용자 (새로운 날짜/시간 선택) -> 시스템 (선택된 날짜/시간 'Start at' 필드에 반영)",
+                  "사용자 (SAVE 버튼 탭) -> 시스템 (변경된 시작 시간 저장) -> 시스템 (저장 완료 메시지 표시 또는 이전 화면으로 이동)",
+                  "시스템 (센서 활성화) -> 시스템 (시작 시간 자동 업데이트) -> 시스템 ('Start at' 필드에 업데이트된 시간 표시)",
+                  "사용자 (물음표 아이콘 탭) -> 시스템 (도움말 상세 내용 표시 또는 팝업)"
+                ],
+                "possibleScreenIds": [
+                  "SC_05_01"
+                ],
+                "uncertainties": [
+                  "상단 아이콘들의 정확한 의미 (네트워크, 배터리 외)",
+                  "Loading... 상태가 어떤 작업을 나타내는지",
+                  "달력 아이콘 탭 시 정확히 어떤 UI가 표시되는지",
+                  "물음표 아이콘 탭 시 정확히 어떤 UI가 표시되는지",
+                  "SAVE 버튼 탭 이후의 정확한 시스템 반응 (메시지, 화면 전환 등)"
+                ]
+              }
+            }
+          ],
+          "sample": "3. 동작 확인 사항 Start Time 동기화 Sensor 연결 후 BT 가 연결된 시간으로 자동 기입이 되는 것이 아닌 아래와 같은 순서를 진행 해야 시간 동기화가 되는 순서 Serial Number  QR 스캔 후 SYNC  Start Time  [SAVE] 터치  Start Time 연동 ※ QR 스캔 한 시간을 기준으로 Start Time 설정 ※"
+        },
+        {
+          "index": 7,
+          "title": "Slide 7",
+          "slidePath": "ppt/slides/slide7.xml",
+          "stats": {
+            "textChars": 38,
+            "picCount": 3,
+            "mediaCount": 26
+          },
+          "text": "LO_01_xx SNS 로그인 모의 로그인 까지는 완료 , 추후 실제 연동 필요 미 구현 사항",
+          "images": [
+            {
+              "path": "ppt/media/image16.png",
+              "cached": false,
+              "hash": "20cc4877834a1ec2ed28dd4be53dd6edc4475eb34b7458e396a203dc7a0c3536",
+              "ai": {
+                "summary": "이 이미지는 CGM 앱의 Google 계정 연동 로그인 프로세스를 설명하는 화면입니다. 사용자는 Google 계정을 선택하거나 로그인하고, 프로필/이메일 등 권한 동의를 진행합니다. 인증 성공 시 앱으로 복귀하며, 이 과정은 모의(mock)로 진행됩니다. 화면에는 Provider 로그인 페이지 열기(참조) 버튼과 로그인 완료(모의) 버튼이 있으며, 하단에는 로그인 선택 화면으로 돌아가기 버튼이 있습니다. 상단에는 'LO_01_02 - Google 로그인'이라는 화면 ID와 로딩 상태를 나타내는 UI가 보입니다.",
+                "extractedText": "3:11\nLOCAL\nLO_01_02 · Google 로그인\nLoading...\nGoogle 계정 연동 프로세스 진행(모의)\nGoogle 계정 선택 또는 로그인\n권한 동의(프로필/이메일 등)\n인증 성공 시 앱으로 복귀\nProvider 로그인 페이지 열기(참조)\n로그인 완료(모의)\n로그인 선택 화면으로 돌아가기",
+                "uiElements": [
+                  {
+                    "type": "header",
+                    "label": "LO_01_02 · Google 로그인",
+                    "value": null,
+                    "notes": "화면 제목 및 ID"
+                  },
+                  {
+                    "type": "status_indicator",
+                    "label": "Loading...",
+                    "value": null,
+                    "notes": "로딩 상태 표시"
+                  },
+                  {
+                    "type": "text_block",
+                    "label": "Google 계정 연동 프로세스 진행(모의)",
+                    "value": null,
+                    "notes": "프로세스 제목"
+                  },
+                  {
+                    "type": "list_item",
+                    "label": "Google 계정 선택 또는 로그인",
+                    "value": null,
+                    "notes": "프로세스 단계 1"
+                  },
+                  {
+                    "type": "list_item",
+                    "label": "권한 동의(프로필/이메일 등)",
+                    "value": null,
+                    "notes": "프로세스 단계 2"
+                  },
+                  {
+                    "type": "list_item",
+                    "label": "인증 성공 시 앱으로 복귀",
+                    "value": null,
+                    "notes": "프로세스 단계 3"
+                  },
+                  {
+                    "type": "button",
+                    "label": "Provider 로그인 페이지 열기(참조)",
+                    "value": null,
+                    "notes": "참조용 버튼"
+                  },
+                  {
+                    "type": "button",
+                    "label": "로그인 완료(모의)",
+                    "value": null,
+                    "notes": "모의 로그인 완료 버튼"
+                  },
+                  {
+                    "type": "button",
+                    "label": "로그인 선택 화면으로 돌아가기",
+                    "value": null,
+                    "notes": "이전 화면으로 이동 버튼"
+                  }
+                ],
+                "flows": [
+                  "사용자 액션: 'Provider 로그인 페이지 열기(참조)' 버튼 클릭 -> 시스템 반응: (참조용이므로 실제 동작은 없음)",
+                  "사용자 액션: '로그인 완료(모의)' 버튼 클릭 -> 시스템 반응: Google 계정 연동 프로세스 완료(모의) -> 다음 상태: 앱으로 복귀 (추정)",
+                  "사용자 액션: '로그인 선택 화면으로 돌아가기' 버튼 클릭 -> 시스템 반응: 이전 로그인 선택 화면으로 이동"
+                ],
+                "possibleScreenIds": [
+                  "LO_01_02"
+                ],
+                "uncertainties": [
+                  "상단 바의 아이콘들이 작아서 정확한 의미 판독 불가",
+                  "상단 'Loading...' 상태의 정확한 지속 시간 및 다음 상태 불확실",
+                  "'Provider 로그인 페이지 열기(참조)' 버튼 클릭 시 실제 동작 여부 및 화면 전환 불확실 (참조용으로만 명시됨)"
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image17.png",
+              "cached": false,
+              "hash": "31a2273135b3ace3b905e6001d96dfc9406a57ac6bd05b940f8f4bdde18a2b2b",
+              "ai": {
+                "summary": "이 이미지는 Apple ID 연동 로그인 프로세스(모의)를 설명하는 모바일 앱 화면입니다. 사용자는 Apple ID로 로그인하거나 Face ID/Touch ID를 사용할 수 있으며, 공유할 정보(이메일/이름 등)를 선택하고 인증 성공 시 앱으로 복귀하는 과정을 거칩니다. 화면에는 'Provider 로그인 페이지 열기(참조)' 버튼과 '로그인 완료(모의)' 버튼이 있으며, 하단에는 '로그인 선택 화면으로 돌아가기' 버튼이 있습니다. 이는 Apple ID를 통한 소셜 로그인 기능을 구현하기 위한 요구사항 또는 테스트 화면으로 보입니다.",
+                "extractedText": "3:11\nLOCAL\nLO_01_03 · Apple 로그인\nApple ID 연동 프로세스 진행(모의)\nApple ID로 로그인(또는 Face ID/Touch ID)\n공유할 정보 선택(이메일/이름 등)\n인증 성공 시 앱으로 복귀\nProvider 로그인 페이지 열기(참조)\n로그인 완료(모의)\n로그인 선택 화면으로 돌아가기",
+                "uiElements": [
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "현재 환경 또는 상태를 나타내는 라벨"
+                  },
+                  {
+                    "type": "화면 제목",
+                    "label": "LO_01_03 · Apple 로그인",
+                    "value": null,
+                    "notes": "화면의 ID와 제목"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Apple ID 연동 프로세스 진행(모의)",
+                    "value": null,
+                    "notes": "Apple ID 연동 프로세스에 대한 설명 섹션 제목"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Apple ID로 로그인(또는 Face ID/Touch ID)",
+                    "value": null,
+                    "notes": "로그인 방법 설명"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "공유할 정보 선택(이메일/이름 등)",
+                    "value": null,
+                    "notes": "정보 공유 단계 설명"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "인증 성공 시 앱으로 복귀",
+                    "value": null,
+                    "notes": "인증 완료 후 동작 설명"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Provider 로그인 페이지 열기(참조)",
+                    "value": null,
+                    "notes": "Provider 로그인 페이지로 이동하는 버튼 (참조용)"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "로그인 완료(모의)",
+                    "value": null,
+                    "notes": "로그인 완료를 시뮬레이션하는 버튼"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "로그인 선택 화면으로 돌아가기",
+                    "value": null,
+                    "notes": "이전 로그인 선택 화면으로 돌아가는 버튼"
+                  }
+                ],
+                "flows": [
+                  "사용자 액션: 'Provider 로그인 페이지 열기(참조)' 버튼 탭 -> 시스템 반응: Provider 로그인 페이지로 이동 (참조용)",
+                  "사용자 액션: '로그인 완료(모의)' 버튼 탭 -> 시스템 반응: Apple ID 연동 로그인 프로세스 완료 (모의)",
+                  "사용자 액션: '로그인 선택 화면으로 돌아가기' 버튼 탭 -> 시스템 반응: 이전 로그인 선택 화면으로 이동"
+                ],
+                "possibleScreenIds": [
+                  "LO_01_03"
+                ],
+                "uncertainties": []
+              }
+            },
+            {
+              "path": "ppt/media/image18.png",
+              "cached": false,
+              "hash": "0cdac69b806a09586ab732840792c3f1cd56e3f09e62ab4414ed7356e12054a2",
+              "ai": {
+                "summary": "이 이미지는 카카오톡 계정 연동 로그인 프로세스를 설명하는 모바일 화면을 보여줍니다. 사용자는 카카오 계정 또는 카카오톡 인증을 통해 로그인할 수 있으며, 이메일 및 프로필과 같은 권한 동의 절차를 거칩니다. 인증 성공 시 앱으로 복귀하게 됩니다. 화면에는 'Provider 로그인 페이지 열기(참조)' 버튼과 '로그인 완료(모의)' 버튼이 있으며, 하단에는 '로그인 선택 화면으로 돌아가기' 버튼이 있습니다. 이는 카카오톡을 이용한 로그인 흐름을 시뮬레이션하거나 안내하는 화면으로 보입니다.",
+                "extractedText": "LOCAL\nLO_01_04 · 카카오 로그인\n카카오톡 계정 연동 프로세스 진행(모의)\n카카오 계정/카카오톡 인증\n권한 동의(프로필/이메일 등)\n인증 성공 시 앱으로 복귀\nProvider 로그인 페이지 열기(참조)\n로그인 완료(모의)\n로그인 선택 화면으로 돌아가기",
+                "uiElements": [
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "현재 환경을 나타내는 것으로 추정"
+                  },
+                  {
+                    "type": "화면 제목",
+                    "label": "LO_01_04 · 카카오 로그인",
+                    "value": null,
+                    "notes": "화면 ID와 제목"
+                  },
+                  {
+                    "type": "설명 텍스트",
+                    "label": "카카오톡 계정 연동 프로세스 진행(모의)",
+                    "value": null,
+                    "notes": "로그인 프로세스에 대한 설명"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "카카오 계정/카카오톡 인증",
+                    "value": null,
+                    "notes": "로그인 방법 중 하나"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "권한 동의(프로필/이메일 등)",
+                    "value": null,
+                    "notes": "로그인 시 필요한 동의 항목"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "인증 성공 시 앱으로 복귀",
+                    "value": null,
+                    "notes": "로그인 성공 후 동작"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Provider 로그인 페이지 열기(참조)",
+                    "value": null,
+                    "notes": "외부 로그인 페이지로 이동하는 버튼으로 추정"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "로그인 완료(모의)",
+                    "value": null,
+                    "notes": "로그인 완료를 시뮬레이션하는 버튼"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "로그인 선택 화면으로 돌아가기",
+                    "value": null,
+                    "notes": "이전 로그인 선택 화면으로 돌아가는 버튼"
+                  }
+                ],
+                "flows": [
+                  "사용자 액션: 'Provider 로그인 페이지 열기(참조)' 버튼 클릭 -> 시스템 반응: Provider 로그인 페이지로 이동(추정)",
+                  "사용자 액션: '로그인 완료(모의)' 버튼 클릭 -> 시스템 반응: 로그인 완료 처리 및 앱으로 복귀(모의)",
+                  "사용자 액션: '로그인 선택 화면으로 돌아가기' 버튼 클릭 -> 시스템 반응: 로그인 선택 화면으로 이동"
+                ],
+                "possibleScreenIds": [
+                  "LO_01_04"
+                ],
+                "uncertainties": [
+                  "상단 상태바의 아이콘 및 시간(3:11)의 의미",
+                  "LOCAL 라벨의 정확한 의미 (개발/테스트 환경 표시로 추정)",
+                  "Provider 로그인 페이지의 실제 동작 및 화면 구성"
+                ]
+              }
+            }
+          ],
+          "sample": "LO_01_xx SNS 로그인 모의 로그인 까지는 완료 , 추후 실제 연동 필요 미 구현 사항"
+        },
+        {
+          "index": 8,
+          "title": "Slide 8",
+          "slidePath": "ppt/slides/slide8.xml",
+          "stats": {
+            "textChars": 72,
+            "picCount": 2,
+            "mediaCount": 26
+          },
+          "text": "Create Account Agreements 텍스트 깨짐 ID/PW 와 선택 사항 입력 후 [Create Account] 터치 시 네트워크 에러 발생 미 구현 사항",
+          "images": [
+            {
+              "path": "ppt/media/image19.png",
+              "cached": false,
+              "hash": "ee83ca7855335f171728c6ad05b63a56a45744133c0c4c8e9163d205a6ee04b6",
+              "ai": {
+                "summary": "이 이미지는 'Create Account' 화면을 보여줍니다. 사용자는 계정 생성을 위해 사용자 ID, 비밀번호, 비밀번호 확인 정보를 입력해야 합니다. 사용자 ID는 4-20자리의 소문자, 숫자, 대시(-) 또는 밑줄(_)을 포함해야 합니다. 또한, 'Agreements' 섹션에서 약관을 검토하고 동의해야 합니다. 약관 동의는 체크박스로 표시되며, 약관 내용은 스크롤 가능한 영역에 'Required Legal Agreement'라는 텍스트로 표시되어 있습니다. 이 화면은 새로운 계정을 생성하는 데 필요한 필수 정보를 수집하고 약관 동의를 받는 과정을 나타냅니다.",
+                "extractedText": "3:12\nLOCAL\nCreate Account\nCredentials\nCreate your account\nUser ID\n4-20 chars, lowercase letters, numbers, -, _\nPassword\nConfirm Password\nAgreements\nPlease review and agree\n[\nR\ne\nq\nu\ni\nr\ne\nd\n]\nL\ne\ng\na\nl\nA\ng\nr\ne\ne",
+                "uiElements": [
+                  {
+                    "type": "Header",
+                    "label": "Create Account",
+                    "value": null,
+                    "notes": "화면 상단 제목"
+                  },
+                  {
+                    "type": "Text Label",
+                    "label": "Credentials",
+                    "value": null,
+                    "notes": "계정 정보 섹션 제목"
+                  },
+                  {
+                    "type": "Text Label",
+                    "label": "Create your account",
+                    "value": null,
+                    "notes": "계정 생성 안내 문구"
+                  },
+                  {
+                    "type": "Input Field",
+                    "label": "User ID",
+                    "value": null,
+                    "notes": "사용자 ID 입력 필드"
+                  },
+                  {
+                    "type": "Text Hint",
+                    "label": "4-20 chars, lowercase letters, numbers, -, _",
+                    "value": null,
+                    "notes": "사용자 ID 입력 규칙"
+                  },
+                  {
+                    "type": "Input Field",
+                    "label": "Password",
+                    "value": null,
+                    "notes": "비밀번호 입력 필드 (마스킹 처리됨)"
+                  },
+                  {
+                    "type": "Input Field",
+                    "label": "Confirm Password",
+                    "value": null,
+                    "notes": "비밀번호 확인 입력 필드"
+                  },
+                  {
+                    "type": "Text Label",
+                    "label": "Agreements",
+                    "value": null,
+                    "notes": "약관 섹션 제목"
+                  },
+                  {
+                    "type": "Text Label",
+                    "label": "Please review and agree",
+                    "value": null,
+                    "notes": "약관 검토 및 동의 안내 문구"
+                  },
+                  {
+                    "type": "Checkbox",
+                    "label": null,
+                    "value": null,
+                    "notes": "약관 동의 체크박스 (체크됨)"
+                  },
+                  {
+                    "type": "Scrollable Text Area",
+                    "label": "Required Legal Agreement",
+                    "value": null,
+                    "notes": "필수 법적 약관 내용 표시 영역"
+                  }
+                ],
+                "flows": [
+                  "사용자: 'User ID' 필드에 사용자 ID 입력 -> 시스템: 입력된 ID 유효성 검사 (4-20자, 소문자, 숫자, -, _)",
+                  "사용자: 'Password' 필드에 비밀번호 입력 -> 시스템: 입력된 비밀번호 마스킹 처리",
+                  "사용자: 'Confirm Password' 필드에 비밀번호 재입력 -> 시스템: 'Password' 필드의 비밀번호와 일치 여부 확인",
+                  "사용자: 'Required Legal Agreement' 내용을 검토 -> 시스템: 약관 내용 표시",
+                  "사용자: 약관 동의 체크박스 클릭 -> 시스템: 체크박스 상태 변경 (체크/체크 해제)",
+                  "사용자: 모든 필수 정보 입력 및 약관 동의 후 계정 생성 버튼 (추정) 클릭 -> 시스템: 계정 생성 시도 및 성공/실패 메시지 표시"
+                ],
+                "possibleScreenIds": [],
+                "uncertainties": [
+                  "화면 하단에 계정 생성 완료를 위한 'Create Account' 또는 'Sign Up'과 같은 버튼이 있을 것으로 추정되나, 이미지에 잘려 보이지 않습니다.",
+                  "약관 내용이 'Required Legal Agreement'로만 표시되어 있어 실제 상세 약관 내용은 알 수 없습니다.",
+                  "상단 바의 'LOCAL' 텍스트의 정확한 의미는 알 수 없습니다 (개발/테스트 환경 표시일 가능성)."
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image20.png",
+              "cached": false,
+              "hash": "10c1e1e146fbef4ecb8fb9eb8f7dcfdb409c83f4b692ed9efd2ea56e529c99f2",
+              "ai": {
+                "summary": "이 이미지는 모바일 애플리케이션의 한 화면을 보여줍니다. 상단에는 'Network error: TimeoutException'이라는 오류 메시지가 표시되어 있으며, 이는 네트워크 연결 문제로 인해 작업이 실패했음을 나타냅니다. 화면 중앙에는 'rmation (email/SMS/push)'이라는 텍스트가 세로로 나열되어 있어, 계정 생성 또는 정보 입력과 관련된 화면으로 추정됩니다. 하단에는 'Create Account' 버튼이 있어 사용자가 계정을 생성하려는 의도를 가졌음을 알 수 있습니다. 전반적으로 네트워크 오류로 인해 계정 생성 프로세스가 중단된 상황을 보여주는 화면입니다.",
+                "extractedText": "3:12\nLOCAL\nNetwork error: TimeoutException\nrmation (email/SMS/push)\nCreate Account",
+                "uiElements": [
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "3:12",
+                    "value": null,
+                    "notes": "현재 시간 표시"
+                  },
+                  {
+                    "type": "상태 표시",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "애플리케이션의 현재 환경 또는 상태를 나타내는 것으로 추정"
+                  },
+                  {
+                    "type": "오류 메시지",
+                    "label": "Network error: TimeoutException",
+                    "value": null,
+                    "notes": "네트워크 연결 시간 초과로 인한 오류"
+                  },
+                  {
+                    "type": "텍스트 블록",
+                    "label": "rmation (email/SMS/push)",
+                    "value": null,
+                    "notes": "정보 입력 또는 계정 생성과 관련된 내용으로 추정되는 텍스트. 'information'의 일부가 잘린 것으로 보임."
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Create Account",
+                    "value": null,
+                    "notes": "계정 생성 버튼"
+                  }
+                ],
+                "flows": [
+                  "사용자 계정 생성 시도 -> 시스템 네트워크 오류 발생 -> 'Network error: TimeoutException' 메시지 표시 및 계정 생성 실패"
+                ],
+                "possibleScreenIds": [],
+                "uncertainties": [
+                  "화면 중앙의 'rmation (email/SMS/push)' 텍스트의 정확한 의미와 전체 문맥 (앞부분이 잘려있음)",
+                  "LOCAL 라벨의 정확한 의미 (로컬 환경, 로컬 저장 등)",
+                  "이 화면이 계정 생성 프로세스의 어느 단계인지",
+                  "네트워크 오류 발생 시 'Create Account' 버튼의 활성화/비활성화 상태"
+                ]
+              }
+            }
+          ],
+          "sample": "Create Account Agreements 텍스트 깨짐 ID/PW 와 선택 사항 입력 후 [Create Account] 터치 시 네트워크 에러 발생 미 구현 사항"
+        },
+        {
+          "index": 9,
+          "title": "Slide 9",
+          "slidePath": "ppt/slides/slide9.xml",
+          "stats": {
+            "textChars": 72,
+            "picCount": 2,
+            "mediaCount": 26
+          },
+          "text": "SC_07_01 Data Share 텍스트 깨짐 현상 하단의 선택부분의 버튼 설정 저장 안됨 [SHARE] 터치 시 저장된 데이터가 어디로 가는지 알 수 없음 미 구현 사항",
+          "images": [
+            {
+              "path": "ppt/media/image21.png",
+              "cached": false,
+              "hash": "2e2a38aea43db90c93f60d1dc03ba82c6422fa4a32e2c0db6d5c313b93f09ef2",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정기) 앱의 '데이터 공유' 설정 화면을 보여줍니다. 사용자는 데이터 공유 기능을 활성화하거나 비활성화할 수 있으며, 공유 기간을 1일, 7일, 30일 또는 사용자 지정 범위로 설정할 수 있습니다. 공유 설정에는 공유할 내용을 선택하는 옵션도 포함되어 있습니다. 현재 화면에서는 'Enable sharing' 토글이 활성화되어 있고, 공유 기간은 'Custom'이 선택되어 있으며, 공유 시작 날짜와 종료 날짜를 설정하는 부분이 표시되어 있습니다. 하단에는 'Change' 버튼을 통해 날짜를 변경할 수 있는 것으로 보입니다.",
+                "extractedText": "3:06\nLOCAL\nSC_07_01 · Data Share\nBasic\nEnable sharing\nSharing period: choose 1/7/30 days or Custom range.\nSharing settings: select what to share.\n1D\n7D\n30D\nCustom\nSharing date range\n2022\n02\n26\n2022\n03\n28\nChange",
+                "uiElements": [
+                  {
+                    "type": "화면 제목",
+                    "label": "Data Share",
+                    "value": null,
+                    "notes": "SC_07_01 화면 ID와 함께 표시됨"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Basic",
+                    "value": null,
+                    "notes": "기본 설정 섹션"
+                  },
+                  {
+                    "type": "정보 아이콘",
+                    "label": "정보 아이콘",
+                    "value": null,
+                    "notes": "Basic 섹션 옆에 위치"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Enable sharing",
+                    "value": "활성화됨",
+                    "notes": "데이터 공유 기능 활성화/비활성화"
+                  },
+                  {
+                    "type": "설명 텍스트",
+                    "label": "Sharing period: choose 1/7/30 days or Custom range.",
+                    "value": null,
+                    "notes": "공유 기간 선택에 대한 설명"
+                  },
+                  {
+                    "type": "설명 텍스트",
+                    "label": "Sharing settings: select what to share.",
+                    "value": null,
+                    "notes": "공유할 내용 선택에 대한 설명"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "1D",
+                    "value": null,
+                    "notes": "공유 기간 1일"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "7D",
+                    "value": null,
+                    "notes": "공유 기간 7일"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "30D",
+                    "value": null,
+                    "notes": "공유 기간 30일"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Custom",
+                    "value": "선택됨",
+                    "notes": "사용자 지정 공유 기간"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Sharing date range",
+                    "value": null,
+                    "notes": "공유 날짜 범위 섹션 제목"
+                  },
+                  {
+                    "type": "날짜 표시",
+                    "label": "2022/02/26",
+                    "value": null,
+                    "notes": "공유 시작 날짜로 추정"
+                  },
+                  {
+                    "type": "날짜 표시",
+                    "label": "2022/03/28",
+                    "value": null,
+                    "notes": "공유 종료 날짜로 추정"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "달력 아이콘",
+                    "value": null,
+                    "notes": "날짜 선택과 관련된 아이콘"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "Change",
+                    "value": null,
+                    "notes": "날짜 변경 버튼"
+                  }
+                ],
+                "flows": [
+                  "사용자: 'Enable sharing' 토글을 탭 -> 시스템: 데이터 공유 기능 활성화/비활성화",
+                  "사용자: '1D', '7D', '30D' 버튼 중 하나를 탭 -> 시스템: 해당 기간으로 공유 기간 설정",
+                  "사용자: 'Custom' 버튼을 탭 -> 시스템: 사용자 지정 날짜 범위 설정 UI 활성화 (현재 화면 상태)",
+                  "사용자: 'Change' 버튼을 탭 -> 시스템: 날짜 선택기 또는 날짜 변경 화면 표시",
+                  "사용자: 정보 아이콘을 탭 -> 시스템: 'Basic' 섹션에 대한 추가 정보 또는 도움말 표시"
+                ],
+                "possibleScreenIds": [
+                  "SC_07_01"
+                ],
+                "uncertainties": [
+                  "화면 상단 좌측의 'LOCAL' 라벨의 정확한 의미",
+                  "화면 상단 우측의 아이콘들(와이파이, 배터리 등)의 상태 및 의미",
+                  "'Sharing settings: select what to share.' 문구 아래에 실제 공유할 내용을 선택하는 UI가 현재 화면에 보이지 않음",
+                  "달력 아이콘 옆의 날짜가 시작일과 종료일 중 어느 것을 나타내는지 명확하지 않으나, 'Sharing date range' 문구와 함께 두 개의 날짜가 표시되어 시작일과 종료일로 추정됨"
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image22.png",
+              "cached": false,
+              "hash": "4089a83014070c15c0dc655bce0ccc5c938b788a0e4c92f088de161519793ef3",
+              "ai": {
+                "summary": "이 이미지는 'SC_07_01 - Data Share' 화면을 보여줍니다. 사용자는 혈당 데이터(범위 분포, 혈당 그래프)와 사용자 프로필 공유 여부를 토글 스위치로 설정할 수 있습니다. 공유 방법으로는 이메일과 SMS를 선택할 수 있으며, 내보내기 형식은 PDF로 기본 설정되어 있습니다. 보안 설정으로 'Revocable anytime' 옵션을 토글할 수 있으며, 하단에는 'SHARE' 버튼이 있습니다. 이 화면은 CGM(연속 혈당 측정) 앱에서 데이터를 공유하는 기능을 제공하는 것으로 보입니다.",
+                "extractedText": "LOCAL\nSC_07_01 - Data Share\nGlucose data · Summary\nGlucose data · Range distribution\nGlucose data · Glucose graph\nUser profile\nSharing method\nEmail\nSMS\nExport format\nPDF\nNote: Actual send (Email/SMS) depends on OS share sheet / backend integration.\nSecurity\nRevocable anytime\nSHARE",
+                "uiElements": [
+                  {
+                    "type": "화면 제목",
+                    "label": "SC_07_01 - Data Share",
+                    "value": null,
+                    "notes": "데이터 공유 화면의 ID 및 제목"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Glucose data · Summary",
+                    "value": "켜짐",
+                    "notes": "혈당 데이터 요약 공유 여부"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Glucose data · Range distribution",
+                    "value": "켜짐",
+                    "notes": "혈당 데이터 범위 분포 공유 여부"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Glucose data · Glucose graph",
+                    "value": "켜짐",
+                    "notes": "혈당 데이터 그래프 공유 여부"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "User profile",
+                    "value": "꺼짐",
+                    "notes": "사용자 프로필 공유 여부"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Sharing method",
+                    "value": null,
+                    "notes": "공유 방법 섹션"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Email",
+                    "value": "켜짐",
+                    "notes": "이메일 공유 방법 선택"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "SMS",
+                    "value": "꺼짐",
+                    "notes": "SMS 공유 방법 선택"
+                  },
+                  {
+                    "type": "드롭다운",
+                    "label": "Export format",
+                    "value": "PDF",
+                    "notes": "내보내기 형식 선택, 현재 PDF로 설정"
+                  },
+                  {
+                    "type": "안내 문구",
+                    "label": "Note: Actual send (Email/SMS) depends on OS share sheet / backend integration.",
+                    "value": null,
+                    "notes": "실제 전송은 OS 공유 시트 또는 백엔드 통합에 따라 달라진다는 안내"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Security",
+                    "value": null,
+                    "notes": "보안 섹션"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Revocable anytime",
+                    "value": "켜짐",
+                    "notes": "언제든지 취소 가능한 공유 설정"
+                  },
+                  {
+                    "type": "버튼",
+                    "label": "SHARE",
+                    "value": null,
+                    "notes": "데이터 공유 실행 버튼"
+                  }
+                ],
+                "flows": [
+                  "사용자: 'Glucose data · Summary' 토글 스위치를 켠다 -> 시스템: 혈당 데이터 요약 공유가 활성화된다.",
+                  "사용자: 'Glucose data · Range distribution' 토글 스위치를 켠다 -> 시스템: 혈당 데이터 범위 분포 공유가 활성화된다.",
+                  "사용자: 'Glucose data · Glucose graph' 토글 스위치를 켠다 -> 시스템: 혈당 데이터 그래프 공유가 활성화된다.",
+                  "사용자: 'User profile' 토글 스위치를 끈다 -> 시스템: 사용자 프로필 공유가 비활성화된다.",
+                  "사용자: 'Email' 토글 스위치를 켠다 -> 시스템: 이메일을 통한 공유가 활성화된다.",
+                  "사용자: 'SMS' 토글 스위치를 끈다 -> 시스템: SMS를 통한 공유가 비활성화된다.",
+                  "사용자: 'Export format' 드롭다운을 클릭하고 다른 형식을 선택한다 -> 시스템: 내보내기 형식이 변경된다.",
+                  "사용자: 'Revocable anytime' 토글 스위치를 켠다 -> 시스템: 공유된 데이터의 취소 가능성이 활성화된다.",
+                  "사용자: 'SHARE' 버튼을 클릭한다 -> 시스템: 선택된 설정에 따라 데이터 공유 프로세스를 시작한다 (OS 공유 시트 또는 백엔드 통합을 통해)."
+                ],
+                "possibleScreenIds": [
+                  "SC_07_01"
+                ],
+                "uncertainties": [
+                  "상단 바의 'LOCAL' 텍스트의 정확한 의미",
+                  "상단 바의 시간(2:59) 및 아이콘(와이파이, 배터리 등)이 앱 기능과 직접적인 관련이 있는지 여부",
+                  "Sharing method 및 Security 섹션 옆의 아이콘의 정확한 기능 (정보 버튼 또는 설정 버튼으로 추정)"
+                ]
+              }
+            }
+          ],
+          "sample": "SC_07_01 Data Share 텍스트 깨짐 현상 하단의 선택부분의 버튼 설정 저장 안됨 [SHARE] 터치 시 저장된 데이터가 어디로 가는지 알 수 없음 미 구현 사항"
+        },
+        {
+          "index": 10,
+          "title": "Slide 10",
+          "slidePath": "ppt/slides/slide10.xml",
+          "stats": {
+            "textChars": 228,
+            "picCount": 1,
+            "mediaCount": 26
+          },
+          "text": "2. Alerts (AR_01_01) 부분의 전체 기능 저장 안됨 각각의 화면 구성은 되어 있지만 각기능의 범위 및 버튼 설정이 저장 및 반영 되지 않음 Very Low : 범위 설정 및 알람 On/Off 버튼 저장 안됨 High : 범위 설정 및 알람 On/Off 버튼 저장 안됨 Low : 범위 설정 및 알람 On/Off 버튼 저장 안됨 Rapid Change : 범위 설정 및 알람 On/Off 버튼 저장 안됨 Signal Loss : 시간 설정 및 알람 On/Off 버튼 저장 안됨 Lock Screen : 알람 On/Off 버튼 저장 안됨 미 구현 사항",
+          "images": [
+            {
+              "path": "ppt/media/image23.png",
+              "cached": false,
+              "hash": "b381b3d392b8a721666c51aea118067a8cfdee8f71cd4765886762dc238991b8",
+              "ai": {
+                "summary": "(AI가 JSON으로 응답하지 않아 원문을 raw로 저장)",
+                "raw": "```json\n{\n  \"summary\": \"이 이미지는 CGM(연속 혈당 측정) 앱의 '알림' 설정 화면을 보여줍니다. 사용자는 다양한 유형의 혈당 관련 알림(매우 낮음, 높음, 낮음, 급격한 변화, 신호 손실, 잠금 화면)을 설정하고 관리할 수 있습니다. 각 알림 유형은 특정 혈당 임계값, 반복 설정, 우선순위, 알림 방식, 재시도 간격, 타임아웃, 에스컬레이션, 가시성 수준 및 동작과 같은 세부 설정을 포함합니다. 화면 상단에는 'LOCAL'이라는 헤더와 'Loading...' 상태 표시가 있으며, 하단에는 'Home', 'Trend', 'Report', 'Sensor', 'Alarm', 'Settings' 탭으로 구성된 내비게이션 바가 있습니다. 이 화면은 사용자가 혈당 모니터링 시스템의 알림 동작을 맞춤 설정할 수 있도록 설계되었습니다.\",\n  \"extractedText\": \"11:06\\nLOCAL\\nLoading...\\nAlerts (AR_01_01)\\nVery Low (AR_01_02)\\nThreshold 55 mg/dL, repeat, quiet hours\\nHigh (AR_01_03)\\nThreshold 180 mg/dL, repeat, priority\\nLow (AR_01_04)\\nThreshold 70 mg/dL, repeat, priority\\nRapid Change (AR_01_05)\\nRate threshold, direction, notification\\nSignal Loss (AR_01_06)\\nRetry interval, timeout, escalation\\nLock Screen (AR_01_08)\\nVisibility level, actions, method\\nInfo: CGMS alerts work based on out-of-range (low/high), rapid rate-of-change, and signal status.\\nHome\\nTrend\\nReport\\nSensor\\nAlarm\\nSettings\",\n  \"uiElements\": [\n    {\n      \"type\": \"헤더\",\n      \"label\": \"LOCAL\",\n      \"value\": null,\n      \"notes\": \"앱의 현재 위치 또는 모드를 나타내는 것으로 추정\"\n    },\n    {\n      \"type\": \"상태 표시\",\n      \"label\": \"Loading...\",\n      \"value\": null,\n      \"notes\": \"데이터 로딩 중임을 나타냄\"\n    },\n    {\n      \"type\": \"화면 제목\",\n      \"label\": \"Alerts\",\n      \"value\": null,\n      \"notes\": \"현재 화면의 제목\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Very Low (AR_01_02)\",\n      \"value\": \"Threshold 55 mg/dL, repeat, quiet hours\",\n      \"notes\": \"매우 낮은 혈당 알림 설정\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"High (AR_01_03)\",\n      \"value\": \"Threshold 180 mg/dL, repeat, priority\",\n      \"notes\": \"높은 혈당 알림 설정\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Low (AR_01_04)\",\n      \"value\": \"Threshold 70 mg/dL, repeat, priority\",\n      \"notes\": \"낮은 혈당 알림 설정\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Rapid Change (AR_01_05)\",\n      \"value\": \"Rate threshold, direction, notification\",\n      \"notes\": \"급격한 혈당 변화 알림 설정\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Signal Loss (AR_01_06)\",\n      \"value\": \"Retry interval, timeout, escalation\",\n      \"notes\": \"신호 손실 알림 설정\"\n    },\n    {\n      \"type\": \"목록 항목\",\n      \"label\": \"Lock Screen (AR_01_08)\",\n      \"value\": \"Visibility level, actions, method\",\n      \"notes\": \"잠금 화면 알림 설정\"\n    },\n    {\n      \"type\": \"정보 텍스트\",\n      \"label\": \"Info: CGMS alerts work based on out-of-range (low/high), rapid rate-of-change, and signal status.\",\n      \"value\": null,\n      \"notes\": \"CGMS 알림 작동 방식에 대한 설명\"\n    },\n    {\n      \"type\": \"내비게이션 탭\",\n      \"label\": \"Home\",\n      \"value\": null,\n      \"notes\": \"홈 화면으로 이동\"\n    },\n    {\n      \"type\": \"내비게이션 탭\",\n      \"label\": \"Trend\",\n      \"value\": null,\n      \"notes\": \"추세 화면으로 이동\"\n    },\n    {\n      \"type\": \"내비게이션 탭\",\n      \"label\": \"Report\",\n      \"value\": null,\n      \"notes\": \"보고서 화면으로 이동\"\n    },\n    {\n      \"type\": \"내비게이션 탭\",\n      \"label\": \"Sensor\",\n      \"value\": null,\n      \"notes\": \"센서 화면으로 이동\"\n    },\n    {\n      \"type\": \"내비게이션 탭\",\n      \"label\": \"Alarm\",\n      \"value\": null,\n      \"notes\": \"알림 화면으로 이동 (현재 화면)\"\n    },\n    {\n      \"type\": \"내비게이션 탭\",\n      \"label\": \"Settings\",\n      \"value\": null,\n      \"notes\": \"설정 화면으로 이동\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"시계 아이콘\",\n      \"value\": null,\n      \"notes\": \"11:06 시간 표시 옆\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"배터리 아이콘\",\n      \"value\": null,\n      \"notes\": \"11:06 시간 표시 옆\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"화살표 아이콘\",\n      \"value\": null,\n      \"notes\": \"각 알림 항목의 오른쪽에 위치, 세부 설정 화면으로 이동을 나타냄\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"물결선 아이콘\",\n      \"value\": null,\n      \"notes\": \"Very Low, High, Low, Rapid Change 알림 항목 옆\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"와이파이/신호 아이콘\",\n      \"value\": null,\n      \"notes\": \"Signal Loss 알림 항목 옆\"\n    },\n    {\n      \"type\": \"아이콘\",\n      \"label\": \"자물쇠 아이콘\",\n      \"value\": null,\n      \"notes\": \"Lock Screen 알림 항목 옆\"\n    }\n  ],\n  \"flows\": [\n    \"사용자: 'Alerts' 화면에 진입 -> 시스템: 다양한 알림 유형 목록을 표시\",\n    \"사용자: 'Very Low' 알림 항목을 탭 -> 시스템: 'Very Low' 알림의 세부 설정 화면으로 이동\",\n    \"사용자: 'High' 알림 항목을 탭 -> 시스템: 'High' 알림의 세부 설정 화면으로 이동\",\n    \"사용자: 'Low' 알림 항목을 탭 -> 시스템: 'Low' 알림의 세부 설정 화면으로 이동\",\n    \"사용자: 'Rapid Change' 알림 항목을 탭 -> 시스템: 'Rapid Change' 알림의 세부 설정 화면으로 이동\",\n    \"사용자: 'Signal Loss' 알림 항목을 탭 -> 시스템: 'Signal Loss' 알림의 세부 설정 화면으로 이동\",\n    \"사용자: 'Lock Screen' 알림 항목을 탭 -> 시스템: 'Lock Screen' 알림의 세부 설정 화면으로 이동\",\n    \"사용자: 하단 내비게이션 바에서 'Home' 탭을 탭 -> 시스템: 홈 화면으로 이동\",\n    \"사용자: 하단 내비게이션 바에서 'Trend' 탭을 탭 -> 시스템: 추세 화면으로 이동\",\n    \"사용자: 하단 내비게이션 바에서 'Report' 탭을 탭 -> 시스템: 보고서 화면으로 이동\",\n    \"사용자: 하단 내비게이션 바에서 'Sensor' 탭을 탭 -> 시스템: 센서 화면으로 이동\",\n    \"사용자: 하단 내비게이션 바에서 'Settings' 탭을 탭 -> 시스템: 설정 화면으로 이동\"\n  ],\n  \"possibleScreenIds\": [\n    \"AR_01_01\",\n    \"AR_01_02\",\n    \"AR_01_03\",\n    \"AR_01_04\",\n    \"AR_"
+              }
+            }
+          ],
+          "sample": "2. Alerts (AR_01_01) 부분의 전체 기능 저장 안됨 각각의 화면 구성은 되어 있지만 각기능의 범위 및 버튼 설정이 저장 및 반영 되지 않음 Very Low : 범위 설정 및 알람 On/Off 버튼 저장 안됨 High : 범위 설정 및 알람 On/Off 버튼 저장 안됨 Low : 범위 설정 및 알람 On/Off 버튼 저장 안됨 Rapid Change : 범위 설정 및 알람 On/Off 버튼 저장 안됨 Signal Loss : 시간 설정 및 알람 On/Off 버튼 저장 안됨 Lock Screen : 알람 On/Off 버튼 저장 안됨 미 구현 사항"
+        },
+        {
+          "index": 11,
+          "title": "Slide 11",
+          "slidePath": "ppt/slides/slide11.xml",
+          "stats": {
+            "textChars": 164,
+            "picCount": 1,
+            "mediaCount": 26
+          },
+          "text": "3. Setting 부분의 기능 저장 및 반영 안됨 각각의 화면 구성은 되어 있지만 각기능의 범위 및 버튼 설정이 저장이 되지 않음 Language : En 과 Ar 중 Ar 설정 시 화면이 좌우 반전되는 문제가 발생 해당 기능은 언어 변경의 영역 Time format : 24h, 12h 변경 안됨 (24h 로만 표시되는 문제 ) Notification : 버튼 On/Off 저장 안됨 미 구현 사항",
+          "images": [
+            {
+              "path": "ppt/media/image24.png",
+              "cached": false,
+              "hash": "9f19b23cdf9967694477acde4aa9226a76f63000c8a67a509dd8f601549c70cf",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정) 앱의 'Settings' 화면을 보여줍니다. 화면 상단에는 사용자 정보와 남은 센서 사용 기간(14/14일)이 표시되어 있으며, 'Loading...' 상태 인디케이터가 보입니다. 설정 섹션은 'General'이라는 하위 섹션으로 구성되어 있으며, 언어, 지역, 알림 등 앱의 전반적인 환경 설정을 관리할 수 있습니다. 사용자는 'Region', 'Language', 'Time format', 'Chart dot size'와 같은 항목을 선택하여 세부 설정을 변경할 수 있으며, 'Notifications'는 토글 스위치를 통해 켜고 끌 수 있습니다. 하단 내비게이션 바에는 'Home', 'Trend', 'Report', 'Sensor', 'Alarm', 'Settings' 아이콘이 있어 다른 주요 기능으로 이동할 수 있습니다.",
+                "extractedText": "10:04\nLOCAL\nUser\nLoading...\nRemaining days: 14 / 14\nSettings\nApplication preferences\nGeneral\nLanguage, Region, Notifications\nRegion\nAuto-detect: KR\nLanguage\nen\nTime format\n24h\nChart dot size\n2px\nNotifications\nHome\nTrend\nReport\nSensor\nAlarm\nSettings",
+                "uiElements": [
+                  {
+                    "type": "텍스트",
+                    "label": "현재 시간",
+                    "value": "10:04",
+                    "notes": "화면 좌측 상단"
+                  },
+                  {
+                    "type": "상태 표시",
+                    "label": "LOCAL",
+                    "value": null,
+                    "notes": "사용자 프로필 옆"
+                  },
+                  {
+                    "type": "사용자 프로필",
+                    "label": "User",
+                    "value": null,
+                    "notes": "사용자 이름"
+                  },
+                  {
+                    "type": "상태 인디케이터",
+                    "label": "Loading...",
+                    "value": null,
+                    "notes": "우측 상단, 원형 로딩 아이콘과 함께 표시"
+                  },
+                  {
+                    "type": "정보 표시",
+                    "label": "Remaining days",
+                    "value": "14 / 14",
+                    "notes": "센서 남은 사용 기간"
+                  },
+                  {
+                    "type": "섹션 제목",
+                    "label": "Settings",
+                    "value": null,
+                    "notes": "메인 설정 섹션 제목"
+                  },
+                  {
+                    "type": "섹션 설명",
+                    "label": "Application preferences",
+                    "value": null,
+                    "notes": "Settings 섹션의 하위 설명"
+                  },
+                  {
+                    "type": "하위 섹션 제목",
+                    "label": "General",
+                    "value": null,
+                    "notes": "일반 설정 섹션 제목"
+                  },
+                  {
+                    "type": "하위 섹션 설명",
+                    "label": "Language, Region, Notifications",
+                    "value": null,
+                    "notes": "General 섹션의 하위 설명"
+                  },
+                  {
+                    "type": "설정 항목",
+                    "label": "Region",
+                    "value": "Auto-detect: KR",
+                    "notes": "지역 설정, 현재 'KR'로 자동 감지됨, 우측 화살표 아이콘으로 이동 가능"
+                  },
+                  {
+                    "type": "설정 항목",
+                    "label": "Language",
+                    "value": "en",
+                    "notes": "언어 설정, 현재 'en'으로 설정됨, 우측 화살표 아이콘으로 이동 가능"
+                  },
+                  {
+                    "type": "설정 항목",
+                    "label": "Time format",
+                    "value": "24h",
+                    "notes": "시간 형식 설정, 현재 '24h'로 설정됨, 우측 화살표 아이콘으로 이동 가능"
+                  },
+                  {
+                    "type": "설정 항목",
+                    "label": "Chart dot size",
+                    "value": "2px",
+                    "notes": "차트 점 크기 설정, 현재 '2px'로 설정됨, 우측 화살표 아이콘으로 이동 가능"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Notifications",
+                    "value": "켜짐",
+                    "notes": "알림 설정, 현재 켜져 있음"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Home",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Trend",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Report",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Sensor",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Alarm",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Settings",
+                    "value": null,
+                    "notes": "하단 내비게이션 바, 현재 활성화된 상태"
+                  }
+                ],
+                "flows": [
+                  "사용자 프로필 영역 클릭 -> 사용자 상세 정보 또는 프로필 편집 화면으로 이동 (추정)",
+                  "Remaining days 영역 클릭 -> 센서 정보 또는 관리 화면으로 이동 (추정)",
+                  "Region 설정 항목 클릭 -> 지역 선택 화면으로 이동",
+                  "Language 설정 항목 클릭 -> 언어 선택 화면으로 이동",
+                  "Time format 설정 항목 클릭 -> 시간 형식 선택 화면으로 이동",
+                  "Chart dot size 설정 항목 클릭 -> 차트 점 크기 선택 화면으로 이동",
+                  "Notifications 토글 스위치 클릭 -> 알림 설정 켜기/끄기",
+                  "하단 내비게이션 바의 Home 아이콘 클릭 -> Home 화면으로 이동",
+                  "하단 내비게이션 바의 Trend 아이콘 클릭 -> Trend 화면으로 이동",
+                  "하단 내비게이션 바의 Report 아이콘 클릭 -> Report 화면으로 이동",
+                  "하단 내비게이션 바의 Sensor 아이콘 클릭 -> Sensor 화면으로 이동",
+                  "하단 내비게이션 바의 Alarm 아이콘 클릭 -> Alarm 화면으로 이동"
+                ],
+                "possibleScreenIds": [],
+                "uncertainties": [
+                  "상단 'Loading...' 상태의 정확한 의미 (데이터 로딩 중인지, 센서 초기화 중인지 등)",
+                  "사용자 프로필 영역의 'User' 아래에 있는 대시(-)의 의미 (추가 정보가 없거나 로딩 중일 수 있음)",
+                  "하단 내비게이션 바의 아이콘들이 어떤 화면 ID를 가지는지 명확하지 않음"
+                ]
+              }
+            }
+          ],
+          "sample": "3. Setting 부분의 기능 저장 및 반영 안됨 각각의 화면 구성은 되어 있지만 각기능의 범위 및 버튼 설정이 저장이 되지 않음 Language : En 과 Ar 중 Ar 설정 시 화면이 좌우 반전되는 문제가 발생 해당 기능은 언어 변경의 영역 Time format : 24h, 12h 변경 안됨 (24h 로만 표시되는 문제 ) Notification : 버튼 On/Off 저장 안됨 미 구현 사항"
+        },
+        {
+          "index": 12,
+          "title": "Slide 12",
+          "slidePath": "ppt/slides/slide12.xml",
+          "stats": {
+            "textChars": 169,
+            "picCount": 2,
+            "mediaCount": 26
+          },
+          "text": "3. Setting 부분의 기능 저장 및 반영 안됨 각각의 화면 구성은 되어 있지만 각기능의 범위 및 버튼 설정이 저장이 되지 않음 Mute all alarms (AR_01_01) : 버튼 On/Off 저장 안됨 Glucose unit : 단위 변경 및 반영 안됨 Sensors : 동작 되지 않음 Alarms : 동작 되지 않음 Accessibility : 글자 폰트 저장 및 반영되지 않음 미 구현 사항",
+          "images": [
+            {
+              "path": "ppt/media/image25.png",
+              "cached": false,
+              "hash": "c63414e09ddf4c8ebc3b6704dbecb3e7a45b1c1fdbc0d749cf1ef6a2e6da810a",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정) 앱의 '설정' 화면을 보여줍니다. 사용자는 여기서 알람, 단위, 센서, 알람, 접근성 설정을 관리할 수 있습니다. '모든 알람 음소거' 토글을 통해 알람 소리를 제어할 수 있으며, '단위' 섹션에서는 혈당 단위를 mg/dL로 설정하거나 변경할 수 있습니다. '센서' 및 '알람' 섹션은 현재 구성된 센서나 알람이 없음을 나타냅니다. '접근성' 섹션에서는 '고대비' 및 '더 큰 글꼴'과 같은 옵션을 통해 앱의 가독성을 조절할 수 있습니다. 하단 내비게이션 바에는 '홈', '추세', '보고서', '센서', '알람', '설정' 메뉴가 있습니다.",
+                "extractedText": [
+                  "5:21",
+                  "Mute all alarms (AR_01_01)",
+                  "Units",
+                  "Glucose unit",
+                  "mg/dL",
+                  "Sensors",
+                  "Registered sensors",
+                  "No sensors configured",
+                  "Alarms",
+                  "Glucose alerts",
+                  "No alarms configured",
+                  "Accessibility",
+                  "Contrast and font",
+                  "High contrast",
+                  "Laraer font (Larger font 추정)",
+                  "Home",
+                  "Trend",
+                  "Report",
+                  "Sensor",
+                  "Alarm",
+                  "Settings"
+                ],
+                "uiElements": [
+                  {
+                    "type": "토글",
+                    "label": "Mute all alarms",
+                    "value": "Off",
+                    "notes": "현재 비활성화 상태"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Units",
+                    "value": null,
+                    "notes": "단위 설정 섹션 제목"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Glucose unit",
+                    "value": "mg/dL",
+                    "notes": "현재 설정된 혈당 단위"
+                  },
+                  {
+                    "type": "아이콘",
+                    "label": "화살표",
+                    "value": null,
+                    "notes": "단위 설정 상세 화면으로 이동하는 버튼"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Sensors",
+                    "value": null,
+                    "notes": "센서 설정 섹션 제목"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Registered sensors",
+                    "value": null,
+                    "notes": "등록된 센서 하위 라벨"
+                  },
+                  {
+                    "type": "텍스트 메시지",
+                    "label": "No sensors configured",
+                    "value": null,
+                    "notes": "현재 등록된 센서가 없음을 알림"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Alarms",
+                    "value": null,
+                    "notes": "알람 설정 섹션 제목"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Glucose alerts",
+                    "value": null,
+                    "notes": "혈당 알림 하위 라벨"
+                  },
+                  {
+                    "type": "텍스트 메시지",
+                    "label": "No alarms configured",
+                    "value": null,
+                    "notes": "현재 설정된 알람이 없음을 알림"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Accessibility",
+                    "value": null,
+                    "notes": "접근성 설정 섹션 제목"
+                  },
+                  {
+                    "type": "텍스트 라벨",
+                    "label": "Contrast and font",
+                    "value": null,
+                    "notes": "대비 및 글꼴 하위 라벨"
+                  },
+                  {
+                    "type": "토글",
+                    "label": "High contrast",
+                    "value": "Off",
+                    "notes": "현재 비활성화 상태"
+                  },
+                  {
+                    "type": "토글",
+                    "label": "Laraer font (Larger font 추정)",
+                    "value": "Off",
+                    "notes": "현재 비활성화 상태, 부분적으로 가려짐"
+                  },
+                  {
+                    "type": "내비게이션 아이템",
+                    "label": "Home",
+                    "value": null,
+                    "notes": "하단 내비게이션 바 메뉴"
+                  },
+                  {
+                    "type": "내비게이션 아이템",
+                    "label": "Trend",
+                    "value": null,
+                    "notes": "하단 내비게이션 바 메뉴"
+                  },
+                  {
+                    "type": "내비게이션 아이템",
+                    "label": "Report",
+                    "value": null,
+                    "notes": "하단 내비게이션 바 메뉴"
+                  },
+                  {
+                    "type": "내비게이션 아이템",
+                    "label": "Sensor",
+                    "value": null,
+                    "notes": "하단 내비게이션 바 메뉴"
+                  },
+                  {
+                    "type": "내비게이션 아이템",
+                    "label": "Alarm",
+                    "value": null,
+                    "notes": "하단 내비게이션 바 메뉴"
+                  },
+                  {
+                    "type": "내비게이션 아이템",
+                    "label": "Settings",
+                    "value": null,
+                    "notes": "하단 내비게이션 바 메뉴, 현재 활성화된 상태"
+                  }
+                ],
+                "flows": [
+                  "사용자 'Mute all alarms' 토글 탭 -> 모든 알람 음소거 상태 변경",
+                  "사용자 'Glucose unit' 영역 탭 -> 혈당 단위 설정 화면으로 이동",
+                  "사용자 'High contrast' 토글 탭 -> 고대비 모드 활성화/비활성화",
+                  "사용자 'Laraer font' 토글 탭 -> 글꼴 크기 변경 (추정)",
+                  "사용자 하단 내비게이션 바 'Home' 탭 -> 홈 화면으로 이동",
+                  "사용자 하단 내비게이션 바 'Trend' 탭 -> 추세 화면으로 이동",
+                  "사용자 하단 내비게이션 바 'Report' 탭 -> 보고서 화면으로 이동",
+                  "사용자 하단 내비게이션 바 'Sensor' 탭 -> 센서 화면으로 이동",
+                  "사용자 하단 내비게이션 바 'Alarm' 탭 -> 알람 화면으로 이동"
+                ],
+                "possibleScreenIds": [
+                  "AR_01_01"
+                ],
+                "uncertainties": [
+                  "하단 'Laraer font' 토글의 정확한 라벨 ('Larger font'로 추정되나 일부 가려짐)",
+                  "하단 'Laraer font' 토글 아래의 추가 접근성 설정 항목 (일부만 보임)"
+                ]
+              }
+            },
+            {
+              "path": "ppt/media/image26.png",
+              "cached": false,
+              "hash": "fad48006b5bc56c5c3379dcfe6abfd5fab3d61e34a43c54d4838394a6905abdc",
+              "ai": {
+                "summary": "이 이미지는 CGM(연속 혈당 측정) 앱의 '설정' 화면 중 '접근성' 및 '개발자' 옵션을 보여줍니다. 접근성 섹션에서는 사용자가 고대비, 큰 글꼴, 색맹 모드를 활성화/비활성화할 수 있는 토글 스위치가 제공됩니다. 개발자 섹션에는 요구사항 오버레이, BLE 로그, 로그 데이터 전송, 생체 인식(LO_02_06)과 같은 디버그 옵션이 포함되어 있으며, 각 옵션은 추가 설정이나 정보를 볼 수 있는 다음 화면으로 이동하는 기능을 제공합니다. 특히 생체 인식 옵션은 'Enable / Debug bypass / Test' 기능을 포함하고 있습니다. 화면 하단에는 홈, 트렌드, 보고서, 센서, 알람, 설정으로 구성된 내비게이션 바가 있습니다.",
+                "extractedText": [
+                  "5:21",
+                  "Accessibility",
+                  "Contrast and font",
+                  "High contrast",
+                  "Larger font",
+                  "Color blind mode",
+                  "Developer",
+                  "Debug options",
+                  "Requirement overlay",
+                  "Off",
+                  "BLE Logs",
+                  "Most recent BLE/OPS/Notify debug logs",
+                  "Log Data Transmission",
+                  "Not sent yet",
+                  "Biometric (LO_02_06)",
+                  "Enable / Debug bypass / Test",
+                  "Home",
+                  "Trend",
+                  "Report",
+                  "Sensor",
+                  "Alarm",
+                  "Settings"
+                ],
+                "uiElements": [
+                  {
+                    "type": "토글 스위치",
+                    "label": "High contrast",
+                    "value": "Off (추정)",
+                    "notes": "현재 비활성화 상태로 보임"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Larger font",
+                    "value": "Off (추정)",
+                    "notes": "현재 비활성화 상태로 보임"
+                  },
+                  {
+                    "type": "토글 스위치",
+                    "label": "Color blind mode",
+                    "value": "Off (추정)",
+                    "notes": "현재 비활성화 상태로 보임"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Requirement overlay",
+                    "value": "Off",
+                    "notes": "오른쪽 화살표 아이콘으로 다음 화면 이동 가능"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "BLE Logs",
+                    "value": "Most recent BLE/OPS/Notify debug logs",
+                    "notes": "오른쪽 화살표 아이콘으로 다음 화면 이동 가능"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Log Data Transmission",
+                    "value": "Not sent yet",
+                    "notes": "오른쪽 화살표 아이콘으로 다음 화면 이동 가능"
+                  },
+                  {
+                    "type": "목록 항목",
+                    "label": "Biometric (LO_02_06)",
+                    "value": "Enable / Debug bypass / Test",
+                    "notes": "오른쪽 화살표 아이콘으로 다음 화면 이동 가능"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Home",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Trend",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Report",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Sensor",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Alarm",
+                    "value": null,
+                    "notes": "하단 내비게이션 바"
+                  },
+                  {
+                    "type": "내비게이션 아이콘",
+                    "label": "Settings",
+                    "value": null,
+                    "notes": "하단 내비게이션 바, 현재 활성화된 상태로 보임"
+                  }
+                ],
+                "flows": [
+                  "사용자 액션: 'High contrast' 토글 스위치 탭 -> 시스템 반응: 고대비 모드 활성화/비활성화",
+                  "사용자 액션: 'Larger font' 토글 스위치 탭 -> 시스템 반응: 글꼴 크기 변경",
+                  "사용자 액션: 'Color blind mode' 토글 스위치 탭 -> 시스템 반응: 색맹 모드 활성화/비활성화",
+                  "사용자 액션: 'Requirement overlay' 목록 항목 탭 -> 시스템 반응: 'Requirement overlay' 상세 화면으로 이동",
+                  "사용자 액션: 'BLE Logs' 목록 항목 탭 -> 시스템 반응: 'BLE Logs' 상세 화면으로 이동 (가장 최근 BLE/OPS/Notify 디버그 로그 표시)",
+                  "사용자 액션: 'Log Data Transmission' 목록 항목 탭 -> 시스템 반응: 'Log Data Transmission' 상세 화면으로 이동 (로그 데이터 전송 상태 표시)",
+                  "사용자 액션: 'Biometric (LO_02_06)' 목록 항목 탭 -> 시스템 반응: 'Biometric' 상세 화면으로 이동 (생체 인식 활성화/디버그 우회/테스트 옵션 제공)",
+                  "사용자 액션: 하단 내비게이션 바의 'Home' 아이콘 탭 -> 시스템 반응: 홈 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바의 'Trend' 아이콘 탭 -> 시스템 반응: 트렌드 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바의 'Report' 아이콘 탭 -> 시스템 반응: 보고서 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바의 'Sensor' 아이콘 탭 -> 시스템 반응: 센서 화면으로 이동",
+                  "사용자 액션: 하단 내비게이션 바의 'Alarm' 아이콘 탭 -> 시스템 반응: 알람 화면으로 이동"
+                ],
+                "possibleScreenIds": [
+                  "LO_02_06"
+                ],
+                "uncertainties": [
+                  "각 토글 스위치의 현재 정확한 상태(활성화/비활성화)는 이미지 해상도로 인해 명확하게 판독하기 어려움. 현재는 모두 비활성화된 것으로 추정됨.",
+                  "각 개발자 옵션 항목을 탭했을 때 이동하는 화면의 정확한 ID나 내용은 명시되어 있지 않음."
+                ]
+              }
+            }
+          ],
+          "sample": "3. Setting 부분의 기능 저장 및 반영 안됨 각각의 화면 구성은 되어 있지만 각기능의 범위 및 버튼 설정이 저장이 되지 않음 Mute all alarms (AR_01_01) : 버튼 On/Off 저장 안됨 Glucose unit : 단위 변경 및 반영 안됨 Sensors : 동작 되지 않음 Alarms : 동작 되지 않음 Accessibility : 글자 폰트 저장 및 반영되지 않음 미 구현 사항"
+        }
+      ],
+      "manualReview": [],
+      "errors": []
+    }
+  ],
+  "manualReview": [],
+  "errors": [],
+  "aiUsage": {
+    "enabled": true,
+    "provider": "gemini",
+    "model": "gemini-2.5-flash-image",
+    "maxImagesTotal": 125,
+    "maxImagesPerItem": 3,
+    "onlyManualReview": false,
+    "analyzedImages": 23,
+    "skippedImages": 0
+  },
+  "config": {
+    "path": "C:\\rc\\_cube\\empecs\\empecs_cgms\\tools\\req-analyzer\\req-analyzer.config.local.jsonc",
+    "effective": {
+      "outputDir": "..\\..\\docs\\req260305\\_analysis_260306",
+      "maxSampleCharsPerItem": 1200,
+      "minTextCharsForReadable": 20,
+      "ai": {
+        "enabled": true,
+        "model": "gpt-4o-mini",
+        "maxImagesTotal": 125,
+        "maxImagesPerItem": 3,
+        "onlyManualReview": false,
+        "provider": "gemini"
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "qa-bot",
+  "version": "1.0.0",
+  "description": "QA tracker: record verification, capture screenshots, generate HTML report",
+  "main": "src/cli.js",
+  "bin": {
+    "qa-bot": "src/cli.js"
+  },
+  "scripts": {
+    "qa-bot": "node src/cli.js",
+    "report": "node src/cli.js report",
+    "seed:current": "node src/cli.js seed:current --id AR_01_02",
+    "android:full-auto": "node src/android-full-auto.js",
+    "export:pdf": "node src/export-pdf-pptx.js --pdf",
+    "export:pptx": "node src/export-pdf-pptx.js --pptx",
+    "export:all": "node src/export-pdf-pptx.js --pdf --pptx"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "pptxgenjs": "^3.12.0",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}
+

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EMPECS 소셜 로그인 — 복사·붙여넣기 설정서</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f0f4f3;
+      --paper: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --accent: #0f766e;
+      --accent-2: #ccfbf1;
+      --border: #cbd5e1;
+      --google: #b91c1c;
+      --apple: #18181b;
+      --kakao: #3c1e1e;
+      --warn-bg: #fff7ed;
+      --warn-border: #ea580c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans KR", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 2rem 1.15rem 3.5rem; }
+    header { margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 2px solid var(--border); }
+    h1 {
+      font-family: "Source Serif 4", Georgia, serif;
+      font-size: 1.65rem;
+      margin: 0 0 0.5rem;
+      font-weight: 600;
+    }
+    .lead { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .must {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      margin: 1.25rem 0;
+      font-size: 0.93rem;
+    }
+    .must strong { color: #9a3412; }
+    section {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.35rem 1.2rem;
+      margin-bottom: 1.1rem;
+      box-shadow: 0 1px 8px rgba(15, 23, 42, 0.06);
+    }
+    section h2 {
+      margin: 0 0 0.85rem;
+      font-size: 1.12rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+    }
+    .badge-google { background: #fee2e2; color: var(--google); }
+    .badge-apple { background: #e4e4e7; color: var(--apple); }
+    .badge-kakao { background: #fee500; color: var(--kakao); }
+    .copy-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      align-items: stretch;
+      margin-bottom: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .copy-row .meta { grid-column: 1 / -1; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.2rem; font-weight: 600; }
+    .copy-row .val {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.78rem;
+      word-break: break-all;
+      line-height: 1.45;
+      padding: 0.35rem 0;
+      align-self: center;
+    }
+    .copy-btn {
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.45rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      white-space: nowrap;
+      align-self: start;
+    }
+    .copy-btn:hover { filter: brightness(1.08); }
+    .copy-btn:active { transform: scale(0.98); }
+    .copy-btn.done { background: #059669; }
+    ol.proc {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+    }
+    ol.proc li { margin-bottom: 0.55rem; }
+    .link { color: var(--accent); }
+    .term {
+      background: #e2e8f0;
+      padding: 0.06em 0.3em;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.92em;
+    }
+    .subh {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 1rem 0 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px dashed var(--border);
+    }
+    .subh:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+    footer {
+      margin-top: 1.75rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>EMPECS 소셜 로그인 설정 (복사·붙여넣기 전용)</h1>
+      <p class="lead">
+        이 문서에 <strong>적힌 글자만</strong> 각 사이트 입력칸에 붙여 넣으세요.
+        <strong>주소·도메인·앱 이름을 스스로 정하거나 바꾸지 마세요.</strong>
+      </p>
+    </header>
+
+    <div class="must">
+      <strong>꼭 지켜 주세요</strong><br />
+      • 빈 칸이 있는데 이 문서에 값이 없으면 <strong>임의로 만들지 말고</strong> EMPECS 개발 담당자에게 문자·메일로 요청하세요.<br />
+      • <span class="term">SHA-1 인증서 지문</span>, <span class="term">Android 키 해시</span>는 개발 쪽에서만 만들 수 있는 값입니다. 담당자가 보내 준 <strong>한 줄</strong>을 그대로 붙여 넣습니다.
+    </div>
+
+    <section>
+      <h2>① 공통 — 무조건 이 값만 사용</h2>
+      <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--muted);">아래 각 줄 옆 <strong>복사</strong>를 누른 뒤, 콘솔 화면의 <strong>같은 이름의 칸</strong>에 붙여 넣습니다.</p>
+
+      <div class="copy-row">
+        <span class="meta">서비스 주소 · 홈페이지 URL · OAuth 동의화면에 묻는 &quot;앱 홈페이지&quot; 등 (https 포함)</span>
+        <span class="val" id="v-base">https://empecs.lunarsystem.co.kr</span>
+        <button type="button" class="copy-btn" data-copy="v-base">복사</button>
+      </div>
+      <div class="copy-row">
+        <span class="meta">Google — 승인된 자바스크립트 출처 (한 줄)</span>
+        <span class="val" id="v-g-js">https://empecs.lunarsystem.co.kr</span>
+        <button type="button" class="copy-btn" data-copy="v-g-js">복사</button>
+      </div>
+      <div class="copy-row">
+        <span class="meta">Google — 승인된 리디렉션 URI (한 줄)</span>
+        <span class="val" id="v-g-cb">https://empecs.lunarsystem.co.kr/api/oauth/google/callback</span>
+        <button type="button" class="copy-btn" data-copy="v-g-cb">복사</button>
+      </div>
+      <div class="copy-row">
+        <span class="meta">Apple — Domains and Subdomains (https 없이 도메인만)</span>
+        <span class="val" id="v-a-dom">empecs.lunarsystem.co.kr</span>
+        <button type="button" class="copy-btn" data-copy="v-a-dom">복사</button>
+      </div>
+      <div class="copy-row">
+        <span class="meta">Apple — Return URLs (한 줄, https 포함)</span>
+        <span class="val" id="v-a-cb">https://empecs.lunarsystem.co.kr/api/oauth/apple/callback</span>
+        <button type="button" class="copy-btn" data-copy="v-a-cb">복사</button>
+      </div>
+      <div class="copy-row">
+        <span class="meta">Kakao — Redirect URI (한 줄)</span>
+        <span class="val" id="v-k-cb">https://empecs.lunarsystem.co.kr/api/oauth/kakao/callback</span>
+        <button type="button" class="copy-btn" data-copy="v-k-cb">복사</button>
+      </div>
+      <div class="copy-row">
+        <span class="meta">Android 앱 — 패키지 이름 (Google Android 클라이언트 / Kakao 플랫폼 Android)</span>
+        <span class="val" id="v-pkg">com.helpcare.app</span>
+        <button type="button" class="copy-btn" data-copy="v-pkg">복사</button>
+      </div>
+      <div class="copy-row">
+        <span class="meta">iOS 앱 — 번들 ID (Apple App ID / Kakao 플랫폼 iOS)</span>
+        <span class="val" id="v-bundle">com.helpcare.helpcare</span>
+        <button type="button" class="copy-btn" data-copy="v-bundle">복사</button>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="badge badge-google">GOOGLE</span> Google Cloud — 할 일 순서</h2>
+      <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--muted);">
+        사이트: <a class="link" href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a>
+      </p>
+      <ol class="proc">
+        <li>구글 계정으로 로그인합니다.</li>
+        <li>상단에서 프로젝트를 선택하거나 새로 만듭니다.</li>
+        <li>왼쪽 메뉴 <strong>API 및 서비스</strong> → <strong>사용자 인증 정보</strong>로 이동합니다.</li>
+        <li>처음이면 화면 안내에 따라 <strong>OAuth 동의 화면</strong>을 완료합니다. 홈페이지·개인정보처리방침 URL을 묻는 칸이 있으면 위 <strong>① 공통</strong>의 <code>https://empecs.lunarsystem.co.kr</code>만 사용합니다.</li>
+      </ol>
+
+      <p class="subh">A. 웹 애플리케이션 클라이언트 만들기</p>
+      <ol class="proc" start="5">
+        <li><strong>+ 사용자 인증 정보 만들기</strong> → <strong>OAuth 클라이언트 ID</strong> → 애플리케이션 유형 <strong>웹 애플리케이션</strong>을 선택합니다.</li>
+        <li><strong>승인된 자바스크립트 출처</strong>에 ①에서 <strong>복사</strong>한 <code>https://empecs.lunarsystem.co.kr</code> 한 줄을 붙여 넣습니다.</li>
+        <li><strong>승인된 리디렉션 URI</strong>에 ①에서 <strong>복사</strong>한 <code>…/api/oauth/google/callback</code> 한 줄을 붙여 넣습니다.</li>
+        <li>저장 후 나오는 <strong>클라이언트 ID</strong>·필요 시 <strong>클라이언트 보안 비밀</strong>을 EMPECS 담당자에게 전달합니다. (이 두 줄은 복사 버튼이 없습니다 — 화면에서 복사하세요.)</li>
+      </ol>
+
+      <p class="subh">B. Android 클라이언트 만들기 (모바일 앱용)</p>
+      <ol class="proc" start="9">
+        <li>다시 <strong>+ 사용자 인증 정보 만들기</strong> → <strong>OAuth 클라이언트 ID</strong> → 유형 <strong>Android</strong>를 선택합니다.</li>
+        <li><strong>패키지 이름</strong>에는 ①의 <code>com.helpcare.app</code>만 붙여 넣습니다.</li>
+        <li><strong>SHA-1 인증서 지문</strong> 칸에는 EMPECS 담당자가 보내 준 값 <strong>한 줄만</strong> 붙여 넣습니다. 담당자에게 받기 전에는 이 단계를 보류합니다.</li>
+        <li>저장 후 나오는 <strong>클라이언트 ID</strong>를 EMPECS 담당자에게 전달합니다.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2><span class="badge badge-apple">APPLE</span> Apple Developer — 할 일 순서</h2>
+      <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--muted);">
+        사이트: <a class="link" href="https://developer.apple.com/account" target="_blank" rel="noopener">developer.apple.com</a> (유료 멤버십 필요)
+      </p>
+      <ol class="proc">
+        <li><strong>Certificates, Identifiers &amp; Profiles</strong> → <strong>Identifiers</strong>로 갑니다.</li>
+        <li><strong>App IDs</strong>에서 EMPECS iOS 앱용 항목을 선택하거나 새로 만듭니다. <strong>Bundle ID</strong>는 반드시 ①의 <code>com.helpcare.helpcare</code>와 동일하게 맞춥니다.</li>
+        <li>기능에서 <strong>Sign In with Apple</strong>을 켜고 저장합니다.</li>
+        <li>웹·Android에서 Apple 로그인까지 쓰는 경우: <strong>Identifiers</strong>에서 <strong>Services IDs</strong>를 추가하고, <strong>Sign In with Apple</strong>을 설정합니다.</li>
+        <li>Services ID 설정 화면에서 <strong>Domains and Subdomains</strong>에 ①에서 복사한 <code>empecs.lunarsystem.co.kr</code>만 넣습니다.</li>
+        <li><strong>Return URLs</strong>에 ①에서 복사한 <code>https://empecs.lunarsystem.co.kr/api/oauth/apple/callback</code> 한 줄만 넣습니다.</li>
+      </ol>
+      <p style="margin:0.75rem 0 0;font-size:0.88rem;color:var(--muted);">맥·Xcode에서 앱 서명·빌드는 EMPECS 개발 쪽에서 진행합니다. 고객은 위 웹 콘솔에 표시된 ID·키만 발급·전달해 주시면 됩니다.</p>
+    </section>
+
+    <section>
+      <h2><span class="badge badge-kakao">KAKAO</span> Kakao Developers — 할 일 순서</h2>
+      <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--muted);">
+        사이트: <a class="link" href="https://developers.kakao.com/" target="_blank" rel="noopener">developers.kakao.com</a>
+      </p>
+      <ol class="proc">
+        <li><strong>내 애플리케이션</strong>에서 앱을 만들거나 선택합니다.</li>
+        <li><strong>앱 설정</strong> → <strong>플랫폼</strong>에서 <strong>Android</strong>를 추가합니다. <strong>패키지명</strong>에 ①의 <code>com.helpcare.app</code>만 넣습니다.</li>
+        <li><strong>마켓 URL</strong> 등 이 문서에 없는 칸이 <strong>필수(빨간 표시)</strong>로 나오면, 임의로 적지 말고 EMPECS 담당자에게 값을 요청합니다.</li>
+        <li><strong>Android 키 해시</strong> 칸에는 EMPECS 담당자가 보내 준 값만 붙여 넣습니다. 여러 줄이면 담당자 안내 순서대로 모두 등록합니다.</li>
+        <li><strong>iOS</strong> 플랫폼을 추가하고 <strong>번들 ID</strong>에 ①의 <code>com.helpcare.helpcare</code>만 넣습니다.</li>
+        <li><strong>제품 설정</strong> → <strong>카카오 로그인</strong>을 <strong>ON</strong>으로 켭니다.</li>
+        <li><strong>Redirect URI</strong>에 ①에서 복사한 <code>https://empecs.lunarsystem.co.kr/api/oauth/kakao/callback</code> 한 줄을 추가·저장합니다.</li>
+        <li><strong>앱 키</strong> 화면의 <strong>네이티브 앱 키</strong>(및 필요 시 REST API 키)를 EMPECS 담당자에게 전달합니다.</li>
+      </ol>
+    </section>
+
+    <div class="must" style="border-color:var(--accent);background:var(--accent-2);">
+      <strong>담당자에게 넘길 때</strong><br />
+      Google / Apple / Kakao 화면에서 발급된 <strong>클라이언트 ID, 키, Services ID</strong> 등은 스크린샷이나 메모로 임의 요약하지 말고, 화면에 보이는 문자열을 <strong>그대로 복사</strong>해 전달해 주세요.
+    </div>
+
+    <footer>
+      EMPECS CGMS · 소셜 로그인 고객용 설정서<br />
+      도메인·콜백 경로·앱 식별자는 본 문서에 고정되어 있습니다. 변경이 필요하면 EMPECS에서 문서를 갱신한 뒤 다시 배포합니다.
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      document.querySelectorAll(".copy-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var id = btn.getAttribute("data-copy");
+          var el = document.getElementById(id);
+          if (!el) return;
+          var text = el.textContent.trim();
+          function done() {
+            btn.textContent = "복사됨";
+            btn.classList.add("done");
+            setTimeout(function () {
+              btn.textContent = "복사";
+              btn.classList.remove("done");
+            }, 1600);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(function () {
+              fallback(text, done);
+            });
+          } else {
+            fallback(text, done);
+          }
+        });
+      });
+      function fallback(text, done) {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+          done();
+        } catch (e) {
+          alert("복사에 실패했습니다. 위 글자를 직접 드래그해 복사해 주세요.");
+        }
+        document.body.removeChild(ta);
+      }
+    })();
+  </script>
+</body>
+</html>

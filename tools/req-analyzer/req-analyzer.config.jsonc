@@ -1,0 +1,44 @@
+{
+  // req-analyzer 설정파일 (JSONC: 주석 허용)
+  //
+  // 우선순위:
+  // 1) CLI 옵션(--min-text-chars 등)
+  // 2) 이 설정파일
+  // 3) 기본값
+  //
+  // AI 사용 시: PowerShell에서 환경변수 OPENAI_API_KEY 설정 필요
+  //   $env:OPENAI_API_KEY="YOUR_KEY"
+  //
+  // (권장) API 키는 이 파일이 아니라 로컬 전용 파일에 넣으세요:
+  //   tools/req-analyzer/req-analyzer.config.local.jsonc
+  // 이 파일은 .gitignore에 포함되어 커밋/공유를 피합니다.
+
+  // 출력 폴더: 입력이 폴더면 <입력폴더>/<outputDir> 로 생성됨
+  "outputDir": "_analysis",
+
+  // 텍스트가 이 값보다 적고(공백 제외), 그림/미디어가 있으면 "수동 확인 필요"로 플래그
+  "minTextCharsForReadable": 20,
+
+  // 리포트/요청문서에 넣을 샘플 텍스트 최대 길이
+  "maxSampleCharsPerItem": 1200,
+
+  "ai": {
+    // true면 이미지(엑셀 xl/media, ppt/media)를 Vision으로 분석해 요약/텍스트 추출을 추가
+    "enabled": true,
+
+    // (비권장) 여기에 API 키를 직접 넣을 수 있습니다.
+    // 보안상 로컬 전용 파일(req-analyzer.config.local.jsonc)에만 넣는 것을 권장합니다.
+    "apiKey": "",
+
+    // 비전 모델(기본: gpt-4o-mini). 필요 시 변경
+    "provider": "gemini",
+    "model": "gemini-2.5-flash-image",
+
+    // 전체 분석할 이미지 최대 수(비용/시간 제어)
+    "maxImagesTotal": 125,
+
+    // 시트/슬라이드 1개당 분석할 이미지 최대 수
+    "maxImagesPerItem": 3
+  }
+}
+

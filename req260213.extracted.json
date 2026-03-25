@@ -1,0 +1,204 @@
+{
+  "generatedAt": "2026-02-27T06:05:31.877Z",
+  "source": "C:\\rc\\_cube\\empecs\\empecs_cgms\\docs\\req\\디앤에스CGMS_앱_기능구성도_동작_확인_26_02_13.xlsx",
+  "reqKItems": [
+    {
+      "id": "LO_01_02",
+      "kNote": "29",
+      "jPrev": "12.30 확인 결과 로그인까지 연결은 구현 X",
+      "screenName": "Google 로그인",
+      "main": "Google 계정 연동",
+      "detail": "• Google 로그인 프로세스 진행",
+      "kAddr": "K8",
+      "idAddr": "C8"
+    },
+    {
+      "id": "LO_01_04",
+      "kNote": "29",
+      "jPrev": "12.30 확인 결과 [올바르지 않는 접근] 표시",
+      "screenName": "카카오 로그인",
+      "main": "카카오톡 계정 연동",
+      "detail": "• 카카오톡 로그인 프로세스 진행",
+      "kAddr": "K14",
+      "idAddr": "C14"
+    },
+    {
+      "id": "LO_02_01",
+      "kNote": "55",
+      "jPrev": "12.30 확인 결과 [네트워트 에러] 표시",
+      "screenName": "회원가입 안내",
+      "main": "서비스 가입 안내",
+      "detail": "• 회원가입 진행 여부 선택",
+      "kAddr": "K26",
+      "idAddr": "C26"
+    },
+    {
+      "id": "ST_01_01",
+      "kNote": "설정 내용 적용 안됨\nSetting 시트 참조",
+      "jPrev": "",
+      "screenName": "사용자 화면",
+      "main": "사용자 기본 설정 기능",
+      "detail": "• 사용자 지역, 언어, 시간, 그래프 포인트, 혈당 단위, 폰트, 설정의 기능",
+      "kAddr": "K215",
+      "idAddr": "C215"
+    },
+    {
+      "id": "ST_01_02",
+      "kNote": "48",
+      "jPrev": "",
+      "screenName": "지역 설정",
+      "main": "사용자 사용 지역 선택",
+      "detail": "• 사용자가 App을 사용하는 지역의 설정",
+      "kAddr": "K216",
+      "idAddr": "C216"
+    },
+    {
+      "id": "ST_01_03",
+      "kNote": "49",
+      "jPrev": "",
+      "screenName": "언어 설정",
+      "main": "사용자의 사용언어 선택",
+      "detail": "• 사용자가 App을 사용하는 언어의 설정",
+      "kAddr": "K217",
+      "idAddr": "C217"
+    },
+    {
+      "id": "ST_01_04",
+      "kNote": "50",
+      "jPrev": "",
+      "screenName": "시간 설정",
+      "main": "사용자의 시간 단위 선택",
+      "detail": "• App에 표시 되는 시간단위의 설정",
+      "kAddr": "K218",
+      "idAddr": "C218"
+    },
+    {
+      "id": "ST_02_01",
+      "kNote": "설정 내용 적용 안됨",
+      "jPrev": "",
+      "screenName": "혈당 단위 설정",
+      "main": "혈당의 표시 단위를 설정",
+      "detail": "• mg/dL, mmol/dL와 같은 혈당 단위 설정",
+      "kAddr": "K220",
+      "idAddr": "C220"
+    },
+    {
+      "id": "ST_03_01",
+      "kNote": "1. 알람 발생 자체를 안함, 알람 내역도 없음\n2. 연결된 센서 표시 안됨",
+      "jPrev": "",
+      "screenName": "Sensors",
+      "main": "340",
+      "detail": "",
+      "kAddr": "K221",
+      "idAddr": "C221"
+    },
+    {
+      "id": "ST_04_01",
+      "kNote": "257",
+      "jPrev": "",
+      "screenName": "Alarms",
+      "main": "340",
+      "detail": "",
+      "kAddr": "K222",
+      "idAddr": "C222"
+    }
+  ],
+  "implErrItems": [
+    {
+      "section": "Report",
+      "id": "RP_01_01",
+      "request": "Share 기능을 사용한 데이터 공유",
+      "recheck": "데이터 공유를 할 시 공유내용, 범위를 적용할 수 있는지(현재는 Share 버튼 선택불가)",
+      "etc": "346",
+      "idAddr": "C4"
+    },
+    {
+      "section": "Report",
+      "id": "SC_03_01",
+      "request": "데이터 공유의 기능",
+      "recheck": "데이터 공유를 할 시 공유내용, 범위를 적용할 수 있는지 확인 요청",
+      "etc": "SC_06_01의 기능이 추가된 건지 확인 필요",
+      "idAddr": "C9"
+    },
+    {
+      "section": "Alarm",
+      "id": "AR_01_02",
+      "request": "방해금지모드의 무시 기능",
+      "recheck": "긴급 저혈당의 알람은 휴대폰의 방해금지모드에도 울릴 수 있도록 하는 내용이지만\n해당 기능에서는 알람을 멈추는 형식으로 구현, 해당 기능의 변경 요청",
+      "etc": "방해금지 모드에도 알람을 울리는\n기능으로 변경 요청",
+      "idAddr": "C14"
+    },
+    {
+      "section": "Alarm",
+      "id": "AR_01_03",
+      "request": "고혈당 범위 설정, 알람 반복설정",
+      "recheck": "선택부분은 구현되었지만 선택한 부분이 실제 구동에 적용되지 않아 확인 요청 (Save를 하여도 다시 원복)",
+      "etc": "해당 부분 페이지 ID 바뀜으로 재확인 요청",
+      "idAddr": "C15"
+    },
+    {
+      "section": "Alarm",
+      "id": "AR_01_04",
+      "request": "저혈당 범위 설정, 알람 반복설정",
+      "recheck": "선택부분은 구현되었지만 선택한 부분이 실제 구동에 적용되지 않아 확인 요청 (Save를 하여도 다시 원복)",
+      "etc": "4",
+      "idAddr": "C16"
+    },
+    {
+      "section": "Alarm",
+      "id": "AR_01_05",
+      "request": "급변동 범위 및 알람 설정",
+      "recheck": "선택부분은 구현되었지만 선택한 부분이 실제 구동에 적용되지 않아 확인 요청 (Save를 하여도 다시 원복)",
+      "etc": "5",
+      "idAddr": "C17"
+    },
+    {
+      "section": "Alarm",
+      "id": "AR_01_06",
+      "request": "신호 손실 알람",
+      "recheck": "선택부분은 구현되었지만 선택한 부분이 실제 구동에 적용되지 않아 확인 요청 (Save를 하여도 다시 원복)",
+      "etc": "6",
+      "idAddr": "C18"
+    },
+    {
+      "section": "Alarm",
+      "id": "AR_01_06",
+      "request": "잠금 배너 알림",
+      "recheck": "휴대폰상 배너를 띄워 알림센터에서의 확인 기능의 누락",
+      "etc": "367",
+      "idAddr": "C19"
+    },
+    {
+      "section": "Alarm",
+      "id": "ST_01_02",
+      "request": "사용자의 지역 선택",
+      "recheck": "선택부분은 구현되었지만 선택한 부분이 실제 구동에 적용되지 않아 확인 요청",
+      "etc": "2",
+      "idAddr": "C24"
+    },
+    {
+      "section": "Alarm",
+      "id": "ST_01_03",
+      "request": "사용자의 언어 선택",
+      "recheck": "선택부분은 구현되었지만 선택한 부분이 실제 구동에 적용되지 않아 확인 요청",
+      "etc": "3",
+      "idAddr": "C25"
+    },
+    {
+      "section": "Alarm",
+      "id": "ST_01_04",
+      "request": "사용자의 시간 단위 선택",
+      "recheck": "선택부분은 구현되었지만 선택한 부분이 실제 구동에 적용되지 않아 확인 요청",
+      "etc": "4",
+      "idAddr": "C26"
+    },
+    {
+      "section": "Alarm",
+      "id": "ST_02_01",
+      "request": "혈당 단위 선택",
+      "recheck": "선택부분은 구현되었지만 선택한 부분이 실제 구동에 적용되지 않아 확인 요청",
+      "etc": "",
+      "idAddr": "C27"
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CGMS 앱 메뉴얼 및 결과자료</title>
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#111}
+    h1,h2{margin:0 0 12px}
+    .meta{background:#f6f8fa;padding:12px;border:1px solid #ddd;border-radius:8px;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;margin:14px 0}
+    th,td{border:1px solid #ddd;padding:10px;vertical-align:top;font-size:13px}
+    th{background:#f3f3f3;text-align:left}
+    img{max-width:280px;border:1px solid #ccc;border-radius:6px}
+    .muted{color:#666}
+  </style>
+</head>
+<body>
+  <h1>CGMS 앱 메뉴얼 및 결과자료</h1>
+  <div class="meta">
+    <div><b>실행 환경</b>: Android Emulator (sdk gphone64 x86 64, 1080x2400)</div>
+    <div><b>앱 실행</b>: flutter run -d emulator-5554</div>
+    <div><b>작성 일시</b>: 2026-03-20</div>
+    <div><b>결과물 경로</b>: docs/manual_result/</div>
+  </div>
+
+  <h2>1) 캡처 완료 화면</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>기능번호</th>
+        <th>목적</th>
+        <th>화면구성설명</th>
+        <th>관련 함수</th>
+        <th>스크린샷</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>GU_01_01</td>
+        <td>메인 대시보드(현재 혈당/추세/연결상태 확인)</td>
+        <td>상단 상태 카드, 현재값, 차트, 하단 내비게이션으로 구성</td>
+        <td><code>MainDashboardPage.build()</code>, <code>MainDashboardPage._recompute()</code></td>
+        <td><img src="screenshots/home.png" alt="home" /></td>
+      </tr>
+      <tr>
+        <td>TG_01_01</td>
+        <td>트렌드 분석(기간별 변화량/통계 확인)</td>
+        <td>기간 선택, 통계 카드, 추세 시각화로 구성</td>
+        <td><code>TrendTabPage.build()</code>, <code>TrendTabPage._reloadTir()</code></td>
+        <td><img src="screenshots/trend.png" alt="trend" /></td>
+      </tr>
+      <tr>
+        <td>RP_01_01</td>
+        <td>리포트 확인(요약 지표/이벤트 기록)</td>
+        <td>평균/최저/최고 및 기록 리스트 중심 화면</td>
+        <td><code>CgmsReportScreen.build()</code>, <code>CgmsReportScreen._load()</code></td>
+        <td><img src="screenshots/report.png" alt="report" /></td>
+      </tr>
+      <tr>
+        <td>SC_02_01</td>
+        <td>센서 관리 진입(스캔/연결/등록 진입점)</td>
+        <td>스캐너 상태, 디바이스 목록, QR 진입 버튼 구성</td>
+        <td><code>SensorPage.build()</code>, <code>SensorPage._mockScan()</code>, <code>SensorPage._connect()</code></td>
+        <td><img src="screenshots/sensor.png" alt="sensor" /></td>
+      </tr>
+      <tr>
+        <td>AR_ROOT</td>
+        <td>알람 설정(고/저/급변동/무음 설정)</td>
+        <td>알람 유형별 토글/임계값 설정 중심 화면</td>
+        <td><code>AlertsRootPage.build()</code>, <code>AlarmTypeDetailPage._save()</code></td>
+        <td><img src="screenshots/alarm.png" alt="alarm" /></td>
+      </tr>
+      <tr>
+        <td>ST_01_01</td>
+        <td>앱 설정(단위/시간형식/접근성 등)</td>
+        <td>사용자 카드, 일반 설정, 단위/알림/접근성 섹션 구성</td>
+        <td><code>SettingsPage.build()</code>, <code>SettingsPage._save()</code></td>
+        <td><img src="screenshots/settings.png" alt="settings" /></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2) 전체 기능 페이지 목록(코드 기준)</h2>
+  <p class="muted">아래는 <code>main.dart</code> 라우트 및 QA 보조 라우트를 기준으로 정리한 항목입니다. 미캡처 항목은 후속 자동 캡처(탭 외 상세 라우트 이동)로 보완 가능합니다.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>기능번호</th>
+        <th>Route</th>
+        <th>목적</th>
+        <th>관련 함수/위젯</th>
+        <th>스크린샷 상태</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>LO_01_01</td><td>/login</td><td>로그인 방식 선택</td><td>LoginChoiceScreen</td><td>미캡처</td></tr>
+      <tr><td>LO_01_02</td><td>/lo/01/02</td><td>Google 로그인 프로세스</td><td>Lo0102GoogleLoginScreen</td><td>미캡처</td></tr>
+      <tr><td>LO_01_03</td><td>/lo/01/03</td><td>Apple 로그인 프로세스</td><td>Lo0103AppleLoginScreen</td><td>미캡처</td></tr>
+      <tr><td>LO_01_04</td><td>/lo/01/04</td><td>Kakao 로그인 프로세스</td><td>Lo0104KakaoLoginScreen</td><td>미캡처</td></tr>
+      <tr><td>LO_02_01~05</td><td>/lo/02/01~05</td><td>회원가입 플로우</td><td>Lo02xx Screens</td><td>미캡처</td></tr>
+      <tr><td>SC_01_01</td><td>/sc/01/01</td><td>권한/범위 설정</td><td>Sc0101PermissionRangeScreen</td><td>미캡처</td></tr>
+      <tr><td>SC_01_03</td><td>/sc/01/03</td><td>NFC 스캔</td><td>Sc0103NfcScanScreen</td><td>미캡처</td></tr>
+      <tr><td>SC_01_04</td><td>/sc/01/04</td><td>QR 스캔</td><td>SensorQrConnectPage</td><td>미캡처</td></tr>
+      <tr><td>SC_01_05</td><td>/sc/01/05</td><td>수동 SN 입력</td><td>Sc0105ManualSnScreen</td><td>미캡처</td></tr>
+      <tr><td>SC_01_06</td><td>/sc/01/06</td><td>워밍업 카운트다운</td><td>Sc0106WarmupScreen</td><td>미캡처</td></tr>
+      <tr><td>SC_06_02</td><td>/sc/06/02</td><td>QR 재연결 가이드</td><td>Sc0602QrReconnectScreen</td><td>미캡처</td></tr>
+      <tr><td>SC_07_01</td><td>/sc/07/01</td><td>데이터 공유 설정</td><td>Sc0701DataShareScreen</td><td>미캡처</td></tr>
+      <tr><td>GU_01_01</td><td>/gu/01/01</td><td>메인 대시보드</td><td>MainDashboardPage</td><td>캡처완료</td></tr>
+      <tr><td>TG_01_01</td><td>/tg/01/01</td><td>트렌드 세로</td><td>TrendTabPage</td><td>캡처완료(탭)</td></tr>
+      <tr><td>TG_01_02</td><td>/tg/01/02</td><td>트렌드 가로</td><td>Tg0102ChartLandscapeScreen</td><td>미캡처</td></tr>
+      <tr><td>RP_01_01</td><td>/rp/01/01</td><td>리포트</td><td>CgmsReportScreen</td><td>캡처완료(탭)</td></tr>
+      <tr><td>ME_01_01</td><td>/me/01/01</td><td>이벤트 편집</td><td>Me0101EventEditorScreen</td><td>미캡처</td></tr>
+      <tr><td>PD_01_01</td><td>/pd/01/01</td><td>이전 데이터</td><td>Pd0101PreviousDataScreen</td><td>미캡처</td></tr>
+      <tr><td>AR_ROOT</td><td>/ar/root</td><td>알람 루트</td><td>AlertsRootPage</td><td>캡처완료(탭)</td></tr>
+      <tr><td>ST_01_01</td><td>/settings</td><td>설정 루트</td><td>SettingsPage</td><td>캡처완료(탭)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3) 비고</h2>
+  <ul>
+    <li>이번 결과는 에뮬레이터 실구동 후 하단 탭 기준 자동 캡처를 우선 반영했습니다.</li>
+    <li>상세 페이지(로그인/NFC/QR/워밍업/이벤트 편집 등)는 라우트 자동 이동 안정화 후 2차 캡처로 완전판 제작 가능합니다.</li>
+    <li>XLSX/PPTX는 원하시면 다음 단계에서 Node 스크립트로 변환 생성 가능합니다.</li>
+  </ul>
+</body>
+</html>
