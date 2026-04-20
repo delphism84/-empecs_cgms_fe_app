@@ -1,0 +1,10 @@
+**/build/
+.dart_tool/
+**/.gradle/
+**/android/.gradle/
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/macos/**/Pods/
+*.iml
+**/logs/
+**/.git/
