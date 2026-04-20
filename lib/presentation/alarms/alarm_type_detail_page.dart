@@ -35,16 +35,17 @@ class _AlarmTypeDetailPageState extends State<AlarmTypeDetailPage> {
       '_id': 'local:$type',
       'type': type,
       'enabled': true,
-      if (type != 'system')
-        'threshold': type == 'very_low'
-            ? 55
-            : type == 'low'
-                ? 70
-                : type == 'high'
-                    ? 180
-                    : type == 'rate'
-                        ? 2
-                        : null,
+      'threshold': type == 'system'
+          ? -88
+          : type == 'very_low'
+              ? 55
+              : type == 'low'
+                  ? 70
+                  : type == 'high'
+                      ? 180
+                      : type == 'rate'
+                          ? 2
+                          : null,
       'quietFrom': '22:00',
       'quietTo': '07:00',
       'sound': true,

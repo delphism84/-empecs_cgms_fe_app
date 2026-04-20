@@ -4,6 +4,8 @@ import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/signal_loss_monitor_log.dart';
+import 'package:helpcare/core/utils/warmup_state.dart';
 
 /// 간단 알람 엔진(봇 검수용 포함)
 /// - DataSyncBus의 glucosePoint를 감시
@@ -24,37 +26,13 @@ class AlertEngine {
   DateTime? _lastPointAt;
   double? _lastPointValue;
 
-  // Warm-up 중에는 알람이 발생하면 안됨(SC_01_06). 빈번한 I/O를 피하기 위해 짧은 캐시를 둔다.
-  DateTime _warmupCheckedAt = DateTime.fromMillisecondsSinceEpoch(0);
-  bool _warmupActiveCached = false;
+  // Warm-up 중에는 알람이 발생하면 안됨(SC_01_06). 매 이벤트마다 저장소를 읽어 웜업 직후에도 억제가 누락되지 않게 한다.
+
+  /// 호환용: 웜업 플래그 저장 직후 [invalidateWarmupCache] 호출 유지 권장.
+  void invalidateWarmupCache() {}
 
   Future<bool> _isWarmupActive() async {
-    final now = DateTime.now();
-    if (now.difference(_warmupCheckedAt) < const Duration(seconds: 5)) return _warmupActiveCached;
-    _warmupCheckedAt = now;
-    try {
-      final st = await SettingsStorage.load();
-      final bool active = st['sc0106WarmupActive'] == true;
-      if (!active) {
-        _warmupActiveCached = false;
-        return false;
-      }
-      final String endsRaw = (st['sc0106WarmupEndsAt'] as String? ?? '').trim();
-      final DateTime? endsAt = endsRaw.isEmpty ? null : DateTime.tryParse(endsRaw)?.toLocal();
-      if (endsAt != null && now.isAfter(endsAt)) {
-        // 안전장치: 워밍업 시간이 지났는데 플래그가 남아있으면 자동 해제
-        st['sc0106WarmupActive'] = false;
-        st['sc0106WarmupDoneAt'] = now.toUtc().toIso8601String();
-        await SettingsStorage.save(st);
-        _warmupActiveCached = false;
-        return false;
-      }
-      _warmupActiveCached = true;
-      return true;
-    } catch (_) {
-      _warmupActiveCached = false;
-      return false;
-    }
+    return WarmupState.isActive();
   }
 
   Future<void> start() async {
@@ -72,34 +50,62 @@ class AlertEngine {
     _alarms = const [];
   }
 
+  /// BLE 링크가 끊겼을 때 (재연결 시도 전·중 포함). Weak RSSI 전용 알림은 사용하지 않음(req 1-2).
+  Future<void> notifyBleLinkLost() async {
+    try {
+      if (await _isWarmupActive()) return;
+      invalidateAlarmsCache();
+      await _ensureAlarmsLoaded();
+      for (final raw in _alarms) {
+        if ((raw['type'] ?? '').toString() != 'system') continue;
+        final Map<String, dynamic> a = Map<String, dynamic>.from(raw);
+        SignalLossMonitorLog.append('BLE disconnected — evaluating signal_loss alarm');
+        await _fireSystemAlarmFromConfig(a, reason: 'signal_loss');
+        return;
+      }
+    } catch (e) {
+      try {
+        SignalLossMonitorLog.append('notifyBleLinkLost error: $e');
+      } catch (_) {}
+    }
+  }
+
   /// 디버그/봇 검수용: 시스템(신호 손실 등) 알람 강제 트리거
   Future<void> debugTriggerSystemAlarm({String reason = 'signal_loss'}) async {
+    invalidateAlarmsCache();
     await _ensureAlarmsLoaded();
-    // system 알람은 threshold가 없을 수 있으므로 별도 처리
+    final String r = reason.trim().isEmpty ? 'signal_loss' : reason.trim();
+    final String useReason = r == 'weak_rssi' ? 'signal_loss' : r;
     final List<Map<String, dynamic>> systems = _alarms.where((a) => (a['type'] ?? '').toString() == 'system').cast<Map<String, dynamic>>().toList();
     if (systems.isEmpty) return;
-
     for (final a in systems) {
-      // quiet hours
-      if (_inQuietHours(a['quietFrom'] as String?, a['quietTo'] as String?)) continue;
+      await _fireSystemAlarmFromConfig(Map<String, dynamic>.from(a), reason: useReason);
+    }
+  }
+
+  Future<void> _fireSystemAlarmFromConfig(
+    Map<String, dynamic> a, {
+    required String reason,
+  }) async {
+    try {
+      if (await _isWarmupActive()) return;
+      if (a['enabled'] != true) return;
+      if (_inQuietHours(a['quietFrom'] as String?, a['quietTo'] as String?)) {
+        SignalLossMonitorLog.append('alarm skipped (quiet hours)');
+        return;
+      }
+
       bool sound = (a['sound'] is bool) ? (a['sound'] == true) : true;
       bool vibrate = (a['vibrate'] is bool) ? (a['vibrate'] == true) : true;
       final int repeatMin = (a['repeatMin'] as num?)?.toInt() ?? 10;
-      // AR_01_01: mute all alarms (force silent)
-      try {
-        final st = await SettingsStorage.load();
-        if (st['alarmsMuteAll'] == true) {
-          sound = false;
-          vibrate = false;
-        }
-      } catch (_) {}
-
-      const String type = 'system';
-      final last = _lastFired[type];
+      const String repeatKey = 'system:signal_loss';
+      final last = _lastFired[repeatKey];
       if (last != null && DateTime.now().difference(last) < Duration(minutes: repeatMin.clamp(1, 120))) {
-        continue;
+        SignalLossMonitorLog.append('alarm skipped (repeat every $repeatMin min · signal_loss)');
+        return;
       }
-      _lastFired[type] = DateTime.now();
+      _lastFired[repeatKey] = DateTime.now();
+      SignalLossMonitorLog.append('alarm raise!');
 
       final Map<String, Map<String, String>> msg = {
         'signal_loss': {'title': 'Signal loss', 'body': 'Sensor signal lost'},
@@ -109,9 +115,12 @@ class AlertEngine {
       };
       final String r = reason.trim().isEmpty ? 'signal_loss' : reason.trim();
       final String title = (msg[r]?['title']) ?? 'System alert';
-      final String body = ((msg[r]?['body']) ?? 'System alert') + ' ($r)';
+      String body = (msg[r]?['body']) ?? 'System alert';
+      if (r != 'signal_loss') {
+        body = '$body ($r)';
+      }
       final int nid = 1010 + (r.hashCode.abs() % 50);
-      final payload = 'alarm:system:$reason';
+      final String payload = 'alarm:system:signal_loss';
       await NotificationService().showAlert(
         id: nid,
         title: title,
@@ -131,13 +140,17 @@ class AlertEngine {
           'payload': payload,
           'critical': false,
           'alarmType': 'system',
-          'reason': reason,
+          'reason': r,
           'sound': sound,
           'vibrate': vibrate,
           'overrideDnd': false,
           'time': DateTime.now().toUtc().toIso8601String(),
         };
         await SettingsStorage.save(s);
+      } catch (_) {}
+    } catch (e) {
+      try {
+        SignalLossMonitorLog.append('_fireSystemAlarmFromConfig error: $e');
       } catch (_) {}
     }
   }
@@ -171,9 +184,14 @@ class AlertEngine {
     if (from == null || from.isEmpty || to == null || to.isEmpty) return false;
     try {
       final now = DateTime.now();
-      final partsF = from.split(':'); final partsT = to.split(':');
-      final fh = int.parse(partsF[0]); final fm = int.parse(partsF[1]);
-      final th = int.parse(partsT[0]); final tm = int.parse(partsT[1]);
+      final partsF = from.split(':');
+      final partsT = to.split(':');
+      final int fh = int.tryParse(partsF.isNotEmpty ? partsF[0].trim() : '') ?? -1;
+      final int fm = int.tryParse(partsF.length > 1 ? partsF[1].trim() : '0') ?? 0;
+      final int th = int.tryParse(partsT.isNotEmpty ? partsT[0].trim() : '') ?? -1;
+      final int tm = int.tryParse(partsT.length > 1 ? partsT[1].trim() : '0') ?? 0;
+      if (fh < 0 || fh > 23 || th < 0 || th > 23) return false;
+      if (fm < 0 || fm > 59 || tm < 0 || tm > 59) return false;
       final n = now.hour * 60 + now.minute;
       final a = fh * 60 + fm;
       final b = th * 60 + tm;
@@ -258,16 +276,6 @@ class AlertEngine {
 
       if (!hit) continue;
 
-      // AR_01_01: mute all alarms (force silent)
-      try {
-        final st = await SettingsStorage.load();
-        if (st['alarmsMuteAll'] == true) {
-          sound = false;
-          vibrate = false;
-          critical = false;
-        }
-      } catch (_) {}
-
       final int repeatMin = (a['repeatMin'] as num?)?.toInt() ?? 10;
       final last = _lastFired[type];
       if (last != null && DateTime.now().difference(last) < Duration(minutes: repeatMin.clamp(1, 120))) {
@@ -275,8 +283,14 @@ class AlertEngine {
       }
       _lastFired[type] = DateTime.now();
 
-      // 노티 ID는 타입별 고정
-      final int nid = type == 'very_low' ? 1002 : type == 'low' ? 1004 : 1003;
+      // 노티 ID는 타입별 고정 (high와 rate가 1003 공유하던 문제 분리)
+      final int nid = type == 'very_low'
+          ? 1002
+          : type == 'low'
+              ? 1004
+              : type == 'rate'
+                  ? 1005
+                  : 1003;
       await NotificationService().showAlert(
         id: nid,
         title: title,

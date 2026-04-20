@@ -52,6 +52,7 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/lang/lang.csv
     - docs/btstep.png
   fonts:
     - family: Gilroy-Medium

@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Save & Sync 후 진입. BLE 검색 → n/total 순차 접속 → MAC 확인 → 성공 시 Warm-up
+/// Save & Sync 후 진입. BLE 스캔 → QR MAC과 동일한 주소의 기기 1대만 접속 (SN 비교 없음)
 class StartMonitorPage extends StatefulWidget {
   const StartMonitorPage({super.key, this.targetSerial, this.targetMac});
 
@@ -36,19 +37,16 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
 
   String _normalizeMac(String? s) {
     final raw = (s ?? '').trim().toUpperCase();
-    // Compare MACs regardless of separators (':', '-', spaces)
     return raw.replaceAll(RegExp(r'[^0-9A-F]'), '');
   }
 
   void _startFeedbackLoop() {
-    // Start monitor UX: periodic vibration + "ding-ding" system beeps.
     _feedbackTimer?.cancel();
     _feedbackTimer = Timer.periodic(const Duration(seconds: 2), (t) {
       if (!mounted || _cancelled) {
         t.cancel();
         return;
       }
-      // "띵~딩": two quick taps
       try {
         HapticFeedback.lightImpact();
       } catch (_) {}
@@ -70,6 +68,8 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
   Future<void> _runAutoConnect() async {
     final ble = BleService();
     final String expectedMac = _normalizeMac(widget.targetMac);
+    final String expectedSerial = (widget.targetSerial ?? '').trim();
+
     if (expectedMac.isEmpty) {
       if (!mounted) return;
       setState(() {
@@ -78,7 +78,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
       });
       _showFailureDialog(
         title: 'BLE Connection Failed',
-        message: 'QR MAC information is missing.\n\nPlease scan the QR code again.',
+        message: 'QR에 MAC 주소가 없습니다.\n\nQR을 다시 스캔해 주세요.',
       );
       return;
     }
@@ -101,135 +101,150 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
 
     if (!mounted) return;
     setState(() => _scanning = false);
+
     if (devices.isEmpty) {
       setState(() => _allFailed = true);
       _showFailureDialog(
         title: 'BLE Connection Failed',
-        message: 'No BLE devices were found.\n\nPlease ensure Bluetooth is on and the sensor is nearby, then try again.',
+        message:
+            'No BLE devices were found.\n\nPlease ensure Bluetooth is on and the sensor is nearby, then try again.',
       );
       return;
     }
 
-    await ble.ensurePermissions();
+    DiscoveredDevice? match;
+    for (final d in devices) {
+      if (_normalizeMac(d.id) == expectedMac) {
+        match = d;
+        break;
+      }
+    }
 
-    for (int i = 0; i < devices.length; i++) {
-      if (!mounted || _cancelled) return;
-      final d = devices[i];
-
+    if (match == null) {
+      if (!mounted) return;
       setState(() {
-        _currentIndex = i + 1;
-        _connecting = true;
         for (var j = 0; j < _statuses.length; j++) {
-          if (_statuses[j].id == d.id) {
+          _statuses[j] = _DeviceStatus(
+            id: _statuses[j].id,
+            name: _statuses[j].name,
+            rssi: _statuses[j].rssi,
+            state: _DeviceState.skipped,
+          );
+        }
+        _allFailed = true;
+      });
+      _showFailureDialog(
+        title: 'BLE Connection Failed',
+        message:
+            '스캔된 기기 중 QR MAC과 일치하는 센서가 없습니다.\n\n블루투스를 켜고 센서를 가까이 둔 뒤 다시 시도하세요.',
+      );
+      return;
+    }
+
+    final DiscoveredDevice matched = match;
+
+    await ble.ensurePermissions();
+    if (!mounted || _cancelled) return;
+
+    setState(() {
+      _currentIndex = 1;
+      _totalCount = devices.length;
+      for (var j = 0; j < _statuses.length; j++) {
+        final id = _statuses[j].id;
+        if (id == matched.id) {
+          _statuses[j] = _DeviceStatus(
+            id: id,
+            name: _statuses[j].name,
+            rssi: _statuses[j].rssi,
+            state: _DeviceState.connecting,
+          );
+        } else {
+          _statuses[j] = _DeviceStatus(
+            id: id,
+            name: _statuses[j].name,
+            rssi: _statuses[j].rssi,
+            state: _DeviceState.skipped,
+          );
+        }
+      }
+      _connecting = true;
+    });
+
+    bool connected = false;
+    try {
+      connected = await ble.connectToDeviceAndWaitReady(matched.id);
+    } catch (_) {
+      connected = false;
+    }
+
+    if (!mounted) return;
+
+    if (!connected) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('cgms.last_mac');
+      } catch (_) {}
+      setState(() {
+        for (var j = 0; j < _statuses.length; j++) {
+          if (_statuses[j].id == matched.id) {
             _statuses[j] = _DeviceStatus(
-              id: d.id,
+              id: _statuses[j].id,
               name: _statuses[j].name,
               rssi: _statuses[j].rssi,
-              state: _DeviceState.connecting,
+              state: _DeviceState.skipped,
             );
             break;
           }
         }
-      });
-
-      try {
-        await ble.connectToDevice(d.id);
-      } catch (_) {
-        if (!mounted) return;
-        setState(() {
-          for (var j = 0; j < _statuses.length; j++) {
-            if (_statuses[j].id == d.id) {
-              _statuses[j] = _DeviceStatus(
-                id: d.id,
-                name: _statuses[j].name,
-                rssi: _statuses[j].rssi,
-                state: _DeviceState.skipped,
-              );
-              break;
-            }
-          }
-          _connecting = false;
-        });
-        continue;
-      }
-
-      final String deviceMacNorm = _normalizeMac(d.id);
-      final bool macMatches =
-          expectedMac.isNotEmpty && deviceMacNorm.isNotEmpty && deviceMacNorm == expectedMac;
-
-      if (macMatches) {
-        if (mounted) {
-          setState(() {
-            for (var j = 0; j < _statuses.length; j++) {
-              if (_statuses[j].id == d.id) {
-                _statuses[j] = _DeviceStatus(
-                  id: d.id,
-                  name: _statuses[j].name,
-                  rssi: _statuses[j].rssi,
-                  state: _DeviceState.matched,
-                  sn: widget.targetSerial?.trim(),
-                );
-                break;
-              }
-            }
-            _connecting = false;
-          });
-        }
-
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('cgms.last_mac', d.id);
-          await prefs.setString('cgms.last_name', d.name.isEmpty ? 'CGMS' : d.name);
-        } catch (_) {}
-        // MAC 매칭 성공 시 센서 식별자는 QR의 SN 정보를 우선 사용
-        try {
-          final st = await SettingsStorage.load();
-          final String qrSn = (widget.targetSerial ?? '').trim();
-          if (qrSn.isNotEmpty) {
-            st['eqsn'] = qrSn;
-            await SettingsStorage.save(st);
-          }
-        } catch (_) {}
-
-        // 접속 성공 시 진동/사운드 피드백 즉시 중지
-        _feedbackTimer?.cancel();
-        _cancelled = true;
-
-        if (!mounted) return;
-        await BleService().startWarmupAndNavigate();
-        return;
-      }
-
-      // MAC mismatch → disconnect and continue
-      if (mounted) {
-        setState(() {
-          for (var j = 0; j < _statuses.length; j++) {
-            if (_statuses[j].id == d.id) {
-              _statuses[j] = _DeviceStatus(
-                id: d.id,
-                name: _statuses[j].name,
-                rssi: _statuses[j].rssi,
-                state: _DeviceState.skipped,
-              );
-              break;
-            }
-          }
-          _connecting = false;
-        });
-      }
-
-      try { await ble.disconnect(); } catch (_) {}
-    }
-
-    // BLE Connection Failed는 검출된 기기가 없을 때만 표시 (통신 성공 시 오탐 방지)
-    if (mounted) {
-      setState(() {
         _connecting = false;
         _allFailed = true;
       });
-      // devices.isEmpty인 경우에만 다이얼로그 표시 (이미 위에서 처리됨)
-      // MAC 불일치 등으로 모든 기기 시도 후 실패한 경우에는 다이얼로그 생략
+      _showFailureDialog(
+        title: 'BLE Connection Failed',
+        message:
+            'MAC이 일치하는 센서에 연결하지 못했습니다.\n\n센서 전원·거리를 확인한 뒤 다시 시도하세요.',
+      );
+      return;
     }
+
+    unawaited(BleLogService().add('QR', 'pair ok mac=$expectedMac id=${matched.id}'));
+
+    if (mounted) {
+      setState(() {
+        for (var j = 0; j < _statuses.length; j++) {
+          if (_statuses[j].id == matched.id) {
+            _statuses[j] = _DeviceStatus(
+              id: matched.id,
+              name: _statuses[j].name,
+              rssi: _statuses[j].rssi,
+              state: _DeviceState.matched,
+              sn: expectedSerial.isNotEmpty ? expectedSerial : null,
+            );
+            break;
+          }
+        }
+        _connecting = false;
+      });
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cgms.last_mac', matched.id);
+      await prefs.setString('cgms.last_name', matched.name.isEmpty ? 'CGMS' : matched.name);
+    } catch (_) {}
+    try {
+      final st = await SettingsStorage.load();
+      if (expectedSerial.isNotEmpty) {
+        st['eqsn'] = expectedSerial;
+        await SettingsStorage.save(st);
+      }
+    } catch (_) {}
+
+    _feedbackTimer?.cancel();
+    _cancelled = true;
+
+    if (!mounted) return;
+    await BleService().startWarmupAndNavigate();
   }
 
   void _showFailureDialog({
@@ -256,15 +271,18 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
   void _onCancel() {
     setState(() => _cancelled = true);
     _feedbackTimer?.cancel();
-    // Stop any ongoing BLE connection attempt.
-    try { BleService().disconnect(); } catch (_) {}
+    try {
+      BleService().disconnect();
+    } catch (_) {}
     Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
     _feedbackTimer?.cancel();
-    try { BleService().disconnect(); } catch (_) {}
+    try {
+      BleService().disconnect();
+    } catch (_) {}
     super.dispose();
   }
 
@@ -310,7 +328,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
                     ),
                     Text(
                       _connecting
-                          ? 'Connecting & MAC check...'
+                          ? 'Connecting to MAC-matched sensor...'
                           : _allFailed
                               ? 'Search complete'
                               : _scanning
@@ -373,7 +391,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
                                   ),
                                   Text(
                                     s.state == _DeviceState.matched
-                                        ? (s.sn ?? 'SN: ${s.name}')
+                                        ? (s.sn ?? 'OK')
                                         : 'SKIP',
                                     style: TextStyle(
                                       fontSize: 12,

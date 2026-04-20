@@ -13,6 +13,7 @@ import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/ingest_queue.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/app_nav.dart';
+import 'package:helpcare/core/config/app_constants.dart';
 import 'package:helpcare/core/utils/global_loading.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
@@ -555,7 +556,7 @@ class BleEmuServer {
           if (j['verified'] == true) s['lo0203VerifiedAt'] = DateTime.now().toUtc().toIso8601String();
           await SettingsStorage.save(s);
         } catch (_) {}
-        await AppNav.goNamed('/lo/02/03', replaceStack: true);
+        await AppNav.goNamed('/lo/02/04', replaceStack: true);
         return _json(req, 200, {'ok': true, 'route': AppNav.route});
       }
       if (req.method == 'POST' && path == '/emu/app/lo0205') {
@@ -735,8 +736,8 @@ class BleEmuServer {
         } catch (_) {}
         try {
           final now = DateTime.now().toUtc();
-          // Sensor2: last 14 days
-          final DateTime s2From = now.subtract(const Duration(days: 14));
+          // Sensor2: last N days (AppConstants)
+          final DateTime s2From = now.subtract(Duration(days: AppConstants.defaultSensorValidityDays));
           final DateTime s2To = now.subtract(const Duration(days: 1));
           // Sensor1: older 21~15 days ago
           final DateTime s1From = now.subtract(const Duration(days: 21));
@@ -780,7 +781,7 @@ class BleEmuServer {
         // reuse seed endpoint logic by inlining minimal
         try {
           final now = DateTime.now().toUtc();
-          final DateTime s2From = now.subtract(const Duration(days: 14));
+          final DateTime s2From = now.subtract(Duration(days: AppConstants.defaultSensorValidityDays));
           final DateTime s2To = now.subtract(const Duration(days: 1));
           final DateTime s1From = now.subtract(const Duration(days: 21));
           final DateTime s1To = now.subtract(const Duration(days: 15));

@@ -16,6 +16,13 @@ import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/debug_toast.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
+import 'package:helpcare/core/config/app_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:helpcare/presentation/dashboard/pd_01_01_previous_data_screen.dart';
+import 'package:helpcare/presentation/dashboard/pd_previous_routes.dart';
+import 'package:easy_localization/easy_localization.dart';
+
+bool _bleShowsConnected(BleConnPhase p) => p == BleConnPhase.notifySubscribed;
 
 enum Trend { up, down, flat }
 // 5단계 화살표 방향 (분당 변화율 기준)
@@ -28,17 +35,17 @@ class MainDashboardPage extends StatefulWidget {
   State<MainDashboardPage> createState() => _MainDashboardPageState();
 }
 
-class _MainDashboardPageState extends State<MainDashboardPage> with SingleTickerProviderStateMixin {
+class _MainDashboardPageState extends State<MainDashboardPage> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final GlobalKey _stackKey = GlobalKey();
   final GlobalKey _glucoseValueKey = GlobalKey();
 
   late final AnimationController _toastController;
   Timer? _nextToastTimer;
-  String _toastTime = '';
   double _currentGlucose = 0;
   int _simulated = 0; // mock 비활성: 기본 0
   int _lastSpecOutYmd = -1; // 일 1회 스펙아웃 플래그 (yyyyMMdd)
-  String _lastMeasuredTime = '-';
+  /// e.g. "Last Update 04/01 14:55" or "Last Update —" when no data
+  String _lastUpdateLine = 'Last Update —';
   Trend5 _trend5 = Trend5.flat;
   double _ratePerMin = 0; // mg/dL per minute
   bool _autoSimulate = false; // 자동 센서 데이터 시뮬레이션 게이트 (기본 off)
@@ -49,7 +56,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   // removed: 24h min/max, TIR (상단 오브 통계 제거에 따라 비표시)
   int _daysLeft = 0;
   DateTime? _sensorStart;
-  int _sensorLifeDays = 14;
+  int _sensorLifeDays = AppConstants.defaultSensorValidityDays;
   StreamSubscription<DataSyncEvent>? _syncSub;
   StreamSubscription<String>? _toastSub;
   // removed: external memo FAB open state (moved to ChartPage overlay)
@@ -58,8 +65,9 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _toastController = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000));
-    _lastMeasuredTime = '-';
+    _lastUpdateLine = 'Last Update —';
     _loadSensorInfo();
     _loadUnit();
     AppSettingsBus.changed.addListener(_onSettingsChanged);
@@ -83,6 +91,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _nextToastTimer?.cancel();
     _toastController.dispose();
     _syncSub?.cancel();
@@ -90,6 +99,14 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     try { AppSettingsBus.changed.removeListener(_onSettingsChanged); } catch (_) {}
     BleService().phase.removeListener(_onBlePhase);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // 스크린세이버/백그라운드 복귀 직후 로컬 DB에서 즉시 재로드 → 표시 공백 구간 최소화
+      unawaited(_seedPoints());
+    }
   }
 
   void _onSettingsChanged() {
@@ -115,6 +132,15 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     // reuse flying toast ui; display bottom-left simple toast
     final scaffold = ScaffoldMessenger.maybeOf(context);
     scaffold?.showSnackBar(SnackBar(content: Text(msg), duration: const Duration(milliseconds: 1200)));
+  }
+
+  void _openPreviousDataScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: PdPreviousRoutes.stack),
+        builder: (_) => const Pd0101PreviousDataScreen(),
+      ),
+    );
   }
 
   void _openMemoModal() async {
@@ -167,7 +193,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
         if (ok) _chartRefresh.value++;
       } catch (_) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to save event')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('dash_event_save_failed'.tr())));
       }
     }
   }
@@ -199,8 +225,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
       _chartRefresh.value++; // 차트 새로고침 트리거
     } catch (_) {}
     setState(() {
-      _toastTime = _formatNow();
-      _lastMeasuredTime = _toastTime; // 최근 측정시간 동기 갱신 (값 업데이트 시 함께 갱신)
+      _lastUpdateLine = _formatLastUpdateLine(DateTime.now());
     });
     _nextToastTimer?.cancel();
     _toastController.forward(from: 0).whenComplete(() {
@@ -245,13 +270,23 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
         if (cached.isNotEmpty) {
           _sensorStart = DateTime.tryParse(cached)?.toLocal();
         } else if (eqsn.isNotEmpty) {
-          // 2) 로컬 없으면 서버에서 조회 후 캐시
+          // 2) 로컬 없으면 서버에서 조회 후 캐시 (SN 또는 BLE MAC 일치 시, req 1-7)
           try {
-            final Map<String, dynamic> eq = await ss.getEqBySerial(eqsn);
+            final prefs = await SharedPreferences.getInstance();
+            final String? mac = prefs.getString('cgms.last_mac');
+            final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: eqsn, bleMac: mac);
             final String? st = (eq['startAt'] as String?);
             if (st != null && st.isNotEmpty) {
               _sensorStart = DateTime.tryParse(st)?.toLocal();
               try { final m = await SettingsStorage.load(); m['sensorStartAt'] = st; await SettingsStorage.save(m); } catch (_) {}
+            }
+            final String? srvSn = (eq['serial'] as String?)?.trim();
+            if (srvSn != null && srvSn.isNotEmpty && srvSn != eqsn) {
+              try {
+                final m = await SettingsStorage.load();
+                m['eqsn'] = srvSn;
+                await SettingsStorage.save(m);
+              } catch (_) {}
             }
           } catch (_) {}
         }
@@ -267,8 +302,8 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
           if (active != null) {
             final String? st = active['startAt'] as String?;
             if (st != null && st.isNotEmpty) _sensorStart = DateTime.tryParse(st)?.toLocal();
-            final int? life = (active['lifeDays'] as num?)?.toInt();
-            if (life != null && life > 0) _sensorLifeDays = life;
+            // 센서 유효일은 앱 상수(15일) 기준. 캐시/서버의 legacy lifeDays(14)는 무시.
+            _sensorLifeDays = AppConstants.defaultSensorValidityDays;
           }
         }
       } catch (_) {}
@@ -283,15 +318,15 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
       final int? c = ev.payload['count'] as int?;
       if (c != null && c == 0) {
         _series.clear();
-        _lastMeasuredTime = '-';
+        _lastUpdateLine = 'Last Update —';
         _recompute();
         // SN 변경 신호로 간주하고 시작일 재조회 → 남은 일수 즉시 갱신
         try { _loadSensorInfo(); } catch (_) {}
         if (mounted) setState(() {});
         return;
       }
-      // 배치 동기화는 토스트/애니메이션 없이 내부 시리즈만 갱신 + 시작일 재조회
-      _recompute();
+      // RACP 등 silent 배치는 DB에만 쌓일 수 있음 → 로컬에서 시리즈 재로드
+      unawaited(_seedPoints());
       try { _loadSensorInfo(); } catch (_) {}
       if (mounted) setState(() {});
       return;
@@ -311,8 +346,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     _recompute();
     if (!mounted) return;
     setState(() {
-      _toastTime = _formatNow();
-      _lastMeasuredTime = _formatTime(t);
+      _lastUpdateLine = _formatLastUpdateLine(t);
     });
     // 실제 notify 이벤트용 토스트 애니메이션: 완료 후 자동 숨김, 재스케줄 없음
     _toastController.forward(from: 0).whenComplete(() {
@@ -322,14 +356,14 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
 
   void _recompute() {
     if (_series.isEmpty) {
-      _lastMeasuredTime = '-';
+      _lastUpdateLine = 'Last Update —';
       return;
     }
     final DateTime now = DateTime.now();
     // removed: 24h min/max 계산
     final Map<String, dynamic> last = _series.last;
     _currentGlucose = (last['value'] as double);
-    _lastMeasuredTime = _formatTime(last['time'] as DateTime);
+    _lastUpdateLine = _formatLastUpdateLine(last['time'] as DateTime);
     if (_series.length >= 2) {
       final Map<String, dynamic> prevPt = _series[_series.length - 2];
       final double prev = (prevPt['value'] as double);
@@ -360,17 +394,6 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     if (v <= 70) return 'low';
     if (v >= 180) return 'high';
     return 'in';
-  }
-
-  Color _guBandColor(String band) {
-    switch (band) {
-      case 'low':
-        return const Color(0xFF2D7FF9); // blue
-      case 'high':
-        return const Color(0xFFF59E0B); // orange
-      default:
-        return const Color(0xFF22C55E); // green
-    }
   }
 
   Future<void> _markGuRendered() async {
@@ -416,6 +439,15 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     return '$h12:$mm $suffix';
   }
 
+  /// "Last Update 04/01 14:55" (로컬 날짜·시간)
+  String _formatLastUpdateLine(DateTime t) {
+    final DateTime local = t.toLocal();
+    final String mo = local.month.toString().padLeft(2, '0');
+    final String dy = local.day.toString().padLeft(2, '0');
+    final String timePart = _formatTime(local);
+    return 'Last Update $mo/$dy $timePart';
+  }
+
   void _onBlePhase() {
     if (!mounted) return;
     setState(() {});
@@ -454,10 +486,8 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  // GU_01_03: 혈당 상태에 따른 색상 구분(고혈당: 주황색)
-                  color: _series.isEmpty
-                      ? _lighterPrimary(Theme.of(context).colorScheme.primary, 0.25)
-                      : _lighterPrimary(_guBandColor(_guBand(_currentGlucose)), 0.10),
+                  // 데이터 유무·혈당 구간과 무관하게 항상 앱 테마 녹색 계열(primary)만 사용 (고정 hex 미사용)
+                  color: _lighterPrimary(Theme.of(context).colorScheme.primary, 0.10),
                   borderRadius: BorderRadius.circular(borderRadius),
                 ),
                 child: Column(
@@ -468,16 +498,25 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(children: [
-                          const Icon(Icons.access_time, color: Colors.white),
-                          const SizedBox(width: 6),
-                          Text(_lastMeasuredTime, style: const TextStyle(color: Colors.white, fontSize: 16)),
-                        ]),
+                        Expanded(
+                          child: Row(children: [
+                            const Icon(Icons.access_time, color: Colors.white),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                _lastUpdateLine,
+                                style: const TextStyle(color: Colors.white, fontSize: 14),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ]),
+                        ),
                         Row(children: [
                           Icon(
-                            (BleService().phase.value == BleConnPhase.off)
-                                ? Icons.link_off
-                                : Icons.link,
+                            _bleShowsConnected(BleService().phase.value)
+                                ? Icons.link
+                                : Icons.link_off,
                             color: Colors.white,
                             size: 20,
                           ),
@@ -608,6 +647,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
                         embedded: true,
                         hoursRange: '12h',
                         onAddMemo: _openMemoModal,
+                        onPreviousData: _openPreviousDataScreen,
                         refreshTick: _chartRefresh,
                       ),
                       ),
@@ -629,13 +669,6 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     );
   }
 
-}
-
-String _formatNow() {
-  final DateTime now = DateTime.now();
-  final String hh = now.hour.toString().padLeft(2, '0');
-  final String mm = now.minute.toString().padLeft(2, '0');
-  return '$hh:$mm';
 }
 
 // removed: old icon mapping (단일 화살표 회전으로 대체)

@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/color_constant.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class Sc0701DataShareScreen extends StatefulWidget {
   const Sc0701DataShareScreen({super.key});
@@ -183,14 +184,41 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
       final ts = DateTime.now().toUtc().toIso8601String().replaceAll(':', '').replaceAll('.', '');
       final file = File('${dir.path}/cgms-share-$ts.$ext');
       final r = customRange ?? _default7d();
-      await file.writeAsString([
-        'CGMS Data Share (SC_07_01)',
-        'format=$exportFormat',
-        'range=${_rangeLabel(r)}',
-        'items: summary=$shareGlucoseSummary distribution=$shareGlucoseDistribution graph=$shareGlucoseGraph profile=$shareUserProfile',
-        'method: Android share sheet',
-        'generatedAt=${DateTime.now().toUtc().toIso8601String()}',
-      ].join('\n'));
+      if (exportFormat.toUpperCase() == 'PDF') {
+        final doc = pw.Document();
+        doc.addPage(
+          pw.Page(
+            build: (ctx) => pw.Padding(
+              padding: const pw.EdgeInsets.all(28),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('CGMS Data Share', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 14),
+                  pw.Text('Range: ${_rangeLabel(r)}'),
+                  pw.SizedBox(height: 10),
+                  pw.Text('Glucose summary: $shareGlucoseSummary'),
+                  pw.Text('Distribution: $shareGlucoseDistribution'),
+                  pw.Text('Graph: $shareGlucoseGraph'),
+                  pw.Text('User profile: $shareUserProfile'),
+                  pw.SizedBox(height: 24),
+                  pw.Text('Generated (UTC): ${DateTime.now().toUtc().toIso8601String()}', style: const pw.TextStyle(fontSize: 9)),
+                ],
+              ),
+            ),
+          ),
+        );
+        await file.writeAsBytes(await doc.save());
+      } else {
+        await file.writeAsString([
+          'CGMS Data Share (SC_07_01)',
+          'format=$exportFormat',
+          'range=${_rangeLabel(r)}',
+          'items: summary=$shareGlucoseSummary distribution=$shareGlucoseDistribution graph=$shareGlucoseGraph profile=$shareUserProfile',
+          'method: Android share sheet',
+          'generatedAt=${DateTime.now().toUtc().toIso8601String()}',
+        ].join('\n'));
+      }
       final st = await SettingsStorage.load();
       st['sc0701LastFilePath'] = file.path;
       await SettingsStorage.save(st);

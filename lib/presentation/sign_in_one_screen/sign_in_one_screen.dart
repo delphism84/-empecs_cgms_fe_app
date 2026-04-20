@@ -10,11 +10,16 @@ import 'package:helpcare/widgets/custom_text_form_field.dart';
 import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
+import 'package:helpcare/core/utils/profile_sync_service.dart';
+import 'package:helpcare/core/utils/auth_response_parser.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:helpcare/widgets/common_toast.dart';
+import 'package:helpcare/core/config/default_dev_account.dart';
+import 'package:helpcare/core/utils/auth_input_validation.dart';
+import 'package:easy_localization/easy_localization.dart';
 // removed sign up and create account navigations in existing login screen
 
 class SignInOneScreen extends StatefulWidget {
@@ -44,8 +49,8 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
       Future.delayed(const Duration(milliseconds: 250), () {
         if (!mounted) return;
         if (_idCtrl.text.isEmpty && _pwCtrl.text.isEmpty) {
-          _idCtrl.text = 'empecs';
-          _pwCtrl.text = 'admin';
+          _idCtrl.text = DefaultDevAccount.email;
+          _pwCtrl.text = DefaultDevAccount.password;
         }
       });
     });
@@ -69,7 +74,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
       MaterialPageRoute(builder: (context) => const Home()),
       (Route<dynamic> route) => false,
     );
-    CommonToast.showSuccess(context, 'Local login (offline)');
+    CommonToast.showSuccess(context, 'auth_local_login_toast'.tr());
   }
 
   Future<void> _enterOfflineMode(ApiClient api, {String? userId}) async {
@@ -92,7 +97,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
       MaterialPageRoute(builder: (context) => const Home()),
       (Route<dynamic> route) => false,
     );
-    CommonToast.showSuccess(context, 'Guest login: offline mode');
+    CommonToast.showSuccess(context, 'auth_guest_login_toast'.tr());
   }
 
   @override
@@ -104,7 +109,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Login'),
+        title: Text('auth_login_title'.tr()),
       ),
       body: SizedBox(
         width: size.width,
@@ -148,7 +153,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                             right: 38,
                           ),
                           child: Text(
-                            "Sign In with CGMS App",
+                            'auth_sign_in_cgms'.tr(),
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.start,
                             style: TextStyle(
@@ -192,7 +197,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                           width: 325,                          
                           controller: _idCtrl,
                           focusNode: FocusNode(),
-                          hintText: "Enter your User ID",
+                          hintText: 'auth_login_hint_userid'.tr(),
                           margin: getMargin(
                             top: 24,
                           ),
@@ -307,7 +312,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                                         bottom: 1,
                                       ),
                                       child: Text(
-                                        "Remember Me",
+                                        'auth_remember_me'.tr(),
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.start,
                                         style: TextStyle(
@@ -336,7 +341,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
   );
                                     },
                                   child: Text(
-                                      "Forgot Password?",
+                                      'auth_forgot_password'.tr(),
                                       overflow: TextOverflow.ellipsis,
                                       textAlign: TextAlign.start,
                                       style: TextStyle(
@@ -356,7 +361,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                         ),
                         CustomButton(
                           width: double.infinity,
-                          text: "Sign In".toUpperCase(),
+                          text: 'auth_sign_in_upper'.tr(),
                           variant: ButtonVariant.FillLoginGreen,
                           margin: getMargin(
                             top: 39,
@@ -374,7 +379,14 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                               final password = _pwCtrl.text;
                               if (email.isEmpty || password.isEmpty) {
                                 if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter ID / Password')));
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('auth_enter_id_password_snack'.tr())));
+                                return;
+                              }
+                              if (!isValidLoginEmailId(email)) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('auth_login_invalid_email'.tr())),
+                                );
                                 return;
                               }
                               final api = ApiClient();
@@ -383,48 +395,76 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                               try {
                                 resp = await doLogin(api, email, password);
                               } on TimeoutException catch (_) {
-                                if (!mounted) return;
+                                if (!isValidLoginEmailId(email)) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('auth_login_offline_email'.tr())),
+                                  );
+                                  return;
+                                }
+                                if (!context.mounted) return;
                                 await _enterLocalLogin(api, email);
                                 return;
                               } on SocketException catch (_) {
-                                if (!mounted) return;
+                                if (!isValidLoginEmailId(email)) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('auth_login_offline_email'.tr())),
+                                  );
+                                  return;
+                                }
+                                if (!context.mounted) return;
                                 await _enterLocalLogin(api, email);
                                 return;
                               } catch (e) {
                                 final msg = e.toString().toLowerCase();
                                 if (msg.contains('socket') || msg.contains('network') || msg.contains('connection') || msg.contains('failed host lookup')) {
-                                  if (!mounted) return;
+                                  if (!isValidLoginEmailId(email)) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('auth_login_offline_email'.tr())),
+                                    );
+                                    return;
+                                  }
+                                  if (!context.mounted) return;
                                   await _enterLocalLogin(api, email);
                                   return;
                                 }
                                 if (!mounted) return;
-                                await showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Login failed'), content: Text('Error: $e'), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: const Text('OK'))]));
+                                await showDialog(context: context, builder: (_) => AlertDialog(title: Text('auth_login_failed'.tr()), content: Text('Error: $e'), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text('common_ok'.tr()))]));
                                 return;
                               }
                               if (resp.statusCode == 200) {
-                                final data = jsonDecode(resp.body) as Map<String, dynamic>;
-                                final token = data['token'] as String?;
+                                final decoded = jsonDecode(resp.body);
+                                if (decoded is! Map) {
+                                  if (!mounted) return;
+                                  CommonToast.showWarning(context, 'auth_invalid_login_response'.tr());
+                                  return;
+                                }
+                                final data = Map<String, dynamic>.from(decoded as Map);
+                                final prof = AuthResponseParser.parseLoginProfile(envelope: data, formEmail: email);
+                                final String? token = prof.token;
                                 if (token != null && token.isNotEmpty) {
                                   await api.saveToken(token);
                                 try {
                                   final st = await SettingsStorage.load();
-                                  st['lastUserId'] = email;
-                                  final dn = data['displayName'] ?? data['name'];
-                                  st['displayName'] = (dn != null && dn.toString().trim().isNotEmpty) ? dn.toString().trim() : email;
+                                  st['lastUserId'] = prof.email;
+                                  st['displayName'] = prof.displayName.isNotEmpty ? prof.displayName : prof.email;
                                   st['guestMode'] = false;
                                   await SettingsStorage.save(st);
                                 } catch (_) {}
                                   try { AppSettingsBus.notify(); } catch (_) {}
+                                  unawaited(ProfileSyncService.refreshFromServer());
                                   if (!mounted) return;
                                   Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const Home()), (Route<dynamic> route) => false);
-                                  CommonToast.showSuccess(context, 'Login successful');
+                                  CommonToast.showSuccess(context, 'auth_login_success_toast'.tr());
                                 } else {
                                   if (!mounted) return;
-                                  CommonToast.showWarning(context, 'Invalid token');
+                                  CommonToast.showWarning(context, 'auth_invalid_token'.tr());
                                 }
                               } else {
                                 if (!mounted) return;
-                                await showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Login failed'), content: Text('Server responded ${resp.statusCode}. Please try again.'), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: const Text('OK'))]));
+                                await showDialog(context: context, builder: (_) => AlertDialog(title: Text('auth_login_failed'.tr()), content: Text('auth_login_server_error'.tr()), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text('common_ok'.tr()))]));
                               }
                             } finally {
                               if (mounted) setState(() => _loggingIn = false);
@@ -435,7 +475,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                         // Guest Login button (offline mode)
                         CustomButton(
                           width: double.infinity,
-                          text: 'GUEST LOGIN',
+                          text: 'auth_guest_login_upper'.tr(),
                           variant: ButtonVariant.OutlinePrimaryWhite,
                           fontStyle: ButtonFontStyle.GilroyMedium16Primary,
                           onTap: () async {
@@ -449,9 +489,16 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                                 final st = await SettingsStorage.load();
                                 userId = (st['lastUserId'] as String? ?? '').trim();
                               } catch (_) {}
-                              if (userId.isEmpty) {
-                                final fallback = _idCtrl.text.trim();
-                                if (fallback.isNotEmpty) userId = fallback;
+                              final String typedId = _idCtrl.text.trim();
+                              if (typedId.isNotEmpty) {
+                                if (!isValidLoginEmailId(typedId)) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('auth_guest_email_required'.tr())),
+                                  );
+                                  return;
+                                }
+                                userId = typedId;
                               }
                               await _enterOfflineMode(api, userId: userId);
                             } finally {

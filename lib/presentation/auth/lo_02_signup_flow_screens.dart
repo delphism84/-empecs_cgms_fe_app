@@ -39,11 +39,12 @@ class _Lo0201SignUpIntroScreenState extends State<Lo0201SignUpIntroScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('LO_02_01 · Sign up')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             const Text(
               'Sign up',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -74,6 +75,7 @@ class _Lo0201SignUpIntroScreenState extends State<Lo0201SignUpIntroScreen> {
               child: const Text('Later (Back to login)'),
             ),
           ],
+        ),
         ),
       ),
     );

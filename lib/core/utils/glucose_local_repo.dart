@@ -69,6 +69,55 @@ class GlucoseLocalRepo {
     return rows;
   }
 
+  /// 최근 혈당 1건 (잠금 배너 등)
+  Future<Map<String, dynamic>?> latestPoint({String? eqsn}) async {
+    final db = await LocalDb().db;
+    final String userId = (await _inferUserId()) ?? '';
+    final List<Map<String, dynamic>> rows = await db.query(
+      'glucose_points',
+      columns: ['time_ms', 'value'],
+      where: (eqsn != null && eqsn.isNotEmpty)
+          ? 'eqsn = ? AND (user_id = ? OR user_id IS NULL)'
+          : '(user_id = ? OR user_id IS NULL)',
+      whereArgs: (eqsn != null && eqsn.isNotEmpty) ? [eqsn, userId] : [userId],
+      orderBy: 'time_ms DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first;
+  }
+
+  /// 최근 N건 (시간 내림차순, [0]=최신)
+  Future<List<Map<String, dynamic>>> latestN({int n = 2, String? eqsn}) async {
+    if (n <= 0) return const [];
+    final db = await LocalDb().db;
+    final String userId = (await _inferUserId()) ?? '';
+    final List<Map<String, dynamic>> rows = await db.query(
+      'glucose_points',
+      columns: ['time_ms', 'value'],
+      where: (eqsn != null && eqsn.isNotEmpty)
+          ? 'eqsn = ? AND (user_id = ? OR user_id IS NULL)'
+          : '(user_id = ? OR user_id IS NULL)',
+      whereArgs: (eqsn != null && eqsn.isNotEmpty) ? [eqsn, userId] : [userId],
+      orderBy: 'time_ms DESC',
+      limit: n,
+    );
+    return rows;
+  }
+
+  /// AR_01_08 잠금화면: 최신값 vs 직전값 (↑ / ↓ / →). 한 건뿐이면 →.
+  /// [eqsn]이 null/빈 문자열이면 동일 사용자의 최근 포인트 전체에서 비교(로컬 `LOCAL` 태그 혼재 대비).
+  Future<String> lockScreenTrendArrow({String? eqsn}) async {
+    final String? q = (eqsn != null && eqsn.trim().isNotEmpty) ? eqsn.trim() : null;
+    final List<Map<String, dynamic>> rows = await latestN(n: 2, eqsn: q);
+    if (rows.length < 2) return '→';
+    final double vNew = (rows[0]['value'] as num).toDouble();
+    final double vPrev = (rows[1]['value'] as num).toDouble();
+    if (vNew > vPrev) return '↑';
+    if (vNew < vPrev) return '↓';
+    return '→';
+  }
+
   Future<int> maxTrid({String? eqsn, String? userId}) async {
     final db = await LocalDb().db;
     userId ??= await _inferUserId();

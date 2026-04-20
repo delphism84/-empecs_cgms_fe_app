@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:helpcare/core/app_export.dart';
-import 'package:helpcare/widgets/spacing.dart';
-import 'package:helpcare/widgets/debug_badge.dart';
-import 'package:helpcare/widgets/custom_button.dart';
-import 'package:helpcare/presentation/report/_report_widgets.dart';
+import 'package:helpcare/core/config/app_constants.dart';
+import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
+import 'package:helpcare/core/utils/profile_sync_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/presentation/report/_report_widgets.dart';
+import 'package:helpcare/presentation/settings_page/user_detail_page.dart';
+import 'package:helpcare/widgets/custom_button.dart';
+import 'package:helpcare/widgets/debug_badge.dart';
+import 'package:helpcare/widgets/spacing.dart';
 
 class CgmsReportScreen extends StatefulWidget {
   const CgmsReportScreen({super.key});
@@ -20,12 +26,117 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
   bool _loading = false;
   List<double> _values = const [];
 
+  String displayName = 'Guest';
+  String email = '';
+  DateTime sensorStart = DateTime.now().subtract(const Duration(days: 3));
+  int lifeDays = AppConstants.defaultSensorValidityDays;
+
+  static String _storageString(dynamic v) {
+    if (v == null) return '';
+    if (v is String) return v.trim();
+    return v.toString().trim();
+  }
+
   @override
   void initState() {
     super.initState();
     _markViewed();
     WidgetsBinding.instance.addPostFrameCallback((_) => _markRendered());
+    _loadUser();
+    AppSettingsBus.changed.addListener(_onAppSettingsChanged);
     _reload();
+  }
+
+  @override
+  void dispose() {
+    try {
+      AppSettingsBus.changed.removeListener(_onAppSettingsChanged);
+    } catch (_) {}
+    super.dispose();
+  }
+
+  void _onAppSettingsChanged() {
+    unawaited(_loadUser());
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      await ProfileSyncService.ensureLocalUserFromJwt();
+      final local = await SettingsStorage.load();
+      if (!mounted) return;
+      setState(() {
+        email = _storageString(local['lastUserId']);
+        displayName = _storageString(local['displayName']);
+        if (displayName.isEmpty && email.isNotEmpty) displayName = email;
+        if (displayName.isEmpty) displayName = 'Guest';
+        lifeDays = AppConstants.defaultSensorValidityDays;
+        final String ssRaw = _storageString(local['sensorStartAt']);
+        if (ssRaw.isNotEmpty) {
+          final DateTime? p = DateTime.tryParse(ssRaw);
+          if (p != null) sensorStart = p.toLocal();
+        }
+      });
+      unawaited(ProfileSyncService.refreshFromServer());
+    } catch (_) {}
+  }
+
+  /// Settings 상단 사용자 카드와 동일 패턴
+  Widget _buildReportUserCard(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final DateTime start = sensorStart;
+    final int total = lifeDays;
+    final Duration used = DateTime.now().difference(start);
+    final int remain = (total - used.inDays).clamp(0, total);
+    final String name = displayName.trim().isEmpty ? 'Guest' : displayName.trim();
+    final String e = email.trim();
+    final String emailLine = e.isEmpty ? '—' : e;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => UserDetailPage(displayName: name, email: emailLine),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1D1D1D) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              CircleAvatar(radius: 22, child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary)),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(emailLine, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ])),
+              const Icon(Icons.chevron_right),
+            ]),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(children: [
+                const Icon(Icons.hourglass_bottom, color: Colors.teal),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Remaining days: $remain / $total', style: const TextStyle(fontSize: 13))),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
   }
 
   Future<void> _markViewed() async {
@@ -79,36 +190,11 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
               child: LinearProgressIndicator(minHeight: 3),
             ),
             VerticalSpace(height: 12),
-            // Profile Card (under header)
             ReportCard(
               title: 'Profile',
-              subtitle: 'User information',
+              subtitle: 'User information (same as Settings)',
               trailing: const Icon(Icons.person, color: Colors.black54),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(color: ColorConstant.green500.withOpacity(0.12), shape: BoxShape.circle),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.account_circle, color: Colors.black54, size: 32),
-                  ),
-                  HorizontalSpace(width: 12),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      // username: black bold
-                      Text('username', style: TextStyle(fontSize: getFontSize(16), fontWeight: FontWeight.w700, color: Colors.black)),
-                      VerticalSpace(height: 6),
-                      Wrap(spacing: 14, runSpacing: 6, children: [
-                        _infoRow(Icons.email, 'email@example.com'),
-                        _infoRow(Icons.phone, '+82-10-0000-0000'),
-                        _infoRow(Icons.cake, 'Age 35'),
-                        _infoRow(Icons.male, 'Male'),
-                      ]),
-                    ]),
-                  ),
-                ]),
-              ]),
+              child: _buildReportUserCard(context),
             ),
             VerticalSpace(height: 12),
             Row(
@@ -198,14 +284,6 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
         ],
       ),
     );
-  }
-
-  Widget _infoRow(IconData icon, String text) {
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, size: 16, color: Colors.black54),
-      const SizedBox(width: 6),
-      Text(text, style: const TextStyle(color: Colors.black87)),
-    ]);
   }
 
   // sample metrics

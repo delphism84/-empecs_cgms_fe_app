@@ -14,13 +14,23 @@ import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 
 class ChartPage extends StatefulWidget {
-  const ChartPage({super.key, this.embedded = false, this.startWide = false, this.initialDay, this.hoursRange = '6h', this.onAddMemo, this.refreshTick});
+  const ChartPage({
+    super.key,
+    this.embedded = false,
+    this.startWide = false,
+    this.initialDay,
+    this.hoursRange = '6h',
+    this.onAddMemo,
+    this.onPreviousData,
+    this.refreshTick,
+  });
 
   final bool embedded;
   final bool startWide;
   final DateTime? initialDay;
   final String hoursRange;
   final VoidCallback? onAddMemo;
+  final VoidCallback? onPreviousData;
   final ValueNotifier<int>? refreshTick;
 
   @override
@@ -482,13 +492,29 @@ class _ChartPageState extends State<ChartPage> {
                                 separatorBuilder: (context, _) => const Divider(height: 1),
                                 itemCount: events.length,
                               ),
-                              if (widget.onAddMemo != null)
+                              if (widget.onPreviousData != null || widget.onAddMemo != null)
                                 Positioned(
                                   right: 16,
                                   bottom: 16,
-                                  child: FloatingActionButton.small(
-                                    onPressed: widget.onAddMemo,
-                                    child: const Icon(Icons.sticky_note_2_outlined),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (widget.onPreviousData != null) ...[
+                                        FloatingActionButton.small(
+                                          heroTag: 'chart_prev_data',
+                                          onPressed: widget.onPreviousData,
+                                          tooltip: 'Previous data',
+                                          child: const Icon(Icons.history),
+                                        ),
+                                        const SizedBox(width: 10),
+                                      ],
+                                      if (widget.onAddMemo != null)
+                                        FloatingActionButton.small(
+                                          heroTag: 'chart_memo',
+                                          onPressed: widget.onAddMemo,
+                                          child: const Icon(Icons.sticky_note_2_outlined),
+                                        ),
+                                    ],
                                   ),
                                 ),
                             ],

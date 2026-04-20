@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart' show SystemNavigator;
+import 'package:easy_localization/easy_localization.dart';
 // removed unused imports
 import 'package:helpcare/presentation/chart_page/trend_tab_page.dart';
 // kept for explicit ChartPage references elsewhere if any
@@ -69,21 +70,21 @@ class _HomeState extends State<Home> {
             context: context,
             builder: (ctx) => AlertDialog(
               content: Text(
-                'Are you sure',
+                'exit_app_body'.tr(),
                 style: TextStyle(fontSize: 13, fontFamily: 'Poppins', color: isDark ? Colors.white : Colors.black),
               ),
               title: Text(
-                'Do you want to exit the app?',
+                'exit_app_title'.tr(),
                 style: TextStyle(fontSize: 13, fontFamily: 'Poppins', color: isDark ? Colors.white : Colors.black),
               ),
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(false),
-                  child: Text('No', style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13, fontFamily: 'Poppins')),
+                  child: Text('common_no'.tr(), style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13, fontFamily: 'Poppins')),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('Yes', style: TextStyle(color: Colors.red, fontSize: 13, fontFamily: 'Poppins')),
+                  child: Text('common_yes'.tr(), style: TextStyle(color: Colors.red, fontSize: 13, fontFamily: 'Poppins')),
                 ),
               ],
             ),
@@ -135,32 +136,32 @@ class _HomeState extends State<Home> {
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.home_outlined, gradient: AppIconGradients.resolve(Icons.home_outlined))),
             activeIcon: GradientIcon(Icons.home_rounded, gradient: AppIconGradients.resolve(Icons.home_rounded)),
-            label: "Home",
+            label: tr('nav_home'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.timeline, gradient: AppGradients.primary)),
             activeIcon: GradientIcon(Icons.timeline, gradient: AppGradients.primary),
-            label: "Trend",
+            label: tr('nav_trend'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.description_outlined, gradient: AppIconGradients.resolve(Icons.description_outlined))),
             activeIcon: GradientIcon(Icons.description, gradient: AppIconGradients.resolve(Icons.description)),
-            label: "Report",
+            label: tr('nav_report'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.sensors, gradient: AppGradients.primary)),
             activeIcon: GradientIcon(Icons.sensors, gradient: AppGradients.primary),
-            label: "Sensor",
+            label: tr('nav_sensor'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.notifications_none, gradient: AppGradients.primary)),
             activeIcon: GradientIcon(Icons.notifications, gradient: AppGradients.primary),
-            label: "Alarm",
+            label: tr('nav_alarm'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.settings, gradient: AppIconGradients.resolve(Icons.settings))),
             activeIcon: GradientIcon(Icons.settings, gradient: AppIconGradients.resolve(Icons.settings)),
-            label: "Settings",
+            label: tr('nav_settings'),
           ),
         ],
       ),

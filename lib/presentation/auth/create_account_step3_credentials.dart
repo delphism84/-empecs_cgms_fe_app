@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'create_account_step4_profile.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/auth_input_validation.dart';
 
 /// Create Account Step 3: Email & Password (일반 회원가입)
 /// iOS HIG: 44pt min touch target, proper keyboard types, autofill hints
@@ -34,8 +35,7 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
 
   String? _validateEmail(String? v) {
     if (v == null || v.trim().isEmpty) return 'Please enter your email.';
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(v.trim())) return 'Invalid email format.';
+    if (!isValidLoginEmailId(v)) return 'Invalid email format.';
     return null;
   }
 
@@ -62,6 +62,7 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
       try {
         final st = await SettingsStorage.load();
         st['signupDraftEmail'] = _emailCtrl.text.trim();
+        st['signupDraftPassword'] = _passwordCtrl.text;
         await SettingsStorage.save(st);
       } catch (_) {}
       if (!context.mounted) return;

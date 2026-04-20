@@ -8,6 +8,7 @@ import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/local_sync_service.dart';
+import 'package:helpcare/core/config/default_dev_account.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 설정 저장 정책: 모든 설정 기본 로컬 저장. BE는 로컬 성공 후 업로드용. BE 실패 시 폴백 없음.
@@ -19,7 +20,7 @@ class SettingsService {
         {'_id': 'local:low', 'type': 'low', 'enabled': true, 'threshold': 70, 'sound': true, 'vibrate': true, 'repeatMin': 5},
         {'_id': 'local:high', 'type': 'high', 'enabled': true, 'threshold': 180, 'sound': true, 'vibrate': true, 'repeatMin': 5},
         {'_id': 'local:rate', 'type': 'rate', 'enabled': true, 'threshold': 2, 'sound': true, 'vibrate': true, 'repeatMin': 10},
-        {'_id': 'local:system', 'type': 'system', 'enabled': true, 'sound': false, 'vibrate': false, 'repeatMin': 10},
+        {'_id': 'local:system', 'type': 'system', 'enabled': true, 'threshold': -88, 'sound': true, 'vibrate': true, 'repeatMin': 10, 'quietFrom': '22:00', 'quietTo': '07:00'},
       ];
 
   // sensors — 로컬만 읽기. 저장 시 로컬 성공 후 BE 업로드, 실패 시 폴백 없음.
@@ -205,6 +206,41 @@ class SettingsService {
     }
   }
 
+  /// BLE MAC 정규화(대문자, 구분자 제거). 서버 `bleMac` 쿼리와 맞춤.
+  static String normalizeBleMac(String? raw) {
+    if (raw == null) return '';
+    return raw.toUpperCase().replaceAll(RegExp(r'[^0-9A-F]'), '');
+  }
+
+  /// 동일 센서 식별: **serial 또는 bleMac** 중 하나가 서버 등록과 일치하면 해당 행 반환(req 1-7).
+  /// BE에 `/api/settings/eq-list/resolve`가 없으면 [getEqBySerial]로 폴백.
+  Future<Map<String, dynamic>> resolveEqRegistration({String? serial, String? bleMac}) async {
+    final String s = (serial ?? '').trim();
+    final String mac = normalizeBleMac(bleMac);
+    if (s.isEmpty && mac.isEmpty) return {};
+    try {
+      await _api.loadToken();
+      final Map<String, dynamic> q = <String, dynamic>{};
+      if (s.isNotEmpty) q['serial'] = s;
+      if (mac.isNotEmpty) q['bleMac'] = mac;
+      final r = await _api.get('/api/settings/eq-list/resolve', query: q);
+      if (r.statusCode == 200) {
+        final dynamic j = jsonDecode(r.body);
+        if (j is Map && j.isNotEmpty) {
+          final Map<String, dynamic> m = Map<String, dynamic>.from(j.cast<String, dynamic>());
+          if ((m['startAt'] ?? '').toString().trim().isNotEmpty ||
+              (m['matchedBy'] ?? '').toString().trim().isNotEmpty ||
+              (m['_id'] ?? '').toString().trim().isNotEmpty ||
+              (m['serial'] ?? '').toString().trim().isNotEmpty) {
+            return m;
+          }
+        }
+      }
+    } catch (_) {}
+    if (s.isNotEmpty) return getEqBySerial(s);
+    return {};
+  }
+
   Future<bool> upsertEqStart({required String serial, DateTime? startAt}) async {
     try {
       await _api.loadToken();
@@ -285,7 +321,7 @@ class SettingsService {
   Future<bool> clearAllData() async {
     // avoid race: stop background local sync while clearing
     try { LocalSyncService().stop(); } catch (_) {}
-    // ensure auth (dev fallback: empecs/admin)
+    // ensure auth (dev fallback: DefaultDevAccount — POST /api/auth/login)
     try {
       final api = ApiClient();
       await api.loadToken();
@@ -293,7 +329,10 @@ class SettingsService {
       final s = await SettingsStorage.load();
       final String token = (s['authToken'] ?? '') as String;
       if (token.isEmpty) {
-        final resp = await api.post('/api/auth/login', body: { 'email': 'empecs', 'password': 'admin' });
+        final resp = await api.post('/api/auth/login', body: {
+          'email': DefaultDevAccount.email,
+          'password': DefaultDevAccount.password,
+        });
         if (resp.statusCode == 200) {
           final Map<String, dynamic> data = jsonDecode(resp.body) as Map<String, dynamic>;
           final String? t = data['token'] as String?;
@@ -348,6 +387,11 @@ class SettingsService {
 
   Future<bool> seedGlucoseDays(int days) async {
     return DataService().seedGlucoseDays(days);
+  }
+
+  /// PD_01_01 View Previous Data 화면에서 기간 목록·그래프가 보이도록 로컬 시드
+  Future<bool> seedPd0101PreviousData() async {
+    return DataService().seedPd0101PreviousDataLocal();
   }
 }
 

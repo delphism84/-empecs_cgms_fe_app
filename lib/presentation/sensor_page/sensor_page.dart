@@ -21,6 +21,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/presentation/widgets/app_fields.dart';
+import 'package:helpcare/core/config/app_constants.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SensorPage extends StatefulWidget {
   const SensorPage({super.key});
@@ -62,7 +64,7 @@ class _SensorPageState extends State<SensorPage> {
       final dt = DateTime.tryParse(raw);
       if (dt != null) startAt = dt.toLocal();
     } catch (_) {}
-    const Duration valid = Duration(days: 14);
+    final Duration valid = AppConstants.sensorValidityDuration;
     final Duration used = now.difference(startAt);
     final Duration remain = valid - used;
     final int remainSec = remain.inSeconds < 0 ? 0 : remain.inSeconds;
@@ -85,7 +87,7 @@ class _SensorPageState extends State<SensorPage> {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Sensor (SC_02_01)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              Text('sensor_page_title'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
               FutureBuilder<Map<String, dynamic>>(
                 future: _readUsage(),
@@ -122,7 +124,7 @@ class _SensorPageState extends State<SensorPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Remaining: ${remainDays}d ${remainHours}h  (valid ${valid?.inDays ?? 14}d)',
+                        'Remaining: ${remainDays}d ${remainHours}h  (valid ${valid?.inDays ?? AppConstants.defaultSensorValidityDays}d)',
                         style: const TextStyle(fontSize: 13),
                       ),
                       const SizedBox(height: 4),
@@ -135,7 +137,7 @@ class _SensorPageState extends State<SensorPage> {
                 },
               ),
               // New group like notification page
-              const Text('New', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              Text('sensor_section_new'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               _notifItem(context, isDark, Icons.bluetooth_connected, 'Status', 'Battery, signal, warm-up', const SensorStatusPage(), 'SC_03_01'),
               _notifItem(context, isDark, Icons.bluetooth_searching, 'Scan & Connect', 'BLE scan/connect · battery/usage', const SensorBleScanPage(), 'SC_01_01'),
@@ -169,16 +171,13 @@ class SensorStatusPage extends StatefulWidget {
 }
 
 class _SensorStatusPageState extends State<SensorStatusPage> {
-  bool enable = true;
   String deviceName = 'CGMS';
   String deviceId = '';
   int battery = 78;
   int rssi = -62;
-  bool autoReconnect = true;
-  int retryMin = 3;
   // usage period
   DateTime? startAt;
-  Duration valid = const Duration(days: 14);
+  Duration valid = AppConstants.sensorValidityDuration;
 
   @override
   void initState() {
@@ -211,7 +210,7 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
   Widget build(BuildContext context) {
     final Color primary = Theme.of(context).colorScheme.primary;
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_03_01 · Connection Status')),
+      appBar: AppBar(title: Text('sensor_sc0301_title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -233,28 +232,19 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
                 );
               },
             ),
-            ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: const Text('Device name'), subtitle: Text(deviceName)),
-            if (deviceId.isNotEmpty) ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: const Text('Device ID'), subtitle: Text(deviceId)),
-            ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: const Text('Battery (%)'), trailing: Text('$battery%')),
-            ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: const Text('Signal strength (dBm)'), trailing: Text('$rssi')),
+            ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: Text('sensor_device_name'.tr()), subtitle: Text(deviceName)),
+            if (deviceId.isNotEmpty) ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: Text('sensor_device_id'.tr()), subtitle: Text(deviceId)),
+            ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: Text('sensor_battery_pct'.tr()), trailing: Text('$battery%')),
+            ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: Text('sensor_signal_dbm'.tr()), trailing: Text('$rssi')),
             ValueListenableBuilder<int>(
               valueListenable: BleService().rxCount,
-              builder: (context, n, _) => ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: const Text('Packets'), trailing: Text('$n')),
+              builder: (context, n, _) => ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: Text('sensor_packets'.tr()), trailing: Text('$n')),
             ),
-          ]),
-          _group(context, title: 'Scan & Connect', children: [
-            const Text(
-              'Scan & Connect is available in SC_01_01 only.\n'
-              'SC_03_01 (Status screen) does not perform scan/connect.',
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SensorBleScanPage()));
-                },
-                child: const Text('Open SC_01_01 · Scan & Connect'),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text(
+                '거리로 연결이 끊기면 로컬에 기록되며, 미연결 상태에서는 저장된 마지막 MAC으로 주기적으로 자동 재연결을 시도합니다. 스캔·연결은 Sensor 탭의 Scan & Connect(SC_01_01)에서 하세요.',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
               ),
             ),
           ]),
@@ -263,7 +253,7 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
             builder: (context, ph, _) {
               if (ph == BleConnPhase.off) return const SizedBox.shrink();
               return _group(context, title: 'Usage period', children: [
-                ListTile(title: const Text('Connected device'), subtitle: Text(deviceName)),
+                ListTile(title: Text('sensor_connected_device'.tr()), subtitle: Text(deviceName)),
                 Builder(builder: (context) {
                   final DateTime now = DateTime.now();
                   final DateTime baseStart = startAt ?? now.subtract(const Duration(days: 3));
@@ -289,29 +279,13 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
                   ]);
                 }),
                 Row(children: [
-                  Expanded(child: OutlinedButton(onPressed: _mockRead, child: const Text('Read status'))),
+                  Expanded(child: OutlinedButton(onPressed: _mockRead, child: Text('common_read_status'.tr()))),
                   const SizedBox(width: 8),
-                  Expanded(child: OutlinedButton(onPressed: _disconnect, child: const Text('Disconnect'))),
+                  Expanded(child: OutlinedButton(onPressed: _disconnect, child: Text('common_disconnect'.tr()))),
                 ])
               ]);
             },
           ),
-          _group(context, title: 'Reconnect', children: [
-            AppSwitchRow(label: 'Auto reconnect', value: autoReconnect, onChanged: (v) => setState(() => autoReconnect = v)),
-            AppCombo<int>(
-              label: 'Retry interval (min)',
-              value: retryMin,
-              items: const [1, 3, 5, 10],
-              labelFor: (e) => '$e',
-              onChanged: (v) => setState(() => retryMin = v),
-            ),
-          ]),
-          _group(context, title: 'Advanced', children: [
-            ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: const Text('Log level'), trailing: DropdownButton<String>(value: 'Info', items: const ['Error', 'Warn', 'Info', 'Debug'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(), onChanged: (_) {})),
-            ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: const Text('BLE MTU'), trailing: DropdownButton<int>(value: 185, items: const [23, 90, 185].map((e) => DropdownMenuItem(value: e, child: Text('$e'))).toList(), onChanged: (_) {})),
-          ]),
-          const SizedBox(height: 12),
-          CustomButton(width: double.infinity, text: 'SAVE', variant: ButtonVariant.FillLoginGreen, onTap: () => Navigator.pop(context)),
         ],
       ),
     );
@@ -409,7 +383,7 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_04_01 · Serial Number')),
+      appBar: AppBar(title: Text('sensor_sc0401_title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -470,7 +444,7 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
           if (_lastScannedQrFullSn.isNotEmpty || _lastScannedQrAt.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Divider(),
-            const Text('Last scanned QR', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
+            Text('sensor_last_scanned_qr'.tr(), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
             const SizedBox(height: 6),
             Text(
               _lastScannedQrRegistered ? 'SN: $_lastScannedQrFullSn' : 'Unregistered QR SN',
@@ -564,25 +538,32 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
     } catch (_) {}
     // 대시보드 등 실시간 값 표시를 대시(–)로 즉시 반영
     try { DataSyncBus().emitGlucoseBulk(count: 0); } catch (_) {}
-    // 시작일은 항상 로컬 우선 저장, 온라인이며 서버에 기존 SN이 있으면 서버값을 우선 사용
+    // 시작일: 서버에 등록된 동일 SN 또는 동일 BLE MAC 행이 있으면 startAt 우선(req 1-7)
+    String resolvedEqsn = newEqsn;
     try {
       final ss = SettingsService();
       DateTime? startLocal;
       try {
-        final Map<String, dynamic> eq = await ss.getEqBySerial(newEqsn);
+        final prefs = await SharedPreferences.getInstance();
+        final String? mac = prefs.getString('cgms.last_mac');
+        final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: newEqsn, bleMac: mac);
         final String? stRemote = (eq['startAt'] as String?);
         if (stRemote != null && stRemote.trim().isNotEmpty) {
           startLocal = DateTime.tryParse(stRemote)?.toLocal();
         }
+        final String? srvSn = (eq['serial'] as String?)?.trim();
+        if (srvSn != null && srvSn.isNotEmpty) resolvedEqsn = srvSn;
       } catch (_) {}
       startLocal ??= DateTime.now();
-      // 로컬 캐시 즉시 반영
-      try { final m = await SettingsStorage.load(); m['sensorStartAt'] = startLocal.toUtc().toIso8601String(); await SettingsStorage.save(m); } catch (_) {}
-      // 서버에 기존값이 없었던 경우에만 업서트로 동기화
       try {
-        await ss.upsertEqStart(serial: newEqsn, startAt: startLocal);
+        final m = await SettingsStorage.load();
+        m['sensorStartAt'] = startLocal.toUtc().toIso8601String();
+        if (resolvedEqsn != newEqsn) m['eqsn'] = resolvedEqsn;
+        await SettingsStorage.save(m);
       } catch (_) {}
-      // 대시보드 즉시 갱신 트리거
+      try {
+        await ss.upsertEqStart(serial: resolvedEqsn, startAt: startLocal);
+      } catch (_) {}
       try { DataSyncBus().emitGlucoseBulk(count: 1); } catch (_) {}
     } catch (_) {}
     try {
@@ -592,11 +573,12 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
       final ev = await ds.fetchEvents(from: now.subtract(const Duration(days: 30)), to: now, limit: 1000, sync: true);
       try { DataSyncBus().emitEventBulk(count: ev.length); } catch (_) {}
     } catch (_) {}
-    try { final int last = await GlucoseLocalRepo().maxTrid(eqsn: newEqsn); await BleService().requestRacpFromTrid((last + 1) & 0xFFFF); } catch (_) {}
+    try { final int last = await GlucoseLocalRepo().maxTrid(eqsn: resolvedEqsn); await BleService().requestRacpFromTrid((last + 1) & 0xFFFF); } catch (_) {}
     if (!mounted) return;
+    if (resolvedEqsn != newEqsn) _snCtrl.text = resolvedEqsn;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved & syncing...')));
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => StartMonitorPage(targetSerial: newEqsn.isNotEmpty ? newEqsn : null)),
+      MaterialPageRoute(builder: (_) => StartMonitorPage(targetSerial: resolvedEqsn.isNotEmpty ? resolvedEqsn : null)),
     );
   }
 
@@ -652,7 +634,7 @@ class _SnQrScanPageState extends State<_SnQrScanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan SN')),
+      appBar: AppBar(title: Text('sensor_scan_sn_title'.tr())),
       body: Stack(children: [
         Positioned.fill(child: MobileScanner(controller: _controller, onDetect: _onDetect)),
         Positioned.fill(
@@ -713,13 +695,13 @@ class _SensorStartTimePageState extends State<SensorStartTimePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_05_01 · Start Time')),
+      appBar: AppBar(title: Text('sensor_sc0501_title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _group(context, title: 'Start', children: [
             ListTile(
-              title: const Text('Start at'),
+              title: Text('sensor_start_at'.tr()),
               subtitle: Text(_startAt == null
                   ? '—'
                   : '${_startAt!.year}/${_startAt!.month.toString().padLeft(2, '0')}/${_startAt!.day.toString().padLeft(2, '0')} '
@@ -730,11 +712,12 @@ class _SensorStartTimePageState extends State<SensorStartTimePage> {
               subtitle: Text('Start time is updated automatically when sensor becomes active.'),
             ),
           ]),
-          _group(context, title: 'Help', children: const [
-            ListTile(title: Text('Warm-up section is hidden per latest layout request.')),
+          _group(context, title: 'Warm-up', children: const [
+            ListTile(
+              title: Text('Note'),
+              subtitle: Text('During warm-up, readings may be unavailable.'),
+            ),
           ]),
-          const SizedBox(height: 12),
-          CustomButton(width: double.infinity, text: 'SAVE', variant: ButtonVariant.FillLoginGreen, onTap: () => Navigator.pop(context)),
         ],
       ),
     );
@@ -770,24 +753,24 @@ class _SensorReconnectNfcPageState extends State<SensorReconnectNfcPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_06_01 · Reconnect (NFC)')),
+      appBar: AppBar(title: Text('sensor_sc0601_title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _group(context, title: 'Basic', children: [
-            SwitchListTile(title: const Text('Enable NFC'), value: enable, onChanged: (v) => setState(() => enable = v)),
-            SwitchListTile(title: const Text('Sound on scan'), value: playSound, onChanged: (v) => setState(() => playSound = v)),
-            SwitchListTile(title: const Text('Vibrate on scan'), value: vibrate, onChanged: (v) => setState(() => vibrate = v)),
+            SwitchListTile(title: Text('sensor_enable_nfc'.tr()), value: enable, onChanged: (v) => setState(() => enable = v)),
+            SwitchListTile(title: Text('sensor_sound_scan'.tr()), value: playSound, onChanged: (v) => setState(() => playSound = v)),
+            SwitchListTile(title: Text('sensor_vibrate_scan'.tr()), value: vibrate, onChanged: (v) => setState(() => vibrate = v)),
           ]),
           _group(context, title: 'Guide', children: [
-            ListTile(title: const Text('Instruction text'), subtitle: Text(guide)),
+            ListTile(title: Text('sensor_instruction_text'.tr()), subtitle: Text(guide)),
             CustomButton(text: 'OPEN GUIDE', variant: ButtonVariant.OutlinePrimaryWhite, fontStyle: ButtonFontStyle.GilroyMedium16Primary, onTap: () {}),
           ]),
           _group(context, title: 'Advanced', children: const [
             ListTile(title: Text('Auto detect NDEF type/record')),
           ]),
           const SizedBox(height: 12),
-          CustomButton(width: double.infinity, text: 'SAVE', variant: ButtonVariant.FillLoginGreen, onTap: () => Navigator.pop(context)),
+          CustomButton(width: double.infinity, text: 'sensor_save_upper'.tr(), variant: ButtonVariant.FillLoginGreen, onTap: () => Navigator.pop(context)),
         ],
       ),
     );
@@ -807,7 +790,7 @@ class _SensorReconnectQrPageState extends State<SensorReconnectQrPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_06_02 · Reconnect (QR)')),
+      appBar: AppBar(title: Text('sensor_sc0602_title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -822,14 +805,14 @@ class _SensorReconnectQrPageState extends State<SensorReconnectQrPage> {
             ),
           ]),
           _group(context, title: 'Recent result', children: [
-            ListTile(title: const Text('Last scan'), subtitle: Text(lastResult)),
-            ElevatedButton(onPressed: () => setState(() => lastResult = 'SN-NEW-0001'), child: const Text('Insert sample')),
+            ListTile(title: Text('sensor_last_scan'.tr()), subtitle: Text(lastResult)),
+            ElevatedButton(onPressed: () => setState(() => lastResult = 'SN-NEW-0001'), child: Text('sensor_insert_sample'.tr())),
           ]),
           _group(context, title: 'Help', children: const [
             ListTile(title: Text('Scan QR straight at 10~15cm distance.')),
           ]),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Save')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: Text('common_save'.tr())),
         ],
       ),
     );
@@ -1023,55 +1006,55 @@ class _SensorSharePageState extends State<SensorSharePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_07_01 · Data Share')),
+      appBar: AppBar(title: Text('sensor_sc0701_title'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           children: [
-          _group(context, title: 'Basic', children: [
-            AppSwitchRow(label: 'Enable sharing', value: enable, onChanged: (v) => setState(() => enable = v)),
+          _group(context, title: 'sensor_share_basic'.tr(), children: [
+            AppSwitchRow(label: 'sensor_share_enable'.tr(), value: enable, onChanged: (v) => setState(() => enable = v)),
             const SizedBox(height: 6),
-            const Text(
-              'Sharing period: choose 1/7/30 days or Custom range.\nSharing settings: select what to share.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            Text(
+              'sensor_share_intro'.tr(),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 6),
             Wrap(spacing: 8, runSpacing: 8, children: [
               _PresetChip(label: '1D', selected: preset == '1D', onTap: () => _applyPreset('1D')),
               _PresetChip(label: '7D', selected: preset == '7D', onTap: () => _applyPreset('7D')),
               _PresetChip(label: '30D', selected: preset == '30D', onTap: () => _applyPreset('30D')),
-              _PresetChip(label: 'Custom', selected: preset == 'Custom', onTap: _pickRange),
+              _PresetChip(label: 'sensor_preset_custom'.tr(), selected: preset == 'Custom', onTap: _pickRange),
             ]),
             const SizedBox(height: 10),
             ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.date_range),
-              title: const Text('Sharing date range'),
+              title: Text('sensor_share_date_range'.tr()),
               subtitle: Text(customRange == null ? '—' : _rangeLabel(customRange!)),
-              trailing: TextButton(onPressed: enable ? _pickRange : null, child: const Text('Change')),
+              trailing: TextButton(onPressed: enable ? _pickRange : null, child: Text('sensor_common_change'.tr())),
             ),
           ]),
-          _group(context, title: 'Sharing items', children: [
+          _group(context, title: 'sensor_share_items'.tr(), children: [
             // Glucose data
             SwitchListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              title: const Text('Glucose data · Summary'),
+              title: Text('sensor_share_glucose_summary'.tr()),
               value: shareGlucoseSummary,
               onChanged: enable ? (v) => setState(() => shareGlucoseSummary = v) : null,
             ),
             SwitchListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              title: const Text('Glucose data · Range distribution'),
+              title: Text('sensor_share_glucose_dist'.tr()),
               value: shareGlucoseDistribution,
               onChanged: enable ? (v) => setState(() => shareGlucoseDistribution = v) : null,
             ),
             SwitchListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              title: const Text('Glucose data · Glucose graph'),
+              title: Text('sensor_share_glucose_graph'.tr()),
               value: shareGlucoseGraph,
               onChanged: enable ? (v) => setState(() => shareGlucoseGraph = v) : null,
             ),
@@ -1079,15 +1062,15 @@ class _SensorSharePageState extends State<SensorSharePage> {
             SwitchListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              title: const Text('User profile'),
+              title: Text('sensor_share_user_profile'.tr()),
               value: shareUserProfile,
               onChanged: enable ? (v) => setState(() => shareUserProfile = v) : null,
             ),
           ]),
-          _group(context, title: 'Export format', children: [
+          _group(context, title: 'sensor_share_export_group'.tr(), children: [
             const SizedBox(height: 6),
             AppCombo<String>(
-              label: 'Export format',
+              label: 'sensor_share_export_label'.tr(),
               value: exportFormat,
               items: const ['CSV', 'PDF'],
               labelFor: (s) => s,
@@ -1097,14 +1080,14 @@ class _SensorSharePageState extends State<SensorSharePage> {
               },
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Share opens Android system share sheet.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            Text(
+              'sensor_share_export_hint'.tr(),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ]),
-          _group(context, title: 'Security', children: [
+          _group(context, title: 'sensor_share_security'.tr(), children: [
             AppSwitchRow(
-              label: 'Revocable anytime',
+              label: 'sensor_share_revoke'.tr(),
               value: revokeAnytime,
               onChanged: (v) {
                 if (!enable) return;
@@ -1118,7 +1101,7 @@ class _SensorSharePageState extends State<SensorSharePage> {
             width: double.infinity,
             child: CustomButton(
               width: double.infinity,
-              text: 'SAVE',
+              text: 'sensor_save_upper'.tr(),
               variant: ButtonVariant.FillLoginGreenFlat,
               onTap: () async {
                 await _saveOnly();
@@ -1286,7 +1269,7 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
 
   int battery = 0;
   Duration used = Duration.zero;
-  Duration valid = const Duration(days: 14);
+  Duration valid = AppConstants.sensorValidityDuration;
 
   @override
   void initState() {
@@ -1336,23 +1319,23 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
   Widget build(BuildContext context) {
     final Color primary = Theme.of(context).colorScheme.primary;
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_01 · Scan & Connect')),
+      appBar: AppBar(title: Text('sensor_sc0101_title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           DebugBadge(
             reqId: 'SC_01_01',
-            child: _group(context, title: 'Scanner', children: [
+            child: _group(context, title: 'sensor_group_scanner'.tr(), children: [
               Row(children: [
                 Expanded(
                   child: ValueListenableBuilder<BleConnPhase>(
                     valueListenable: BleService().phase,
                     builder: (context, ph, _) {
                       String label;
-                      if (scanning) label = 'Scanning...';
-                      else if (ph == BleConnPhase.connecting) label = 'Connecting...';
-                      else if (ph != BleConnPhase.off) label = 'Scanning...';
-                      else label = 'Ready';
+                      if (scanning) label = 'sensor_scanner_scanning'.tr();
+                      else if (ph == BleConnPhase.connecting) label = 'sensor_scanner_connecting'.tr();
+                      else if (ph != BleConnPhase.off) label = 'sensor_scanner_scanning'.tr();
+                      else label = 'sensor_scanner_ready'.tr();
                       return Text(label);
                     },
                   ),
@@ -1365,7 +1348,7 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
                       child: ElevatedButton.icon(
                         onPressed: (scanning || ph != BleConnPhase.off) ? null : () { _mockScan(); },
                         icon: const Icon(Icons.bluetooth_searching, size: 18),
-                        label: const Text('BLE Scan'),
+                        label: Text('sensor_ble_scan'.tr()),
                       ),
                     ),
                   ),
@@ -1373,9 +1356,9 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
               ]),
               const SizedBox(height: 8),
               if (devices.isEmpty && !scanning)
-                const Text('No devices yet')
+                Text('sensor_devices_none'.tr())
               else if (devices.isEmpty)
-                const Text('Scanning...')
+                Text('sensor_scanner_scanning'.tr())
               else
                 ...devices.map((d) => ListTile(
                       leading: Icon(Icons.sensors, color: primary),
@@ -1386,15 +1369,18 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
                   builder: (context, ph, _) {
                     final bool busy = (ph == BleConnPhase.connecting || ph == BleConnPhase.scanning);
                     final bool canConnect = (ph == BleConnPhase.off && !scanning);
+                    final String rowLabel = canConnect
+                        ? 'sensor_connect'.tr()
+                        : (ph == BleConnPhase.connecting
+                            ? 'sensor_connecting_busy'.tr()
+                            : (scanning || ph == BleConnPhase.scanning ? 'sensor_scanner_scanning'.tr() : 'sensor_busy'.tr()));
                     return IntrinsicWidth(
                       child: SizedBox(
                         height: 36,
                         child: ElevatedButton.icon(
                           onPressed: canConnect ? () => _connect(d) : () { DebugToastBus().show('BLE: already in session'); },
                           icon: busy ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.link),
-                          label: Text(
-                            canConnect ? 'Connect' : (ph == BleConnPhase.connecting ? 'Connecting...' : 'Connected'),
-                            ),
+                          label: Text(rowLabel),
                           style: ElevatedButton.styleFrom(
                             disabledBackgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.6),
                           ),
@@ -1412,7 +1398,7 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
                           MaterialPageRoute(builder: (_) => const BeforeQrScanPage()),
                         ),
                 icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('QR Scan'),
+                label: Text('sensor_qr_scan'.tr()),
               ),
             ]),
           ),
@@ -1421,20 +1407,20 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
             builder: (context, phase, _) {
               final bool showConnectedCard = (phase != BleConnPhase.off);
               if (!showConnectedCard) return const SizedBox.shrink();
-              return _group(context, title: 'Connected', children: [
-                ListTile(title: const Text('Device'), subtitle: Text((connected != null ? (connected!['name'] as String?) : null) ?? _lastName)),
-                ListTile(title: const Text('ID'), subtitle: Text((connected != null ? (connected!['id'] as String?) : null) ?? _lastId)),
-              ListTile(title: const Text('Battery'), trailing: Text('$battery%')),
+              return _group(context, title: 'sensor_connected_section'.tr(), children: [
+                ListTile(title: Text('common_device'.tr()), subtitle: Text((connected != null ? (connected!['name'] as String?) : null) ?? _lastName)),
+                ListTile(title: Text('common_id'.tr()), subtitle: Text((connected != null ? (connected!['id'] as String?) : null) ?? _lastId)),
+              ListTile(title: Text('common_battery'.tr()), trailing: Text('$battery%')),
               ListTile(
-                title: const Text('Usage'),
-                subtitle: Text('Used ${used.inHours}h / ${valid.inDays}d'),
+                title: Text('common_usage'.tr()),
+                subtitle: Text('sensor_usage_hours_days'.tr(args: <String>[used.inHours.toString(), valid.inDays.toString()])),
                 trailing: Text('${((used.inSeconds / valid.inSeconds) * 100).clamp(0, 100).toStringAsFixed(0)}%'),
               ),
               Row(children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _mockRead,
-                    child: const Text('Read status'),
+                    child: Text('common_read_status'.tr()),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1444,12 +1430,14 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
                       setState(() { _disconnecting = true; });
                       await BleService().disconnect();
                       if (!mounted) return;
+                      await _hydrateFromPrefs();
+                      if (!mounted) return;
                       setState(() { connected = null; _disconnecting = false; });
                     },
                     icon: _disconnecting
                         ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.link_off),
-                    label: Text(_disconnecting ? 'Disconnecting...' : 'Disconnect'),
+                    label: Text(_disconnecting ? 'common_disconnecting'.tr() : 'common_disconnect'.tr()),
                   ),
                 ),
               ]),
@@ -1459,21 +1447,21 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () async { await BleService().requestRacpCountAll(); },
-                    child: const Text('RACP: Count'),
+                    child: Text('sensor_racp_count'.tr()),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () async { await BleService().requestRacpAllRecords(); },
-                    child: const Text('RACP: All'),
+                    child: Text('sensor_racp_all'.tr()),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () async { await BleService().requestRacpLastRecord(); },
-                    child: const Text('RACP: Last'),
+                    child: Text('sensor_racp_last'.tr()),
                   ),
                 ),
               ]),
@@ -1526,7 +1514,7 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
     setState(() {
       battery = 78;
       used = now.difference(start);
-      valid = const Duration(days: 14);
+      valid = AppConstants.sensorValidityDuration;
     });
   }
 

@@ -13,6 +13,8 @@ import 'package:helpcare/core/utils/debug_toast.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/app_nav.dart';
+import 'package:helpcare/core/utils/alert_engine.dart';
+import 'package:helpcare/core/utils/warmup_state.dart';
 class _CgmsSample {
   _CgmsSample({required this.time, required this.value, required this.trid});
   final DateTime time;
@@ -37,6 +39,10 @@ class BleService {
   bool _historyInProgress = false;
   Timer? _historyDebounce;
 
+  /// Pairing UI (QR flow): [connectToDeviceAndWaitReady] waits until GATT is usable.
+  Completer<bool>? _pairingCompleter;
+  String? _pairingDeviceId;
+
   // note: no persistent device cache here; using SharedPreferences for last_mac
 
   // connection/ops state for UI
@@ -48,6 +54,15 @@ class BleService {
 
   // notify 수신 버퍼 개수 (누적)
   final ValueNotifier<int> rxCount = ValueNotifier<int>(0);
+
+  /// 끊김 후 마지막 MAC으로 주기적 자동 재연결
+  Timer? _autoReconnectTimer;
+  /// 링크 손실 알람(AR_01_06) 설정 주기만큼 재발화 — disconnect 이벤트는 1회만 오므로 타이머로 보강
+  Timer? _signalLossRepeatTimer;
+  /// 사용자가 설정/센서 화면에서 [disconnect]를 호출한 경우, 링크 손실 알람(AR_01_06)을 띄우지 않음.
+  bool _userInitiatedDisconnect = false;
+  /// CGM measurement notify 구독 성공 후에만 true — 접속 전·구독 실패 시 AR_01_06(signal loss) 알림 없음.
+  bool _ar0106SessionReady = false;
   // discovered capabilities (updated by _validateCgmsProfile)
   bool _measFound = false;
   bool _measNotify = false;
@@ -100,7 +115,7 @@ class BleService {
       final String n = (d.name).toUpperCase();
       // common CGM vendor/name hints
       const List<String> hints = [
-        'CGM', 'DEXCOM', 'LIBRE', 'FREESTYLE', 'ABBOTT', 'MEDTRONIC', 'ASCENSIA', 'EVER', 'SENSE', 'GLUCO', 'DUSUN'
+        'CGM', 'DEXCOM', 'LIBRE', 'FREESTYLE', 'ABBOTT', 'MEDTRONIC', 'ASCENSIA', 'EVER', 'SENSE', 'GLUCO', 'DUSUN', 'EMPECS'
       ];
       for (final h in hints) {
         if (n.contains(h)) return true;
@@ -131,12 +146,46 @@ class BleService {
     yield* controller.stream;
   }
 
+  void _completePairingIfPending(String deviceId, bool ok) {
+    if (_pairingDeviceId == deviceId && _pairingCompleter != null && !_pairingCompleter!.isCompleted) {
+      _pairingCompleter!.complete(ok);
+      _pairingCompleter = null;
+      _pairingDeviceId = null;
+      unawaited(BleLogService().add('BLE', 'pairing ${ok ? 'ready' : 'fail'} $deviceId'));
+    }
+  }
+
+  /// Waits until the device is connected and services are discovered (same as [connectToDevice] first phase).
+  /// Use for QR pairing before comparing scan MAC vs QR or reading DIS serial.
+  Future<bool> connectToDeviceAndWaitReady(String deviceId) async {
+    await ensurePermissions();
+    _pairingCompleter = Completer<bool>();
+    _pairingDeviceId = deviceId;
+    await connectToDevice(deviceId);
+    try {
+      return await _pairingCompleter!.future.timeout(const Duration(seconds: 25));
+    } on TimeoutException {
+      unawaited(BleLogService().add('BLE', 'pairing timeout $deviceId'));
+      if (_pairingCompleter != null && !_pairingCompleter!.isCompleted) {
+        _pairingCompleter!.complete(false);
+      }
+      _pairingCompleter = null;
+      _pairingDeviceId = null;
+      try {
+        await disconnect();
+      } catch (_) {}
+      return false;
+    }
+  }
+
   Future<void> connectToDevice(String deviceId) async {
     await ensurePermissions();
+    _cancelSignalLossRepeatTimer();
     // keep only a single connection:
     // 1) if already connected/connecting to the same device, ignore
     if (_currentDeviceId != null && _currentDeviceId == deviceId && phase.value != BleConnPhase.off) {
       DebugToastBus().show('BLE: already connected/connecting');
+      _completePairingIfPending(deviceId, true);
       return;
     }
     // 2) stop scanning before connecting
@@ -144,14 +193,17 @@ class BleService {
     scanning.value = false;
     // 3) if another connection exists, disconnect first
     if (phase.value != BleConnPhase.off && _currentDeviceId != null) {
-      try { await disconnect(); } catch (_) {}
+      try { await disconnect(clearPersistentPairing: false); } catch (_) {}
     }
+    _ar0106SessionReady = false;
     phase.value = BleConnPhase.connecting;
     DebugToastBus().show('BLE: connecting to $deviceId');
     unawaited(BleLogService().add('BLE', 'connect -> $deviceId'));
     _connSub?.cancel();
     _connSub = _ble.connectToDevice(id: deviceId, connectionTimeout: const Duration(seconds: 8)).listen((update) async {
       if (update.connectionState == DeviceConnectionState.connected) {
+        _cancelSignalLossRepeatTimer();
+        _stopAutoReconnectPoller();
         phase.value = BleConnPhase.connected;
         DebugToastBus().show('BLE: connected');
         unawaited(BleLogService().add('BLE', 'connected'));
@@ -160,21 +212,25 @@ class BleService {
           connectedDeviceId.value = deviceId;
           // validate CGMS profile (service/characteristics/properties) - MUST await to avoid race
           await _validateCgmsProfile(deviceId);
+          _completePairingIfPending(deviceId, true);
           try {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('cgms.last_mac', deviceId);
           } catch (_) {}
-          // Start Time: BT 연결 시점으로 자동 동기화 (소비자 저장 없이)
+          // 센서 시작 시각: 재연결마다 덮어쓰지 않음(웜업/남은일수·히스토리 동기와 충돌 방지). 비어 있을 때만 기록.
           try {
             final st = await SettingsStorage.load();
             final String eqsn = (st['eqsn'] as String? ?? '').trim();
             final DateTime now = DateTime.now().toUtc();
-            st['sensorStartAt'] = now.toIso8601String();
-            await SettingsStorage.save(st);
-            if (eqsn.isNotEmpty) {
-              try {
-                await SettingsService().upsertEqStart(serial: eqsn, startAt: now);
-              } catch (_) {}
+            final String existingStart = (st['sensorStartAt'] as String? ?? '').trim();
+            if (existingStart.isEmpty) {
+              st['sensorStartAt'] = now.toIso8601String();
+              await SettingsStorage.save(st);
+              if (eqsn.isNotEmpty) {
+                try {
+                  await SettingsService().upsertEqStart(serial: eqsn, startAt: now);
+                } catch (_) {}
+              }
             }
           } catch (_) {}
           // NRF Toolbox 스타일: CCCD 먼저 on (RACP indicate, Measurement notify)
@@ -213,12 +269,63 @@ class BleService {
         }
       }
       if (update.connectionState == DeviceConnectionState.disconnected) {
+        _completePairingIfPending(deviceId, false);
         phase.value = BleConnPhase.off;
         _currentDeviceId = null;
         connectedDeviceId.value = null;
-        unawaited(BleLogService().add('BLE', 'disconnected'));
+        unawaited(BleLogService().add('BLE', 'disconnected (range/timeout/user) — 로컬 기록'));
+        final bool skipLinkAlarm = _userInitiatedDisconnect;
+        _userInitiatedDisconnect = false;
+        final bool hadCgmNotify = _ar0106SessionReady;
+        _ar0106SessionReady = false;
+        if (!skipLinkAlarm && hadCgmNotify) {
+          unawaited(AlertEngine().notifyBleLinkLost());
+          _scheduleSignalLossRepeats();
+        }
+        // 사용자 Disconnect로 MAC을 지운 뒤 늦게 도착하는 disconnected에서도 폴링이 다시 케이지 않도록,
+        // 저장된 last_mac이 있을 때만 자동 재연결(SC_01_01 등 “의도적 끊김” 후 반복 연결 시도 방지).
+        unawaited(() async {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            final String mac = (prefs.getString('cgms.last_mac') ?? '').trim();
+            if (mac.isNotEmpty) {
+              _startAutoReconnectPoller();
+            }
+          } catch (_) {}
+        }());
       }
     });
+  }
+
+  void _cancelSignalLossRepeatTimer() {
+    _signalLossRepeatTimer?.cancel();
+    _signalLossRepeatTimer = null;
+  }
+
+  Future<int> _systemSignalLossRepeatMinutes() async {
+    try {
+      final list = await SettingsService().listAlarms();
+      for (final raw in list) {
+        if ((raw['type'] ?? '').toString() == 'system') {
+          return ((raw['repeatMin'] as num?)?.toInt() ?? 10).clamp(1, 120);
+        }
+      }
+    } catch (_) {}
+    return 10;
+  }
+
+  void _scheduleSignalLossRepeats() {
+    _cancelSignalLossRepeatTimer();
+    unawaited(() async {
+      final int mins = await _systemSignalLossRepeatMinutes();
+      _signalLossRepeatTimer = Timer.periodic(Duration(minutes: mins), (Timer tm) async {
+        if (phase.value != BleConnPhase.off) {
+          _cancelSignalLossRepeatTimer();
+          return;
+        }
+        await AlertEngine().notifyBleLinkLost();
+      });
+    }());
   }
 
   /// Starts (or resumes) the 30-minute warm-up flow and navigates to `SC_01_06`.
@@ -244,14 +351,8 @@ class BleService {
       }
 
       // Start warm-up
-      final DateTime now = DateTime.now().toUtc();
-      final DateTime ends = now.add(Duration(seconds: seconds));
-      st['sc0106WarmupEqsn'] = eqsn;
-      st['sc0106WarmupStartAt'] = now.toIso8601String();
-      st['sc0106WarmupEndsAt'] = ends.toIso8601String();
-      st['sc0106WarmupActive'] = true;
-      st['sc0106WarmupDoneAt'] = '';
-      await SettingsStorage.save(st);
+      await WarmupState.start(seconds: seconds, eqsn: eqsn);
+      AlertEngine().invalidateWarmupCache();
 
       unawaited(BleLogService().add('CGMS', 'warmup start ${seconds}s (eqsn=${eqsn.isEmpty ? '—' : eqsn})'));
       if (AppNav.route != '/sc/01/06') {
@@ -313,6 +414,24 @@ class BleService {
     }
   }
 
+  void _startAutoReconnectPoller() {
+    _autoReconnectTimer?.cancel();
+    _autoReconnectTimer = Timer.periodic(const Duration(seconds: 12), (_) async {
+      if (phase.value == BleConnPhase.connecting) return;
+      if (phase.value != BleConnPhase.off) return;
+      final prefs = await SharedPreferences.getInstance();
+      final id = (prefs.getString('cgms.last_mac') ?? '').trim();
+      if (id.isEmpty) return;
+      unawaited(BleLogService().add('BLE', 'auto-reconnect poll -> $id'));
+      unawaited(tryAutoReconnect());
+    });
+  }
+
+  void _stopAutoReconnectPoller() {
+    _autoReconnectTimer?.cancel();
+    _autoReconnectTimer = null;
+  }
+
   Future<void> _subscribeGlucose(String deviceId) async {
     _notifySub?.cancel();
     // short-circuit if characteristic wasn't discovered or is not notifiable
@@ -348,6 +467,7 @@ class BleService {
       return;
     }
     phase.value = BleConnPhase.notifySubscribed;
+    _ar0106SessionReady = true;
   }
 
   /// 테스트/에뮬레이션용: 실제 BLE notify 수신 경로와 동일한 파서를 호출한다.
@@ -669,7 +789,12 @@ class BleService {
 
   // removed unused _encodeSfloatPayload helper (not referenced)
 
-  Future<void> disconnect() async {
+  /// [clearPersistentPairing]: true면 `cgms.last_mac` 등을 지우고 자동 재연결 폴링을 시작하지 않음(사용자 Disconnect·로그아웃 등).
+  /// false면 BLE 스택만 정리하고 저장 MAC은 유지하며, 필요 시 자동 재연결 폴링을 이어감(부팅 정리·다른 기기로 교체 직전 등).
+  Future<void> disconnect({bool clearPersistentPairing = true}) async {
+    _userInitiatedDisconnect = clearPersistentPairing;
+    _cancelSignalLossRepeatTimer();
+    _ar0106SessionReady = false;
     try { await _scanSub?.cancel(); } catch (_) {}
     try { await _notifySub?.cancel(); } catch (_) {}
     try { await _opsIndSub?.cancel(); } catch (_) {}
@@ -681,6 +806,20 @@ class BleService {
     phase.value = BleConnPhase.off;
     try { DebugToastBus().show('BLE: disconnect requested'); } catch (_) {}
     try { BleLogService().add('BLE', 'disconnect requested'); } catch (_) {}
+    _stopAutoReconnectPoller();
+    if (clearPersistentPairing) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('cgms.last_mac');
+        await prefs.remove('cgms.last_name');
+      } catch (_) {}
+    } else {
+      _startAutoReconnectPoller();
+    }
+    // 구독 취소로 disconnected 이벤트가 오지 않을 수 있음 — 플래그가 남지 않도록 정리
+    unawaited(Future<void>.delayed(const Duration(seconds: 2), () {
+      _userInitiatedDisconnect = false;
+    }));
   }
 
   /// Reads BLE Serial Number String (Device Information / 0x2A25) as a best-effort.

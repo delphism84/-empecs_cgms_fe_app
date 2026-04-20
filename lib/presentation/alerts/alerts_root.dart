@@ -5,11 +5,13 @@ import 'package:helpcare/widgets/debug_badge.dart';
 import 'package:helpcare/presentation/report/report_controls.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/presentation/widgets/app_fields.dart';
-import 'package:helpcare/presentation/alarms/ar_01_01_mute_all_screen.dart';
 import 'package:helpcare/presentation/alarms/ar_01_08_lock_screen_screen.dart';
 import 'package:helpcare/presentation/alarms/alarm_type_detail_page.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/notification_service.dart';
+import 'package:helpcare/widgets/gradient_icon.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AlertsRootPage extends StatefulWidget {
   const AlertsRootPage({super.key});
@@ -21,6 +23,7 @@ class AlertsRootPage extends StatefulWidget {
 class _AlertsRootPageState extends State<AlertsRootPage> {
   final SettingsService _svc = SettingsService();
   bool _loading = false;
+  bool _notificationsEnabled = true;
   List<Map<String, dynamic>> _alarms = <Map<String, dynamic>>[];
 
   @override
@@ -47,11 +50,35 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
         }
       } catch (_) {}
     }
+    bool notifOn = true;
+    try {
+      final st = await SettingsStorage.load();
+      notifOn = (st['notificationsEnabled'] ?? true) == true;
+      NotificationService().setEnabled(notifOn);
+    } catch (_) {}
     if (!mounted) return;
     setState(() {
       _alarms = list;
+      _notificationsEnabled = notifOn;
       _loading = false;
     });
+  }
+
+  Future<void> _setNotificationsEnabled(bool enabled) async {
+    setState(() => _notificationsEnabled = enabled);
+    NotificationService().setEnabled(enabled);
+    try {
+      final st = await SettingsStorage.load();
+      st['notificationsEnabled'] = enabled;
+      await SettingsStorage.save(st);
+    } catch (_) {}
+    // best-effort sync
+    try {
+      await _svc.updateAppSetting({
+        'notifications': enabled,
+        'preferences': {'notificationsEnabled': enabled},
+      });
+    } catch (_) {}
   }
 
   Map<String, dynamic> _alarmForType(String type) {
@@ -61,8 +88,18 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
     return {
       '_id': 'local:$type',
       'type': type,
-      'enabled': type == 'system' ? true : true,
-      if (type != 'system') 'threshold': type == 'very_low' ? 55 : type == 'low' ? 70 : type == 'high' ? 180 : type == 'rate' ? 2 : null,
+      'enabled': true,
+      'threshold': type == 'system'
+          ? -88
+          : type == 'very_low'
+              ? 55
+              : type == 'low'
+                  ? 70
+                  : type == 'high'
+                      ? 180
+                      : type == 'rate'
+                          ? 2
+                          : null,
       'quietFrom': '22:00',
       'quietTo': '07:00',
       'sound': true,
@@ -74,7 +111,9 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
 
   String _subtitleFor(String type, Map<String, dynamic> a) {
     final enabled = (a['enabled'] == true) ? 'On' : 'Off';
-    if (type == 'system') return 'Retry interval, timeout, escalation · $enabled';
+    if (type == 'system') {
+      return 'BLE link loss · repeat & quiet hours · $enabled';
+    }
     if (type == 'rate') return 'Rate threshold, direction, notification · $enabled';
     final th = (a['threshold'] is num) ? (a['threshold'] as num).toInt() : null;
     final repeatMin = (a['repeatMin'] is num) ? (a['repeatMin'] as num).toInt() : null;
@@ -85,113 +124,115 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
     return parts.join(', ');
   }
 
-  static const _kPaddingH = 20.0;
-  static const _kPaddingV = 16.0;
-
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: _kPaddingH, vertical: _kPaddingV),
-          children: [
-            Text(
-              'Alerts (AR_01_01)',
-              style: TextStyle(
-                fontSize: getFontSize(20),
-                fontFamily: 'Gilroy-Medium',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Divider(height: 1),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 8),
-                child: LinearProgressIndicator(minHeight: 2),
-              ),
-            _alertItem(
-              context,
-              icon: Icons.notifications_off,
-              title: 'Mute all alarms (AR_01_01)',
-              subtitle: 'Global mute toggle',
-              reqId: 'AR_01_01',
-              pageBuilder: (_) => const Ar0101MuteAllScreen(),
-              onReturn: _load,
-            ),
-            _alertItem(
-              context,
-              icon: Icons.priority_high,
-              title: 'Very Low (AR_01_02)',
-              subtitle: _subtitleFor('very_low', _alarmForType('very_low')),
-              reqId: 'AR_01_02',
-              pageBuilder: (_) => const AlarmTypeDetailPage(type: 'very_low', title: 'Very Low (AR_01_02)', reqId: 'AR_01_02'),
-              onReturn: _load,
-            ),
-            _alertItem(
-              context,
-              icon: Icons.trending_up,
-              title: 'High (AR_01_03)',
-              subtitle: _subtitleFor('high', _alarmForType('high')),
-              reqId: 'AR_01_03',
-              pageBuilder: (_) => const AlarmTypeDetailPage(type: 'high', title: 'High (AR_01_03)', reqId: 'AR_01_03'),
-              onReturn: _load,
-            ),
-            _alertItem(
-              context,
-              icon: Icons.trending_down,
-              title: 'Low (AR_01_04)',
-              subtitle: _subtitleFor('low', _alarmForType('low')),
-              reqId: 'AR_01_04',
-              pageBuilder: (_) => const AlarmTypeDetailPage(type: 'low', title: 'Low (AR_01_04)', reqId: 'AR_01_04'),
-              onReturn: _load,
-            ),
-            _alertItem(
-              context,
-              icon: Icons.show_chart,
-              title: 'Rapid Change (AR_01_05)',
-              subtitle: _subtitleFor('rate', _alarmForType('rate')),
-              reqId: 'AR_01_05',
-              pageBuilder: (_) => const AlarmTypeDetailPage(type: 'rate', title: 'Rapid Change (AR_01_05)', reqId: 'AR_01_05'),
-              onReturn: _load,
-            ),
-            _alertItem(
-              context,
-              icon: Icons.wifi_off,
-              title: 'Signal Loss (AR_01_06)',
-              subtitle: _subtitleFor('system', _alarmForType('system')),
-              reqId: 'AR_01_06',
-              pageBuilder: (_) => const AlarmTypeDetailPage(type: 'system', title: 'Signal Loss (AR_01_06)', reqId: 'AR_01_06'),
-              onReturn: _load,
-            ),
-            _alertItem(
-              context,
-              icon: Icons.lock,
-              title: 'Lock Screen (AR_01_08)',
-              subtitle: 'Visibility level, actions, method',
-              reqId: 'AR_01_08',
-              pageBuilder: (_) => const Ar0108LockScreenScreen(),
-              onReturn: _load,
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? ColorConstant.darkTextField : ColorConstant.whiteA700,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: ColorConstant.indigo51, width: 1),
-              ),
-              child: Text(
-                'Info: CGMS alerts work based on out-of-range (low/high), rapid rate-of-change, and signal status.',
-                style: TextStyle(
-                  color: ColorConstant.bluegray400,
-                  fontSize: getFontSize(12),
-                  fontFamily: 'Gilroy-Medium',
+        child: SingleChildScrollView(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('alerts_root_title'.tr(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 12),
+                if (_loading)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: LinearProgressIndicator(minHeight: 3),
+                  ),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isDark ? ColorConstant.darkTextField : ColorConstant.whiteA700,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ColorConstant.indigo51, width: 1),
+                  ),
+                  child: SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('alerts_all_notifications'.tr()),
+                    subtitle: Text(_notificationsEnabled ? 'common_on'.tr().toUpperCase() : 'common_off'.tr().toUpperCase()),
+                    value: _notificationsEnabled,
+                    onChanged: _setNotificationsEnabled,
+                  ),
                 ),
-              ),
-            )
-          ],
+                Text('alerts_new_section'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                _alertItem(
+                  context,
+                  icon: Icons.priority_high,
+                  title: 'Very Low (AR_01_02)',
+                  subtitle: _subtitleFor('very_low', _alarmForType('very_low')),
+                  reqId: 'AR_01_02',
+                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'very_low', title: 'Very Low (AR_01_02)', reqId: 'AR_01_02'),
+                  onReturn: _load,
+                ),
+                _alertItem(
+                  context,
+                  icon: Icons.trending_up,
+                  title: 'High (AR_01_03)',
+                  subtitle: _subtitleFor('high', _alarmForType('high')),
+                  reqId: 'AR_01_03',
+                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'high', title: 'High (AR_01_03)', reqId: 'AR_01_03'),
+                  onReturn: _load,
+                ),
+                _alertItem(
+                  context,
+                  icon: Icons.trending_down,
+                  title: 'Low (AR_01_04)',
+                  subtitle: _subtitleFor('low', _alarmForType('low')),
+                  reqId: 'AR_01_04',
+                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'low', title: 'Low (AR_01_04)', reqId: 'AR_01_04'),
+                  onReturn: _load,
+                ),
+                _alertItem(
+                  context,
+                  icon: Icons.show_chart,
+                  title: 'Rapid Change (AR_01_05)',
+                  subtitle: _subtitleFor('rate', _alarmForType('rate')),
+                  reqId: 'AR_01_05',
+                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'rate', title: 'Rapid Change (AR_01_05)', reqId: 'AR_01_05'),
+                  onReturn: _load,
+                ),
+                _alertItem(
+                  context,
+                  icon: Icons.signal_cellular_off,
+                  title: 'Signal Loss (AR_01_06)',
+                  subtitle: _subtitleFor('system', _alarmForType('system')),
+                  reqId: 'AR_01_06',
+                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'system', title: 'Signal Loss (AR_01_06)', reqId: 'AR_01_06'),
+                  onReturn: _load,
+                ),
+                _alertItem(
+                  context,
+                  icon: Icons.lock,
+                  title: 'Lock Screen (AR_01_08)',
+                  subtitle: 'Visibility level, actions, method',
+                  reqId: 'AR_01_08',
+                  pageBuilder: (_) => const Ar0108LockScreenScreen(),
+                  onReturn: _load,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? ColorConstant.darkTextField : ColorConstant.whiteA700,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ColorConstant.indigo51, width: 1),
+                  ),
+                  child: Text(
+                    'CGMS alerts include low/high, rapid change, signal loss (link loss), and lock-screen banner.',
+                    style: TextStyle(
+                      color: ColorConstant.bluegray400,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -200,9 +241,8 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
   // removed old _tile in favor of card-style _alertItem
 }
 
-/// 레거시 화면. **미사용.** AR_01_02는 [AlarmTypeDetailPage] → [AlarmDetailPage] 경로 사용.
-/// SAVE 시 저장 로직 없음(저장 미구현). 라우팅/진입점 없음.
-@Deprecated('미사용. AR_01_02는 AlarmTypeDetailPage 사용')
+/// 레거시 QA용 화면. 제품 플로우는 [AlarmTypeDetailPage] → [AlarmDetailPage] 사용.
+@Deprecated('레거시. AlarmTypeDetailPage 사용')
 class VeryLowAlertPage extends StatefulWidget {
   const VeryLowAlertPage({super.key});
   @override
@@ -651,31 +691,26 @@ Widget _alertItem(
     reqId: reqId,
     child: Material(
       color: Colors.transparent,
-        child: InkWell(
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () async {
           await Navigator.of(context).push(MaterialPageRoute(builder: pageBuilder));
           if (onReturn != null) await onReturn();
         },
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isDark ? ColorConstant.darkTextField : ColorConstant.whiteA700,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
           ),
           child: Row(children: [
-            Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
-            ),
-            const SizedBox(width: 14),
+            GradientIcon(icon, gradient: AppIconGradients.resolve(icon)),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis, maxLines: 1),
+                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis, maxLines: 1),
                 const SizedBox(height: 4),
                 Text(subtitle, style: TextStyle(fontSize: 12, color: ColorConstant.bluegray400), overflow: TextOverflow.ellipsis, maxLines: 2),
               ]),

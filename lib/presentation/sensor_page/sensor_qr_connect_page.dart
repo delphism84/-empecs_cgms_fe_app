@@ -4,6 +4,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/qr_sn_parser.dart';
+import 'package:helpcare/core/utils/glucose_local_repo.dart';
+import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/app_export.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/presentation/sensor_page/start_monitor_page.dart';
@@ -89,10 +91,24 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
     setState(() => _saving = true);
     try {
       final s = await SettingsStorage.load();
+      final String prevEqsn = (s['eqsn'] as String? ?? '').trim();
       final List list = (s['registeredDevices'] as List? ?? <Map<String, dynamic>>[]);
       final String serial = _parsed!['serial'] ?? '';
       final String fullSn = QrSnParser.fullSn(_raw) ?? _raw.trim().toUpperCase();
       final String? mac = (_parsed!['mac'] ?? '').trim().isNotEmpty ? _parsed!['mac'] : null;
+      // 다른 시리얼로 QR 재스캔 시 이전 sensorStartAt·웜업이 남지 않도록 정리 (검수 1-7)
+      if (prevEqsn.isNotEmpty && fullSn.toUpperCase() != prevEqsn.toUpperCase()) {
+        s['sensorStartAt'] = '';
+        s['sc0106WarmupDoneAt'] = '';
+        s['sc0106WarmupActive'] = false;
+        s['sc0106WarmupEqsn'] = '';
+        try {
+          await GlucoseLocalRepo().clearForEqsn(prevEqsn);
+        } catch (_) {}
+        try {
+          DataSyncBus().emitGlucoseBulk(count: 0);
+        } catch (_) {}
+      }
       list.add({
         'id': 'QR-${DateTime.now().millisecondsSinceEpoch}',
         'sn': serial,

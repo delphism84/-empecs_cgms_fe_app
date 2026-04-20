@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/api_client.dart';
+import 'package:helpcare/core/config/app_constants.dart';
+import 'package:helpcare/presentation/dashboard/pd_previous_period_chart_screen.dart';
+import 'package:helpcare/presentation/dashboard/pd_previous_routes.dart';
 
 /// Previous data view screen (ppt slide 2)
 ///
@@ -45,9 +49,20 @@ class _Pd0101PreviousDataScreenState extends State<Pd0101PreviousDataScreen> {
     return '${d(a)} ~ ${d(b)}';
   }
 
-  Future<void> _reload() async {
+  Future<void> _downloadFromServer() async {
+    try {
+      final now = DateTime.now();
+      final from = now.subtract(Duration(days: AppConstants.defaultSensorValidityDays * 3));
+      await DataService().fetchGlucose(from: from, to: now, limit: 5000, skipLocalCache: true);
+    } catch (_) {}
+  }
+
+  Future<void> _reload({bool fetchRemote = false}) async {
     setState(() => _loading = true);
     try {
+      if (fetchRemote) {
+        await _downloadFromServer();
+      }
       final rows = await GlucoseLocalRepo().listEqsnRanges();
       _items = rows;
       try {
@@ -67,11 +82,11 @@ class _Pd0101PreviousDataScreenState extends State<Pd0101PreviousDataScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('View Previous Data (PD_01_01)'),
+        title: const Text('Previous data'),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
-            onPressed: _loading ? null : _reload,
+            tooltip: 'Refresh — download from server',
+            onPressed: _loading ? null : () => _reload(fetchRemote: true),
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -80,14 +95,18 @@ class _Pd0101PreviousDataScreenState extends State<Pd0101PreviousDataScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           const Text(
-            'Previous sensor periods (offline)',
+            'Sensor periods (newest first). Tap a row for the graph.',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           if (_loading) const LinearProgressIndicator(minHeight: 3),
           const SizedBox(height: 12),
           if (_items.isEmpty)
-            const Text('No previous data found. (Seed via /emu/app/pd0101)', style: TextStyle(color: Colors.black54))
+            const Text(
+              'No previous sensor periods in local storage.\n'
+              'On the main screen, open Previous data → Refresh / download to cache server data for offline use.',
+              style: TextStyle(color: Colors.black54, height: 1.35),
+            )
           else
             ..._items.map((m) {
               final String eqsn = (m['eqsn'] as String? ?? '').trim();
@@ -102,17 +121,24 @@ class _Pd0101PreviousDataScreenState extends State<Pd0101PreviousDataScreen> {
                   subtitle: Text('${_fmtRange(fromMs, toMs)}  ·  points $count'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    // scope: in this iteration we only show list (selection → detailed graph screen TBD)
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected $eqsn')));
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(name: PdPreviousRoutes.chart),
+                        builder: (_) => PdPreviousPeriodChartScreen(
+                          eqsn: eqsn,
+                          fromMs: fromMs,
+                          toMs: toMs,
+                        ),
+                      ),
+                    );
                   },
                 ),
               );
             }),
           const SizedBox(height: 10),
           const Text(
-            'Note: This screen is seeded by the QA emulator for verification.\n'
-            'In production, tapping refresh would download records from server and cache locally.',
-            style: TextStyle(color: Colors.black54, fontSize: 12),
+            'Sensors are listed with the most recent period first. Tap a row to open the graph for that sensor and date range.',
+            style: TextStyle(color: Colors.black54, fontSize: 12, height: 1.35),
           ),
         ],
       ),

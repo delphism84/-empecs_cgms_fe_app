@@ -7,6 +7,7 @@ import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/global_loading.dart';
+import 'package:helpcare/core/config/app_constants.dart';
 // no widget import needed here
 
 class ApiClient {
@@ -207,10 +208,10 @@ class DataService {
     return [];
   }
 
-  Future<List<Map<String, dynamic>>> fetchGlucose({DateTime? from, DateTime? to, int limit = 2000}) async {
+  Future<List<Map<String, dynamic>>> fetchGlucose({DateTime? from, DateTime? to, int limit = 2000, bool skipLocalCache = false}) async {
     await _api.loadToken();
-    // 1) 로컬 캐시 최우선 (오프라인/비행기모드에서도 즉시 응답)
-    if (from != null && to != null) {
+    // 1) 로컬 캐시 최우선 (오프라인/비행기모드에서도 즉시 응답) — skipLocalCache 시 서버 재다운로드(PD 새로고침 등)
+    if (!skipLocalCache && from != null && to != null) {
       String eqsn = '';
       String userId = '';
       try { final s = await SettingsStorage.load(); eqsn = (s['eqsn'] as String? ?? ''); userId = (s['lastUserId'] as String? ?? ''); } catch (_) {}
@@ -460,6 +461,62 @@ class DataService {
     } catch (_) {
       await _seedLocalDays(days);
       return true;
+    }
+  }
+
+  /// PD_01_01 (View Previous Data) 검증용: 두 센서(eqsn) 구간을 로컬에 기록. `/emu/app/pd0101/seed`와 동일 데이터 패턴.
+  Future<bool> seedPd0101PreviousDataLocal() async {
+    try {
+      await GlucoseLocalRepo().clear();
+    } catch (_) {}
+    try {
+      final DateTime now = DateTime.now().toUtc();
+      final DateTime s2From = now.subtract(Duration(days: AppConstants.defaultSensorValidityDays));
+      final DateTime s2To = now.subtract(const Duration(days: 1));
+      final DateTime s1From = now.subtract(const Duration(days: 21));
+      final DateTime s1To = now.subtract(const Duration(days: 15));
+
+      String userId = '';
+      try {
+        final s = await SettingsStorage.load();
+        userId = (s['lastUserId'] as String? ?? '').trim();
+      } catch (_) {}
+
+      Future<void> seedEq(String eqsn, DateTime from, DateTime to, {int stepMin = 30}) async {
+        final List<DateTime> times = <DateTime>[];
+        final List<double> values = <double>[];
+        final List<int?> trids = <int?>[];
+        int trid = 1;
+        for (DateTime t = from; t.isBefore(to); t = t.add(Duration(minutes: stepMin))) {
+          times.add(t);
+          final double v = 120 + 40 * (math.sin(times.length / 10.0));
+          values.add(v);
+          trids.add(trid);
+          trid = (trid % 65535) + 1;
+        }
+        await GlucoseLocalRepo().addPointsBatch(
+          times: times,
+          values: values,
+          trids: trids,
+          eqsn: eqsn,
+          userId: userId.isEmpty ? null : userId,
+        );
+      }
+
+      await seedEq('C21ZS00102', s2From, s2To);
+      await seedEq('C21ZS00101', s1From, s1To);
+
+      try {
+        final st = await SettingsStorage.load();
+        st['pd0101RefreshedAt'] = DateTime.now().toUtc().toIso8601String();
+        st['pd0101ItemsCount'] = 2;
+        await SettingsStorage.save(st);
+      } catch (_) {}
+
+      DataSyncBus().emitGlucoseBulk(count: 2);
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

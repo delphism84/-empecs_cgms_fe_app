@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/warmup_state.dart';
 
 class NotificationService {
   NotificationService._internal();
@@ -43,8 +44,14 @@ class NotificationService {
     try {
       final s = await SettingsStorage.load();
       final dynamic v = s['notificationsEnabled'];
-      if (v is bool) _enabled = v; else _enabled = true;
-    } catch (_) { _enabled = true; }
+      if (v is bool) {
+        _enabled = v;
+      } else {
+        _enabled = true;
+      }
+    } catch (_) {
+      _enabled = true;
+    }
   }
 
   Future<void> _ensureDefaultChannel() async {
@@ -146,6 +153,17 @@ class NotificationService {
     bool vibrate = true,
   }) async {
     if (!_enabled) return;
+    final String p = (payload ?? '').trim();
+    if (p.startsWith('alarm:') && await WarmupState.isActive()) {
+      return;
+    }
+    if (p.startsWith('alarm:')) {
+      // Ensure channel/method changes (sound/vibrate) apply immediately
+      // instead of inheriting previous post state for the same notification id.
+      try {
+        await _plugin.cancel(id);
+      } catch (_) {}
+    }
     final String channelId = critical
         ? (sound && vibrate ? 'cgms_critical_both' : sound ? 'cgms_critical_sound' : vibrate ? 'cgms_critical_vibrate' : 'cgms_critical_silent')
         : (sound && vibrate ? 'cgms_alerts_both' : sound ? 'cgms_alerts_sound' : vibrate ? 'cgms_alerts_vibrate' : 'cgms_alerts_silent');
@@ -155,15 +173,18 @@ class NotificationService {
       channelDescription: critical ? 'Very low glucose critical alerts' : 'Glucose threshold alerts and system notices',
       importance: critical ? Importance.max : Importance.high,
       priority: critical ? Priority.max : Priority.high,
-      category: critical ? AndroidNotificationCategory.alarm : AndroidNotificationCategory.reminder,
+      category: (critical || sound) ? AndroidNotificationCategory.alarm : AndroidNotificationCategory.reminder,
       fullScreenIntent: critical,
       playSound: sound,
       enableVibration: vibrate,
+      audioAttributesUsage: sound ? AudioAttributesUsage.alarm : AudioAttributesUsage.notification,
     );
     final DarwinNotificationDetails ios = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: sound,
+      sound: sound ? '' : null,
+      interruptionLevel: sound ? InterruptionLevel.active : null,
     );
     final NotificationDetails details = NotificationDetails(android: android, iOS: ios);
     await _plugin.show(id, title, body, details, payload: payload);
@@ -191,16 +212,24 @@ class NotificationService {
     required double value,
     String trend = '',
     String unit = 'mg/dL',
+    DateTime? measuredAt,
   }) async {
     if (!_enabled) return;
+    if (await WarmupState.isActive()) return;
     // AR_01_08: lock screen banner per-feature toggle
     try {
       final s = await SettingsStorage.load();
       if (s['ar0108Enabled'] == false) return;
     } catch (_) {}
-    final String v = value.isNaN ? '-' : value.toStringAsFixed(0);
-    final String t = trend.trim();
-    final String title = 'Glucose ${t.isEmpty ? '' : t + ' '}$v $unit'.trim();
+    final bool mmol = unit.toLowerCase().contains('mmol');
+    final String v = value.isNaN ? '—' : (mmol ? value.toStringAsFixed(1) : value.toStringAsFixed(0));
+    final String arrow = trend.trim().isEmpty ? '→' : trend.trim();
+    final DateTime at = (measuredAt ?? DateTime.now()).toLocal();
+    final String timeStr =
+        '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
+    // AR_01_08: 잠금화면 한 줄에 변화 방향 + 최신 혈당 (Last Reading 형태 문구 사용 안 함)
+    final String title = '$arrow $v $unit';
+    final String body = timeStr;
     const int id = 2001;
     const String payload = 'lockscreen:glucose';
 
@@ -215,8 +244,9 @@ class NotificationService {
       visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.status,
       ongoing: true,
-      onlyAlertOnce: true,
-      showWhen: false,
+      onlyAlertOnce: false,
+      showWhen: true,
+      when: at.millisecondsSinceEpoch,
     );
     final DarwinNotificationDetails ios = const DarwinNotificationDetails(
       presentAlert: false,
@@ -224,7 +254,7 @@ class NotificationService {
       presentSound: false,
     );
     final NotificationDetails details = NotificationDetails(android: android, iOS: ios);
-    await _plugin.show(id, title, '', details, payload: payload);
+    await _plugin.show(id, title, body, details, payload: payload);
 
     // bot/debug verification: persist last lockscreen snapshot
     try {

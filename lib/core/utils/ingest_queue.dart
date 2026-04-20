@@ -4,9 +4,9 @@ import 'package:helpcare/core/utils/api_client.dart';
 // import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
-import 'dart:convert';
 // removed: settings storage import; notification gating moved to NotificationService
 import 'package:helpcare/core/utils/data_sync_bus.dart';
+import 'package:helpcare/core/utils/notification_service.dart';
 
 class IngestQueueService {
   IngestQueueService._internal();
@@ -15,17 +15,15 @@ class IngestQueueService {
 
   final Queue<Map<String, dynamic>> _queue = Queue();
   bool _syncing = false;
-  bool _onlineCheckInProgress = false;
 
   void enqueueGlucose(DateTime time, num value, {int? trid, String? eqsn, String? userId, bool silent = false}) {
     // 로컬 캐시 우선: 저장 후 즉시 UI 브로드캐스트/알림, 서버 동기는 비동기 처리
     GlucoseLocalRepo().addPoint(time: time, value: value.toDouble(), trid: trid, eqsn: eqsn ?? _inferEqsn(), userId: userId ?? _inferUserId());
     if (!silent) {
       DataSyncBus().emitGlucosePoint(time: time, value: value.toDouble());
+      unawaited(_pushLockScreenBanner(time, value.toDouble()));
     }
     _queue.add({'type': 'glucose', 'time': time, 'value': value, if (trid != null) 'trid': trid, 'eqsn': eqsn ?? _inferEqsn(), 'userId': userId ?? _inferUserId()});
-    // 로컬 모드일 때 노티 수신 시 온라인 연결 시도
-    _ensureOnlineIfGuest();
     _drain();
   }
 
@@ -72,6 +70,21 @@ class IngestQueueService {
     _queue.clear();
   }
 
+  Future<void> _pushLockScreenBanner(DateTime time, double value) async {
+    try {
+      final st = await SettingsStorage.load();
+      final String u = (st['glucoseUnit'] as String? ?? 'mgdl') == 'mmol' ? 'mmol/L' : 'mg/dL';
+      // eqsn 컬럼이 LOCAL/실SN 혼재될 수 있어, 추세는 사용자 단위 최근 2포인트로 통일
+      final String trend = await GlucoseLocalRepo().lockScreenTrendArrow(eqsn: null);
+      await NotificationService().showLockScreenGlucose(
+        value: value,
+        trend: trend,
+        unit: u,
+        measuredAt: time,
+      );
+    } catch (_) {}
+  }
+
   String _inferEqsn() {
     // try registered device id/mac from settings; fallback to LOCAL
     try {
@@ -102,36 +115,6 @@ class IngestQueueService {
   }
 
   static String? _lastUserIdCache;
-
-  void _ensureOnlineIfGuest() {
-    if (_onlineCheckInProgress) return;
-    _onlineCheckInProgress = true;
-    () async {
-      try {
-        final s = await SettingsStorage.load();
-        final String token = (s['authToken'] as String? ?? '');
-        final bool guest = (s['guestMode'] as bool? ?? false);
-        if (guest || token.isEmpty || token == 'OFFLINE_USER_TOKEN') {
-          final api = ApiClient();
-          await api.loadToken();
-          try {
-            final resp = await api.post('/api/auth/login', body: { 'email': 'empecs', 'password': 'admin' });
-            if (resp.statusCode == 200) {
-              final Map<String, dynamic> data = jsonDecode(resp.body) as Map<String, dynamic>;
-              final String? t = data['token'] as String?;
-              if (t != null && t.isNotEmpty) {
-                await api.saveToken(t);
-                final st = await SettingsStorage.load();
-                st['guestMode'] = false;
-                await SettingsStorage.save(st);
-              }
-            }
-          } catch (_) {}
-        }
-      } catch (_) {}
-      _onlineCheckInProgress = false;
-    }();
-  }
 }
 
 

@@ -1,0 +1,274 @@
+key,en,ko
+nav_home,Home,홈
+nav_trend,Trend,추세
+nav_report,Report,리포트
+nav_sensor,Sensor,센서
+nav_alarm,Alarm,알람
+nav_settings,Settings,설정
+exit_app_title,Exit App,앱 종료
+exit_app_body,Do you want to quit?,앱을 종료할까요?
+common_yes,Yes,예
+common_no,No,아니오
+common_ok,OK,확인
+common_cancel,Cancel,취소
+common_save,Save,저장
+common_next,Next,다음
+common_close,Close,닫기
+common_back,Back,뒤로
+common_refresh,Refresh,새로고침
+common_loading,Loading...,로딩 중...
+common_retry,Try again,다시 시도
+common_logout,Logout,로그아웃
+common_guest,Guest,게스트
+common_delete,Delete,삭제
+common_edit,Edit,편집
+common_done,Done,완료
+common_scan,Scan,스캔
+common_connect,Connect,연결
+common_disconnect,Disconnect,연결 해제
+common_disconnecting,Disconnecting...,연결 해제 중...
+common_read_status,Read status,상태 읽기
+common_device,Device,기기
+common_battery,Battery,배터리
+common_usage,Usage,사용
+common_id,ID,식별자
+common_name,Name,이름
+common_email,Email,이메일
+settings_page_title,Settings,설정
+settings_app_prefs,Application preferences,앱 환경설정
+settings_general,General,일반
+settings_general_sub,Region time chart and language,지역·시간·차트·언어
+settings_region,Region,지역
+settings_language,Language,언어
+settings_language_en,English,English
+settings_language_ko,Korean,한국어
+settings_time_format,Time format,시간 형식
+settings_chart_dot,Chart dot size,차트 점 크기
+settings_units,Units,단위
+settings_units_sub,Glucose unit,혈당 단위
+settings_glucose_unit,Glucose unit,혈당 단위
+settings_remaining_days,Remaining days,남은 일수
+settings_sn_unchanged,SN unchanged,일련번호가 동일합니다
+settings_saved_syncing,Saved & syncing...,저장 및 동기화 중...
+settings_data_local_title,Data · Local cache,데이터 · 로컬 캐시
+settings_data_refresh,REFRESH,새로고침
+settings_data_open,OPEN DATA,데이터 열기
+settings_data_reset,RESET DB,DB 초기화
+settings_data_reset_done,Local DB reset completed,로컬 DB 초기화 완료
+settings_data_no_days,No local data days,로컬 데이터 일자 없음
+settings_user_title,User,사용자
+settings_logout_confirm_title,Logout,로그아웃
+settings_logout_confirm_body,Are you sure you want to log out?,로그아웃할까요?
+auth_login_title,Login,로그인
+auth_login_hint_userid,Enter your User ID,사용자 ID 입력
+auth_login_hint_password,Enter your Password,비밀번호 입력
+auth_login_enter_credentials,Enter ID / Password,ID와 비밀번호를 입력하세요
+auth_login_invalid_email,Enter a valid email address,올바른 이메일을 입력하세요
+auth_login_offline_email,Offline: enter a valid email address,오프라인: 올바른 이메일을 입력하세요
+auth_login_failed,Login failed,로그인 실패
+auth_login_server_error,Server responded. Please try again.,서버 응답 오류입니다. 다시 시도하세요.
+auth_guest_email_required,Guest: ID must be a valid email,게스트: ID는 유효한 이메일이어야 합니다
+auth_continue_google,Continue with Google,Google로 계속
+auth_continue_apple,Continue with Apple,Apple로 계속
+auth_continue_kakao,Continue with Kakao,카카오로 계속
+auth_sign_in,Sign in,로그인
+auth_back_to_login,Back to login,로그인으로 돌아가기
+auth_create_account,Create Account,계정 만들기
+auth_confirm_account_title,Confirm Account Creation,계정 생성 확인
+auth_confirm_account_body,We will create your account with the provided information. Required permissions:,제공한 정보로 계정을 생성합니다. 필요 권한:
+auth_country_language_title,Country & Language,국가 및 언어
+auth_profile_info_title,Profile Information,프로필 정보
+auth_email_password_title,Email & Password,이메일 및 비밀번호
+auth_terms_agree_required,I agree to the Terms of Service and Privacy Policy,이용약관 및 개인정보 처리방침에 동의합니다
+auth_biometric_title,Biometric Login (LO_01_06),생체 로그인 (LO_01_06)
+auth_biometric_authenticating,Authenticating...,인증 중...
+auth_biometric_prompt,Authenticate with biometrics,생체 인증으로 로그인
+sensor_page_title,Sensor (SC_02_01),센서 (SC_02_01)
+sensor_section_new,New,새로 만들기
+sensor_sc0101_title,SC_01_01 · Scan & Connect,SC_01_01 · 스캔 및 연결
+sensor_ble_scan,BLE Scan,BLE 스캔
+sensor_qr_scan,QR Scan,QR 스캔
+sensor_scanner_ready,Ready,준비됨
+sensor_scanner_scanning,Scanning...,스캔 중...
+sensor_scanner_connecting,Connecting...,연결 중...
+sensor_devices_none,No devices yet,기기가 없습니다
+sensor_connect,Connect,연결
+sensor_connecting_busy,Connecting...,연결 중...
+sensor_busy,Busy,처리 중
+sensor_connected_section,Connected,연결됨
+sensor_racp_count,RACP: Count,RACP: 개수
+sensor_racp_all,RACP: All,RACP: 전체
+sensor_racp_last,RACP: Last,RACP: 마지막
+sensor_group_scanner,Scanner,스캐너
+sensor_sc0601_title,SC_06_01 · Reconnect (NFC),SC_06_01 · 재연결 (NFC)
+sensor_sc0602_title,SC_06_02 · Reconnect (QR),SC_06_02 · 재연결 (QR)
+sensor_enable_nfc,Enable NFC,NFC 사용
+sensor_sound_scan,Sound on scan,스캔 시 소리
+sensor_vibrate_scan,Vibrate on scan,스캔 시 진동
+sensor_instruction_text,Instruction text,안내 문구
+sensor_last_scan,Last scan,마지막 스캔
+sensor_insert_sample,Insert sample,샘플 입력
+sensor_sc0701_title,SC_07_01 · Data Share,SC_07_01 · 데이터 공유
+sensor_share_basic,Basic,기본
+sensor_share_enable,Enable sharing,공유 사용
+sensor_share_intro,Sharing period: choose 1/7/30 days or Custom range.\nSharing settings: select what to share.,공유 기간: 1/7/30일 또는 사용자 지정.\n공유 설정: 항목을 선택하세요.
+sensor_preset_custom,Custom,사용자 지정
+sensor_share_date_range,Sharing date range,공유 기간
+sensor_common_change,Change,변경
+sensor_share_items,Sharing items,공유 항목
+sensor_share_glucose_summary,Glucose data · Summary,혈당 데이터 · 요약
+sensor_share_glucose_dist,Glucose data · Range distribution,혈당 데이터 · 구간 분포
+sensor_share_glucose_graph,Glucose data · Glucose graph,혈당 데이터 · 그래프
+sensor_share_user_profile,User profile,사용자 프로필
+sensor_share_export_group,Export format,내보내기 형식
+sensor_share_export_label,Export format,내보내기 형식
+sensor_share_export_hint,Share opens Android system share sheet.,공유 시 Android 시스템 공유 시트가 열립니다.
+sensor_share_security,Security,보안
+sensor_share_revoke,Revocable anytime,언제든 철회 가능
+sensor_save_upper,SAVE,저장
+sensor_usage_hours_days,Used {}h / {}d,{}시간 / {}일 사용
+sensor_sc0301_title,SC_03_01 · Connection Status,SC_03_01 · 연결 상태
+sensor_device_name,Device name,기기 이름
+sensor_device_id,Device ID,기기 ID
+sensor_battery_pct,Battery (%),배터리 (%)
+sensor_signal_dbm,Signal strength (dBm),신호 강도 (dBm)
+sensor_packets,Packets,패킷
+sensor_connected_device,Connected device,연결된 기기
+sensor_sc0401_title,SC_04_01 · Serial Number,SC_04_01 · 일련번호
+sensor_last_scanned_qr,Last scanned QR,마지막 스캔 QR
+sensor_scan_sn_title,Scan SN,SN 스캔
+sensor_sc0501_title,SC_05_01 · Start Time,SC_05_01 · 시작 시각
+sensor_start_at,Start at,시작 시각
+sensor_enter_sn_first,Enter SN first,먼저 일련번호를 입력하세요
+sensor_saved_syncing,Saved & syncing...,저장 및 동기화 중...
+sensor_start_now_ok,Start date set to now,시작일을 현재로 설정했습니다
+sensor_start_now_local,Start date set to now (local),시작일을 현재로 설정 (로컬)
+alerts_root_title,Alerts (AR_01_01),알림 (AR_01_01)
+alerts_all_notifications,All Notifications,모든 알림
+alerts_new_section,New,새 항목
+dash_event_saved,Event saved,이벤트 저장됨
+dash_event_save_failed,Failed to save event,이벤트 저장 실패
+ar0108_title,AR_01_08 · Lock screen,AR_01_08 · 잠금화면
+ar0108_banner_title,Lock screen banner,잠금화면 배너
+ar0108_banner_desc,"When on, an ongoing notification shows the latest glucose on the lock screen and updates as new readings arrive.",켜면 잠금화면에 최신 혈당을 표시하고 새 측정 시 갱신합니다.
+ar0108_show_banner,Show lock screen banner,잠금화면 배너 표시
+ar0108_snack_on,Lock screen banner on — refreshed with trend arrow,잠금화면 배너 켜짐 — 추세 화살표로 갱신됨
+alarm_detail_save,SAVE,저장
+alarm_detail_enabled,Enabled,사용
+alarm_detail_repeat,Repeat,반복
+alarm_detail_quiet_hours,Quiet hours,방해 금지 시간
+alarm_detail_method,Method,방식
+alarm_detail_sound_vibration,Sound / Vibration,소리 / 진동
+alarm_detail_sound,Sound,소리
+alarm_detail_vibration,Vibration,진동
+alarm_detail_test_signal,Test signal alert,신호 알림 테스트
+alarm_detail_test_signal_sub,Play current sound/vibration setting,현재 소리·진동 설정 재생
+alarm_detail_threshold,Threshold,임계값
+alarm_detail_type,Type,유형
+online_sync_title,Syncing with server...,서버와 동기화 중...
+online_sync_failed,Upload sync failed,업로드 동기화 실패
+settings_region_auto,Auto-detect,자동 감지
+settings_data_title,Data,데이터
+settings_data_local_sub,Local cache summary,로컬 캐시 요약
+settings_data_total_points,Total points,총 포인트
+settings_accessibility,Accessibility,접근성
+settings_accessibility_sub,Contrast and font,대비 및 글꼴
+settings_developer,Developer,개발자
+settings_developer_sub,Debug options,디버그 옵션
+settings_req_overlay,Requirement overlay,요구사항 오버레이
+settings_ble_logs,BLE Logs,BLE 로그
+settings_ble_logs_sub,Most recent BLE/OPS/Notify debug logs,최근 BLE/OPS/Notify 디버그 로그
+settings_ble_logs_sheet_title,BLE Logs,BLE 로그
+settings_ble_clear,Clear,지우기
+settings_ble_no_logs,No logs,로그 없음
+settings_log_tx,Log Data Transmission,로그 데이터 전송
+settings_log_tx_sub,Send recent debug logs to server,최근 디버그 로그를 서버로 전송
+settings_tx_not_sent,Not sent yet,아직 전송 안 함
+settings_tx_prefix_ok,Transmission completed,전송 완료
+settings_tx_prefix_fail,Last attempt failed,마지막 시도 실패
+settings_tx_snack_ok,Transmission completed,전송 완료
+settings_tx_snack_fail,Transmission failed (offline?),전송 실패(오프라인?)
+settings_biometric_row,Biometric (LO_02_06),생체 인증 (LO_02_06)
+settings_biometric_row_sub,Enable / Debug bypass / Test,사용 / 디버그 우회 / 테스트
+settings_clear_points,Clear Data (points + events),데이터 지우기(포인트+이벤트)
+settings_clear_points_sub,Delete all glucose points and events for current user,현재 사용자의 모든 혈당·이벤트 삭제
+settings_dev_cleared,Cleared,삭제됨
+settings_dev_clear_fail,Failed to clear,삭제 실패
+settings_seed_1d,Seed 1 day (1-min interval),1일 시드(1분 간격)
+settings_seed_1d_sub,Generate 1-day data ending now,지금까지 1일 데이터 생성
+settings_seed_3d,Seed 3 days (1-min interval),3일 시드(1분 간격)
+settings_seed_3d_sub,Generate 3 days of data ending now,지금까지 3일 데이터 생성
+settings_seed_nd,Seed {} days (1-min interval),{}일 시드(1분 간격)
+settings_seed_nd_sub,Generate {} days of data ending now,지금까지 {}일 데이터 생성
+settings_dev_seeded,Seeded,시드 완료
+settings_dev_seed_fail,Failed to seed,시드 실패
+settings_dev_seeded_3,Seeded 3 days,3일 시드 완료
+settings_dev_seeded_n,Seeded {} days,{}일 시드 완료
+settings_seed_pd_title,Seed Previous Data (PD_01_01),이전 데이터 시드(PD_01_01)
+settings_seed_pd_sub,Two sensor ranges (C21ZS00101/102) for View Previous Data list & chart,이전 데이터 목록·차트용 두 센서 구간(C21ZS00101/102)
+settings_seed_pd_ok,PD_01_01: local periods seeded. Open Main → View Previous Data.,PD_01_01: 로컬 기간 시드 완료. 메인 → 이전 데이터 보기에서 확인하세요.
+settings_seed_pd_fail,Failed to seed previous data,이전 데이터 시드 실패
+settings_acc_high_contrast,High contrast,고대비
+settings_acc_larger_font,Larger font,큰 글꼴
+settings_acc_colorblind,Color blind mode,색맹 모드
+auth_remember_me,Remember Me,로그인 상태 유지
+auth_forgot_password,Forgot Password?,비밀번호를 잊으셨나요?
+auth_sign_in_cgms,Sign In with CGMS App,CGMS 앱으로 로그인
+auth_sign_in_upper,SIGN IN,로그인
+auth_guest_login_upper,GUEST LOGIN,게스트 로그인
+auth_easy_login_upper,EASY LOGIN (GOOGLE / APPLE / KAKAO),간편 로그인 (구글 / 애플 / 카카오)
+auth_create_account_upper,CREATE ACCOUNT,계정 만들기
+auth_existing_login_upper,EXISTING LOGIN,기존 로그인
+auth_continue_guest_upper,CONTINUE AS GUEST,게스트로 계속
+auth_enter_id_password_snack,Enter ID / Password,ID와 비밀번호를 입력하세요
+auth_local_login_toast,Local login (offline),로컬 로그인(오프라인)
+auth_guest_login_toast,Guest login: offline mode,게스트 로그인: 오프라인 모드
+auth_invalid_login_response,Invalid login response,로그인 응답이 올바르지 않습니다
+auth_invalid_token,Invalid token,토큰이 올바르지 않습니다
+auth_login_success_toast,Login successful,로그인 성공
+alarm_detail_sound_vibration_off,Sound/Vibration is OFF,소리/진동이 꺼져 있습니다
+alarm_detail_system_disabled_sub,When off Bluetooth link-loss alerts are disabled.,끄면 블루투스 연결 끊김 알림이 비활성화됩니다.
+alarm_detail_override_dnd,Override DND,방해 금지 무시
+alarm_detail_signal_help_title,AR_01_06 · How Signal Loss works,AR_01_06 · 신호 손실 동작
+alarm_detail_clear_log,Clear log,로그 지우기
+alarm_section_alarm,Alarm,알람
+alarm_section_alarm_sub,Type and status,유형 및 상태
+alarm_section_threshold,Threshold,임계값
+alarm_section_threshold_sub,Alert threshold,알림 임계값
+alarm_section_repeat,Repeat,반복
+alarm_section_repeat_sub,Alarm repeat interval (minutes),알림 반복 간격(분)
+alarm_section_method,Method,방식
+alarm_section_method_sub,Sound / Vibration,소리 / 진동
+alarm_section_quiet,Quiet hours,방해 금지 시간
+alarm_section_quiet_sub,Do-not-disturb period,방해 금지 시간대
+alarm_quiet_from,From (HH:mm),시작 (시:분)
+alarm_quiet_to,To (HH:mm),종료 (시:분)
+alarm_section_override_title,Override Do Not Disturb,방해 금지 무시
+alarm_section_override_sub,AR_01_02 only,AR_01_02 전용
+alarm_field_type_label,Type,유형
+alarm_field_repeat_label,Repeat,반복
+alarm_field_mode_label,Mode,모드
+alarm_field_rapid,Rapid change (mg/dL/min),급변 (mg/dL/분)
+alarm_type_very_low,Very Low,매우 낮음
+alarm_type_low,Low,낮음
+alarm_type_high,High,높음
+alarm_type_rate,Rapid Change,급격한 변화
+alarm_type_system,Signal Loss,신호 손실
+alarm_log_section_title,Local monitor log,로컬 모니터 로그
+alarm_log_section_sub,Signal loss monitor (saved on device only),신호 손실 모니터(기기에만 저장)
+alarm_log_empty,No entries yet. Disconnect or link loss events will appear here.,항목이 없습니다. 연결 해제·링크 손실 시 여기에 표시됩니다.
+sensor_remove_title,How to remove,제거 방법
+sensor_remove_heading,How to Remove the Sensor,센서 제거 방법
+sensor_remove_intro,Medisign CG01 can be used for up to {} days.\nYou will receive a notification 72 hours before the sensor expires.\nWhen it expires the sensor will automatically disconnect and you can then remove it.,Medisign CG01은 최대 {}일까지 사용할 수 있습니다.\n만료 72시간 전에 알림을 받습니다.\n만료되면 센서가 자동으로 연결 해제된 뒤 제거할 수 있습니다.
+sensor_remove_steps_title,Steps,단계
+sensor_remove_step1,1) Remove the sensor from your arm. Gently peel it off from the edge of the adhesive tape.,1) 팔에서 센서를 제거합니다. 테이프 가장자리부터 천천히 떼어냅니다.
+sensor_remove_step2,2) If the tape does not come off easily apply a small amount of baby oil around the edges and rub gently.,2) 테이프가 잘 떨어지지 않으면 가장자리에 베이비 오일을 소량 바르고 부드럽게 문지릅니다.
+sensor_remove_step3,3) Wash the area and apply moisturizer to care for your skin.,3) 해당 부위를 씻고 보습제로 피부를 관리합니다.
+sensor_remove_caution_title,Caution,주의
+sensor_remove_caution_body,"If you experience pain itching redness fever or signs of infection after removing the sensor consult a healthcare professional such as a dermatologist.",센서 제거 후 통증·가려움·발적·발열·감염 징후가 있으면 피부과 등 전문의와 상담하세요.
+sensor_remove_early_title,Removing Before Expiration,만료 전 제거
+sensor_remove_early_body,If you want to remove the sensor before it expires press the Disconnect button in the app.,만료 전에 제거하려면 앱에서 연결 해제 버튼을 누르세요.
+common_min,min,분
+common_on,On,켜짐
+common_off,Off,꺼짐
+debug_local_badge,LOCAL,로컬

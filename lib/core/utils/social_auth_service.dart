@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,7 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 
 import 'package:helpcare/core/config/social_auth_config.dart';
 import 'package:helpcare/core/utils/api_client.dart';
+import 'package:helpcare/core/utils/profile_sync_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 
@@ -147,6 +149,7 @@ class SocialAuthService {
       try {
         AppSettingsBus.notify();
       } catch (_) {}
+      unawaited(ProfileSyncService.refreshFromServer());
       return null;
     } catch (e, st) {
       debugPrint('social verify error: $e $st');

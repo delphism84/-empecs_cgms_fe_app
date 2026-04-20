@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/warmup_state.dart';
 
 class Sc0106WarmupScreen extends StatefulWidget {
   const Sc0106WarmupScreen({super.key});
@@ -54,12 +56,8 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   Future<void> _startWarmup({int seconds = 30 * 60}) async {
     final DateTime now = DateTime.now().toUtc();
     final DateTime ends = now.add(Duration(seconds: seconds));
-    final st = await SettingsStorage.load();
-    st['sc0106WarmupStartAt'] = now.toIso8601String();
-    st['sc0106WarmupEndsAt'] = ends.toIso8601String();
-    st['sc0106WarmupActive'] = true;
-    st['sc0106WarmupDoneAt'] = '';
-    await SettingsStorage.save(st);
+    await WarmupState.start(seconds: seconds);
+    AlertEngine().invalidateWarmupCache();
     if (!mounted) return;
     setState(() {
       _startAt = now;
@@ -71,10 +69,8 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
 
   Future<void> _markDone() async {
     try {
-      final st = await SettingsStorage.load();
-      st['sc0106WarmupActive'] = false;
-      st['sc0106WarmupDoneAt'] = DateTime.now().toUtc().toIso8601String();
-      await SettingsStorage.save(st);
+      await WarmupState.completeNow();
+      AlertEngine().invalidateWarmupCache();
     } catch (_) {}
     if (!mounted) return;
     setState(() {
@@ -123,7 +119,9 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
     final String mm = (rem ~/ 60).toString().padLeft(2, '0');
     final String ss = (rem % 60).toString().padLeft(2, '0');
 
-    return Scaffold(
+    return PopScope(
+      canPop: !(_active && !_done),
+      child: Scaffold(
       appBar: AppBar(title: const Text('SC_01_06 · Warm-Up')),
       body: SafeArea(
         child: Column(
@@ -135,6 +133,11 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
                   const Text(
                     'Initial sensor connection warm-up',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'During warm-up, readings may be unavailable.',
+                    style: TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                   const SizedBox(height: 8),
                   Card(
@@ -192,7 +195,9 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }
+
 

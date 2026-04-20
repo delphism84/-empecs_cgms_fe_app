@@ -4,7 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helpcare/presentation/splash_screen/splash_screen.dart';
-import 'package:helpcare/translations/codegen_loader.g.dart';
+import 'package:helpcare/core/utils/csv_lang_loader.dart';
 
 import 'core/theme/theme_constants.dart';
 import 'core/theme/theme_manager.dart';
@@ -25,19 +25,11 @@ import 'presentation/auth/login_choice_screen.dart';
 import 'presentation/auth/lo_01_02_04_sns_login_process_screens.dart';
 import 'presentation/auth/lo_02_signup_flow_screens.dart';
 import 'presentation/auth/lo_02_02_terms_screen.dart';
-import 'presentation/auth/passcode_screen.dart';
-import 'presentation/auth/passcode_reset_screen.dart';
-import 'presentation/auth/biometric_settings_screen.dart';
-import 'presentation/auth/biometric_gate_screen.dart';
-import 'presentation/auth/lo_01_07_sensor_registered_screen.dart';
 import 'presentation/onboarding/sc_01_01_permission_range_screen.dart';
 import 'presentation/onboarding/sc_01_02_reregister_screen.dart';
 import 'presentation/onboarding/um_01_01_attach_guide_screen.dart';
-import 'presentation/onboarding/sc_01_05_manual_sn_screen.dart';
 import 'presentation/onboarding/sc_01_06_warmup_screen.dart';
-import 'presentation/onboarding/sc_01_03_nfc_scan_screen.dart';
 import 'presentation/onboarding/sc_01_01_btstep_screen.dart';
-import 'presentation/onboarding/sc_06_02_qr_reconnect_screen.dart';
 import 'presentation/onboarding/sc_07_01_data_share_screen.dart';
 import 'presentation/alarms/ar_01_01_mute_all_screen.dart';
 import 'presentation/alarms/ar_01_08_lock_screen_screen.dart';
@@ -45,7 +37,6 @@ import 'presentation/alarms/alarm_type_detail_page.dart';
 import 'presentation/sensor_page/sensor_qr_connect_page.dart';
 import 'presentation/qa/qa_qr_scan_success_redirect.dart';
 import 'presentation/settings_page/local_data_page.dart';
-import 'core/utils/qa_route_web.dart';
 import 'core/utils/global_loading.dart';
 import 'core/utils/notification_service.dart';
 import 'core/utils/local_sync_service.dart';
@@ -62,11 +53,22 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 
 final GlobalKey<NavigatorState> navigatorKey = AppNav.navigatorKey;
 
+Future<Locale> _appStartLocale() async {
+  try {
+    final st = await SettingsStorage.load();
+    final String lang = (st['language'] ?? 'en').toString().toLowerCase();
+    if (lang == 'ko') return const Locale('ko');
+  } catch (_) {}
+  return const Locale('en');
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // QA 자동화 서버는 가장 먼저 시도해서 초기화 병목의 영향을 받지 않도록 한다.
   await BleEmuServer.maybeStart();
   await EasyLocalization.ensureInitialized();
+  await CsvLangAssetLoader.preload('assets/lang/lang.csv');
+  final Locale startLocale = await _appStartLocale();
   await NotificationService().initialize();
   await AlertEngine().start();
   // 로컬 DB 초기화
@@ -80,23 +82,17 @@ Future<void> main() async {
     kakao.KakaoSdk.init(nativeAppKey: SocialAuthConfig.kakaoNativeAppKey);
   }
 
-  // 로컬 설정 기반 시작 로케일(지원 로케일만)
-  Locale startLocale = const Locale('en');
-  try {
-    final st = await SettingsStorage.load();
-    final String lang = (st['language'] as String? ?? 'en').trim();
-    if (lang == 'ar' || lang == 'en') startLocale = Locale(lang);
-  } catch (_) {}
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('en'), Locale('ar')],
-      path: 'assets/translations',
-      assetLoader: const CodegenLoader(),
+      supportedLocales: const [Locale('en'), Locale('ko')],
+      path: 'assets/lang',
+      assetLoader: const CsvLangAssetLoader(),
       fallbackLocale: const Locale('en'),
       startLocale: startLocale,
+      saveLocale: false,
       child: const MyApp(),
     ),
   );
@@ -113,10 +109,10 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _isLocal = false;
   bool _always24h = true;
-  String _lang = 'en';
   double _textScale = kGlobalTextScale;
   bool _accHighContrast = false;
   bool _accColorblind = false;
+  bool _exitDialogShowing = false;
 
   @override
   void initState() {
@@ -126,29 +122,28 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _init() async {
+    Map<String, dynamic>? st;
     try {
-      final st = await SettingsStorage.load();
+      final loaded = await SettingsStorage.load();
+      st = loaded;
       if (!mounted) return;
       setState(() {
-        _isLocal = (st['guestMode'] == true);
-        _always24h = (st['timeFormat'] as String? ?? '24h') == '24h';
-        _lang = (st['language'] as String? ?? 'en').trim();
-        final bool larger = st['accLargerFont'] == true;
+        _isLocal = (loaded['guestMode'] == true);
+        _always24h = (loaded['timeFormat'] as String? ?? '24h') == '24h';
+        final bool larger = loaded['accLargerFont'] == true;
         _textScale = kGlobalTextScale * (larger ? 1.20 : 1.0);
-        _accHighContrast = st['accHighContrast'] == true;
-        _accColorblind = st['accColorblind'] == true;
+        _accHighContrast = loaded['accHighContrast'] == true;
+        _accColorblind = loaded['accColorblind'] == true;
       });
     } catch (_) {}
     try {
       // 부팅시 BLE 상태 정리
-      await BleService().disconnect();
+      await BleService().disconnect(clearPersistentPairing: false);
     } catch (_) {}
-    // 런타임 로케일 적용(지원 로케일만)
     try {
       if (!mounted) return;
-      if (_lang == 'ar' || _lang == 'en') {
-        await context.setLocale(Locale(_lang));
-      }
+      final String lang = (st?['language'] ?? 'en').toString().toLowerCase();
+      await context.setLocale(lang == 'ko' ? const Locale('ko') : const Locale('en'));
     } catch (_) {}
     // QA 자동화를 위해 앱 프레임 진입 후에도 EMU 서버 시작을 재시도한다.
     // 일부 기기에서 main() 초기 부팅 타이밍에 바인딩이 실패하는 경우를 보완.
@@ -169,20 +164,17 @@ class _MyAppState extends State<MyApp> {
       try {
         final st = await SettingsStorage.load();
         final String tf = (st['timeFormat'] as String? ?? '24h');
-        final String lang = (st['language'] as String? ?? 'en').trim();
         if (!mounted) return;
         setState(() {
           _isLocal = (st['guestMode'] == true);
           _always24h = tf == '24h';
-          _lang = lang;
           final bool larger = st['accLargerFont'] == true;
           _textScale = kGlobalTextScale * (larger ? 1.20 : 1.0);
           _accHighContrast = st['accHighContrast'] == true;
           _accColorblind = st['accColorblind'] == true;
         });
-        if (lang == 'ar' || lang == 'en') {
-          await context.setLocale(Locale(lang));
-        }
+        final String lang = (st['language'] ?? 'en').toString().toLowerCase();
+        await context.setLocale(lang == 'ko' ? const Locale('ko') : const Locale('en'));
       } catch (_) {}
     }();
   }
@@ -199,6 +191,33 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: navigatorKey,
       navigatorObservers: [AppNav.observer],
       builder: (context, child) {
+        Future<void> handleGlobalBack() async {
+          if (_exitDialogShowing) return;
+          _exitDialogShowing = true;
+          final bool? shouldQuit = await showDialog<bool>(
+            context: navigatorKey.currentContext ?? context,
+            barrierDismissible: true,
+            builder: (ctx) => AlertDialog(
+              title: Text('exit_app_title'.tr()),
+              content: Text('exit_app_body'.tr()),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text('common_no'.tr()),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text('common_yes'.tr()),
+                ),
+              ],
+            ),
+          );
+          _exitDialogShowing = false;
+          if (shouldQuit == true) {
+            await SystemNavigator.pop();
+          }
+        }
+
         final mq = MediaQuery.of(context);
         // 전역 텍스트 스케일 적용 + 우상단 로딩 인디케이터 오버레이
         final scaled = MediaQuery(
@@ -214,7 +233,14 @@ class _MyAppState extends State<MyApp> {
         final Widget filtered = _applyAccessibilityFilters(fixedDir);
         return Stack(
           children: [
-            filtered,
+            PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, result) {
+                if (didPop) return;
+                unawaited(handleGlobalBack());
+              },
+              child: filtered,
+            ),
             if (_isLocal)
               Positioned(
                 top: mq.padding.top + 8,
@@ -225,9 +251,9 @@ class _MyAppState extends State<MyApp> {
                     color: Colors.blue.shade600,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    'LOCAL',
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                  child: Text(
+                    'debug_local_badge'.tr(),
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -246,14 +272,14 @@ class _MyAppState extends State<MyApp> {
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        SizedBox(
+                      children: [
+                        const SizedBox(
                           height: 14,
                           width: 14,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         ),
-                        SizedBox(width: 8),
-                        Text('Loading...', style: TextStyle(color: Colors.white, fontSize: 12)),
+                        const SizedBox(width: 8),
+                        Text('common_loading'.tr(), style: const TextStyle(color: Colors.white, fontSize: 12)),
                       ],
                     ),
                   );
@@ -287,31 +313,22 @@ class _MyAppState extends State<MyApp> {
         '/lo/01/04': (_) => const Lo0104KakaoLoginScreen(),
         '/lo/02/01': (_) => const Lo0201SignUpIntroScreen(),
         '/lo/02/02': (_) => const Lo0202TermsScreen(),
-        '/lo/02/03': (_) => const Lo0203PhoneVerifyScreen(),
         '/lo/02/04': (_) => const Lo0204UserInfoWrapperScreen(),
         '/lo/02/05': (_) => const Lo0205SignUpCompleteScreen(),
-        '/passcode': (_) => const PasscodeScreen(),
-        '/passcode/reset': (_) => const PasscodeResetScreen(),
-        '/biometric': (_) => const BiometricSettingsScreen(),
-        '/biometric/gate': (_) => const BiometricGateScreen(),
-        '/lo/01/07': (_) => const Lo0107SensorRegisteredScreen(),
         '/sc/01/01': (_) => const Sc0101PermissionRangeScreen(),
         '/sc/01/02': (_) => const Sc0102ReregisterScreen(),
-        '/sc/01/03': (_) => const Sc0103NfcScanScreen(),
         '/sc/01/04': (_) => const SensorQrConnectPage(title: 'QR Sensor Scan', reqId: 'SC_01_04'),
-        '/sc/01/05': (_) => const Sc0105ManualSnScreen(),
+        '/sc/01/05': (_) => const SensorSerialPage(),
         '/sc/01/06': (_) => const Sc0106WarmupScreen(),
         // SC_01_01 (PPTX 기준) Scan & Connect 전용 라우트
         '/sc/01/01/scan': (_) => const SensorBleScanPage(),
         '/sc/01/01/btstep': (_) => const Sc0101BtStepScreen(),
-        '/sc/06/02': (_) => const Sc0602QrReconnectScreen(),
         '/sc/07/01': (_) => const Sc0701DataShareScreen(),
         '/ar/01/01': (_) => const Ar0101MuteAllScreen(),
         '/ar/01/02': (_) => const AlarmTypeDetailPage(type: 'very_low', title: 'Very Low (AR_01_02)', reqId: 'AR_01_02'),
         '/ar/01/03': (_) => const AlarmTypeDetailPage(type: 'high', title: 'High (AR_01_03)', reqId: 'AR_01_03'),
         '/ar/01/04': (_) => const AlarmTypeDetailPage(type: 'low', title: 'Low (AR_01_04)', reqId: 'AR_01_04'),
         '/ar/01/05': (_) => const AlarmTypeDetailPage(type: 'rate', title: 'Rapid Change (AR_01_05)', reqId: 'AR_01_05'),
-        '/ar/01/06': (_) => const AlarmTypeDetailPage(type: 'system', title: 'Signal Loss (AR_01_06)', reqId: 'AR_01_06'),
         '/ar/01/08': (_) => const Ar0108LockScreenScreen(),
         // AR_01_01 알람 설정 루트(홈 탭 의존 없이 QA 캡처용)
         '/ar/root': (_) => AlertsRootPage(),

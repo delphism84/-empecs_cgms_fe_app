@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 // ignore_for_file: unused_import, unused_field, unused_element
 // removed: local settings storage
@@ -25,9 +27,12 @@ import 'package:helpcare/presentation/widgets/app_heading.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/presentation/settings_page/local_data_page.dart';
 import 'package:helpcare/presentation/settings_page/user_detail_page.dart';
+import 'package:helpcare/core/config/app_constants.dart';
+import 'package:helpcare/core/utils/profile_sync_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -47,8 +52,6 @@ class _SettingsPageState extends State<SettingsPage> {
   bool accHighContrast = false;
   bool accLargerFont = false;
   bool accColorblind = false;
-  bool notificationsEnabled = true;
-  bool alarmsMuteAll = false;
   int chartDotSize = 2;
   // support: log transmission
   String _lastLogTxAt = '';
@@ -57,7 +60,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String displayName = 'Guest';
   String email = '';
   DateTime sensorStart = DateTime.now().subtract(const Duration(days: 3));
-  int lifeDays = 14;
+  int lifeDays = AppConstants.defaultSensorValidityDays;
   // alarms from server
   List<Map<String, dynamic>> alarms = [];
   // sensors: Setup에서 제거(중복). Sensor 탭에서 관리.
@@ -82,6 +85,13 @@ class _SettingsPageState extends State<SettingsPage> {
   ];
   Color _rowColor(int index) => _rowColors[index % _rowColors.length];
 
+  /// SharedPreferences JSON에 숫자 등이 섞여도 setState 전체가 캐스트 예외로 스킵되지 않도록.
+  static String _storageString(dynamic v) {
+    if (v == null) return '';
+    if (v is String) return v.trim();
+    return v.toString().trim();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -104,7 +114,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final int current = await _getStoredDotSize();
     await _showSelectSheet(
       context,
-      title: 'Chart dot size',
+      title: 'settings_chart_dot'.tr(),
       options: List<String>.generate(10, (i) => '${i + 1}'),
       current: '$current',
       onSelected: (v) async {
@@ -125,12 +135,28 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {
         final int cds = ((local['chartDotSize'] as num?)?.toInt() ?? 2);
         chartDotSize = cds.clamp(1, 10);
-        email = (local['lastUserId'] as String? ?? '').toString().trim();
-        displayName = (local['displayName'] as String? ?? '').toString().trim();
-        if (displayName.isEmpty && email.isNotEmpty) displayName = email;
-        if (displayName.isEmpty) displayName = 'Guest';
+        _applyUserIdentityFromMap(local);
       });
     } catch (_) {}
+  }
+
+  /// 로그인/게스트 표시용: 저장소(+선택적 앱 prefs)에서 email·displayName·guestMode 반영
+  void _applyUserIdentityFromMap(Map<String, dynamic> local, {Map? prefs}) {
+    email = _storageString(local['lastUserId']);
+    displayName = _storageString(local['displayName']);
+    if (displayName.isEmpty && email.isNotEmpty) displayName = email;
+    if (displayName.isEmpty) displayName = 'Guest';
+
+    final String tok = _storageString(local['authToken']);
+    final bool loggedIn =
+        email.isNotEmpty && tok.isNotEmpty && tok != 'OFFLINE_USER_TOKEN' && local['guestMode'] != true;
+    if (loggedIn) {
+      guestMode = false;
+    } else if (prefs != null) {
+      guestMode = (prefs['guestMode'] ?? local['guestMode'] ?? guestMode) == true;
+    } else {
+      guestMode = (local['guestMode'] == true);
+    }
   }
 
   @override
@@ -139,15 +165,9 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // 화면 재진입 시 로컬 저장된 도트 크기 등 최신값을 다시 반영
-    _load();
-  }
-
   Future<void> _load() async {
     try {
+      await ProfileSyncService.ensureLocalUserFromJwt();
       final local = await SettingsStorage.load();
       // 모든 설정 기본 로컬. BE는 업로드 전용, 실패 시 폴백 없음.
       final app = await _svc.getAppSetting();
@@ -155,41 +175,42 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
       setState(() {
         final prefs = (app['preferences'] as Map?) ?? {};
-        language = (prefs['language'] ?? local['language'] ?? language).toString();
+        final String rawLang = (local['language'] ?? prefs['language'] ?? 'en').toString().toLowerCase();
+        language = rawLang == 'ko' ? 'ko' : 'en';
         region = (prefs['region'] ?? local['region'] ?? region).toString();
         autoRegion = (prefs['autoRegion'] ?? local['autoRegion'] ?? autoRegion) == true;
-        guestMode = (prefs['guestMode'] ?? local['guestMode'] ?? guestMode) == true;
+        // 로그인·회원 정보가 로컬에 있으면 게스트 플래그를 서버 설정보다 우선
+        _applyUserIdentityFromMap(local, prefs: prefs);
         glucoseUnit = ((local['glucoseUnit'] ?? app['unit'] ?? '') == 'mmol' || (app['unit'] ?? '') == 'mmol/L') ? 'mmol' : 'mgdl';
         timeFormat = (local['timeFormat'] ?? prefs['timeFormat'] ?? timeFormat).toString();
         accHighContrast = (prefs['accHighContrast'] ?? accHighContrast) == true;
         accLargerFont = (prefs['accLargerFont'] ?? accLargerFont) == true;
         accColorblind = (prefs['accColorblind'] ?? accColorblind) == true;
         alarms = list;
-        final bool? notif = (prefs['notificationsEnabled'] as bool?);
-        notificationsEnabled = notif ?? (app['notifications'] == true);
-        alarmsMuteAll = local['alarmsMuteAll'] == true;
         final int cds = ((local['chartDotSize'] as num?)?.toInt() ?? 2);
         chartDotSize = cds.clamp(1, 10);
         _lastLogTxAt = (local['lastLogTxAt'] as String? ?? '').toString().trim();
         _lastLogTxOk = local['lastLogTxOk'] == true;
-        // user: local only
-        email = (local['lastUserId'] as String? ?? '').toString().trim();
-        displayName = (local['displayName'] as String? ?? '').toString().trim();
-        if (displayName.isEmpty && email.isNotEmpty) displayName = email;
-        if (displayName.isEmpty) displayName = 'Guest';
         _eqsn = (local['eqsn'] as String? ?? '').toString().trim();
         _snCtrl.text = _eqsn;
         _parseSn(_eqsn);
+        lifeDays = AppConstants.defaultSensorValidityDays;
+        final String ssRaw = _storageString(local['sensorStartAt']);
+        if (ssRaw.isNotEmpty) {
+          final DateTime? p = DateTime.tryParse(ssRaw);
+          if (p != null) sensorStart = p.toLocal();
+        }
       });
       _loadDataSummary();
+      unawaited(ProfileSyncService.refreshFromServer());
     } catch (_) {}
   }
 
   String _logTxSubtitle() {
-    if (_lastLogTxAt.isEmpty) return 'Not sent yet';
+    if (_lastLogTxAt.isEmpty) return 'settings_tx_not_sent'.tr();
     final dt = DateTime.tryParse(_lastLogTxAt)?.toLocal();
     final ts = dt != null ? dt.toString() : _lastLogTxAt;
-    return _lastLogTxOk ? 'Transmission Completed: $ts' : 'Last attempt failed: $ts';
+    return _lastLogTxOk ? '${'settings_tx_prefix_ok'.tr()}: $ts' : '${'settings_tx_prefix_fail'.tr()}: $ts';
   }
 
   Future<void> _sendLogTx() async {
@@ -199,7 +220,7 @@ class _SettingsPageState extends State<SettingsPage> {
       final logs = await BleLogService().snapshot(limit: 80);
       final s = await SettingsStorage.load();
       final String eqsn = (s['eqsn'] as String? ?? '').trim();
-      final String userId = (s['lastUserId'] as String? ?? '').trim();
+      final String userId = _storageString(s['lastUserId']);
       final String apiBase = (s['apiBaseUrl'] as String? ?? '').trim();
       final memo = [
         '[log_tx]',
@@ -267,7 +288,7 @@ class _SettingsPageState extends State<SettingsPage> {
       try { DataSyncBus().emitGlucoseBulk(count: 0); } catch (_) {}
       try { DataSyncBus().emitEventBulk(count: 0); } catch (_) {}
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Local DB reset completed')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('settings_data_reset_done'.tr())));
     } catch (_) {}
   }
 
@@ -313,34 +334,52 @@ class _SettingsPageState extends State<SettingsPage> {
     final Map<String, dynamic> st = await SettingsStorage.load();
     final String prevEqsn = (st['eqsn'] as String? ?? '').trim();
     if (newEqsn == prevEqsn) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SN unchanged')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('settings_sn_unchanged'.tr())));
       return;
     }
     // 1) update settings
     st['eqsn'] = newEqsn;
     await SettingsStorage.save(st);
-    setState(() { _eqsn = newEqsn; });
     // 2) SN 변경 시 로컬 데이터 전부 초기화 (혼섞임 방지)
     try {
         await GlucoseLocalRepo().clear();
         await EventLocalRepo().clear();
     } catch (_) {}
-    // 3) 시작일은 로컬 우선: 온라인이고 서버에 SN이 있으면 서버값 사용, 없으면 로컬(현재시각) 기록 후 서버로 동기화
+    // 3) 시작일은 로컬 우선: 온라인이고 서버에 SN/MAC이 있으면 서버값 사용(req 1-7)
+    String resolvedEqsn = newEqsn;
     try {
       final ss = SettingsService();
       DateTime? startLocal;
       try {
-        final Map<String, dynamic> eq = await ss.getEqBySerial(newEqsn);
+        final prefs = await SharedPreferences.getInstance();
+        final String? mac = prefs.getString('cgms.last_mac');
+        final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: newEqsn, bleMac: mac);
         final String? stRemote = (eq['startAt'] as String?);
         if (stRemote != null && stRemote.trim().isNotEmpty) {
           startLocal = DateTime.tryParse(stRemote)?.toLocal();
         }
+        final String? srvSn = (eq['serial'] as String?)?.trim();
+        if (srvSn != null && srvSn.isNotEmpty) resolvedEqsn = srvSn;
       } catch (_) {}
       startLocal ??= DateTime.now();
-      try { final m = await SettingsStorage.load(); m['sensorStartAt'] = startLocal.toUtc().toIso8601String(); await SettingsStorage.save(m); } catch (_) {}
-      try { await ss.upsertEqStart(serial: newEqsn, startAt: startLocal); } catch (_) {}
+      try {
+        final m = await SettingsStorage.load();
+        m['sensorStartAt'] = startLocal.toUtc().toIso8601String();
+        if (resolvedEqsn != newEqsn) {
+          m['eqsn'] = resolvedEqsn;
+          st['eqsn'] = resolvedEqsn;
+        }
+        await SettingsStorage.save(m);
+      } catch (_) {}
+      try { await ss.upsertEqStart(serial: resolvedEqsn, startAt: startLocal); } catch (_) {}
       try { DataSyncBus().emitGlucoseBulk(count: 1); } catch (_) {}
     } catch (_) {}
+    if (mounted) {
+      setState(() {
+        _eqsn = resolvedEqsn;
+        if (resolvedEqsn != newEqsn) _snCtrl.text = resolvedEqsn;
+      });
+    }
     // 4) fetch from DB (server) into local cache (recent 30 days)
     try {
       final ds = DataService();
@@ -349,18 +388,78 @@ class _SettingsPageState extends State<SettingsPage> {
     } catch (_) {}
     // 5) RACP greater-than from last trid
     try {
-      final int last = await GlucoseLocalRepo().maxTrid(eqsn: newEqsn);
+      final int last = await GlucoseLocalRepo().maxTrid(eqsn: resolvedEqsn);
       await BleService().requestRacpFromTrid((last + 1) & 0xFFFF);
     } catch (_) {}
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved & syncing...')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('settings_saved_syncing'.tr())));
+  }
+
+  /// 상단 사용자 카드 — [findAncestorStateOfType]은 자기 State를 찾지 못하므로 State 필드를 직접 사용
+  Widget _buildUserCard(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final DateTime start = sensorStart;
+    final int total = lifeDays;
+    final Duration used = DateTime.now().difference(start);
+    final int remain = (total - used.inDays).clamp(0, total);
+    final String nameRaw = displayName.trim().isEmpty ? 'Guest' : displayName.trim();
+    final String name = nameRaw == 'Guest' ? 'common_guest'.tr() : nameRaw;
+    final String e = email.trim();
+    final String emailLine = e.isEmpty ? '—' : e;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => UserDetailPage(displayName: name, email: emailLine),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1D1D1D) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              CircleAvatar(radius: 22, child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary)),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(emailLine, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ])),
+              const Icon(Icons.chevron_right),
+            ]),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(children: [
+                const Icon(Icons.hourglass_bottom, color: Colors.teal),
+                const SizedBox(width: 8),
+                Expanded(child: Text('${'settings_remaining_days'.tr()}: $remain / $total', style: const TextStyle(fontSize: 13))),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
   }
 
   Future<void> _save() async {
+    final String lang = language == 'ko' ? 'ko' : 'en';
     // 1) 로컬 저장(즉시 적용/원복 방지)
     try {
       final local = await SettingsStorage.load();
-      final String lang = (language == 'ar' || language == 'en') ? language : 'en';
       final String tf = (timeFormat == '12h' || timeFormat == '24h') ? timeFormat : '24h';
       local['language'] = lang;
       local['region'] = region;
@@ -371,14 +470,12 @@ class _SettingsPageState extends State<SettingsPage> {
       local['accHighContrast'] = accHighContrast;
       local['accLargerFont'] = accLargerFont;
       local['accColorblind'] = accColorblind;
-      local['notificationsEnabled'] = notificationsEnabled;
-      local['alarmsMuteAll'] = alarmsMuteAll;
+      local['notificationsEnabled'] = true;
       await SettingsStorage.save(local);
-      // Notification on/off 즉시 반영
-      try { NotificationService().setEnabled(notificationsEnabled); } catch (_) {}
+      try { NotificationService().setEnabled(true); } catch (_) {}
       // 런타임 언어 변경(지원 로케일만)
       try {
-        if (mounted && (lang == 'en' || lang == 'ar')) {
+        if (mounted) {
           await context.setLocale(Locale(lang));
         }
       } catch (_) {}
@@ -390,11 +487,10 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await _svc.updateAppSetting({
         'unit': glucoseUnit == 'mgdl' ? 'mg/dL' : 'mmol/L',
-        'notifications': notificationsEnabled,
+        'notifications': true,
         'timeFormat': timeFormat,
-        'alarmsMuteAll': alarmsMuteAll,
         'preferences': {
-          'language': language,
+          'language': lang,
           'region': region,
           'autoRegion': autoRegion,
           'guestMode': guestMode,
@@ -402,7 +498,7 @@ class _SettingsPageState extends State<SettingsPage> {
           'accHighContrast': accHighContrast,
           'accLargerFont': accLargerFont,
           'accColorblind': accColorblind,
-          'notificationsEnabled': notificationsEnabled,
+          'notificationsEnabled': true,
         },
       });
     } catch (_) {}
@@ -420,17 +516,17 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _userCard(context),
+                _buildUserCard(context),
                 const SizedBox(height: 12),
                 if (kDebugMode) ...[
                   ReportCard(
-                    title: 'Data',
-                    subtitle: 'Local cache summary',
+                    title: 'settings_data_title'.tr(),
+                    subtitle: 'settings_data_local_sub'.tr(),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Row(children: [
                         const Icon(Icons.storage, size: 18),
                         const SizedBox(width: 8),
-                        Expanded(child: Text('Total points: ' + _localCount.toString(), style: const TextStyle(fontWeight: FontWeight.w600))),
+                        Expanded(child: Text('${'settings_data_total_points'.tr()}: ${_localCount.toString()}', style: const TextStyle(fontWeight: FontWeight.w600))),
                       ]),
                       const SizedBox(height: 8),
                       Row(
@@ -440,7 +536,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               height: 44,
                               child: OutlinedButton(
                                 onPressed: _loadDataSummary,
-                                child: const Text('REFRESH'),
+                                child: Text('settings_data_refresh'.tr()),
                               ),
                             ),
                           ),
@@ -452,7 +548,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 onPressed: () {
                                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LocalDataPage()));
                                 },
-                                child: const Text('OPEN DATA'),
+                                child: Text('settings_data_open'.tr()),
                               ),
                             ),
                           ),
@@ -462,7 +558,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               height: 44,
                               child: OutlinedButton(
                                 onPressed: _resetLocalDb,
-                                child: const Text('RESET DB'),
+                                child: Text('settings_data_reset'.tr()),
                               ),
                             ),
                           ),
@@ -474,23 +570,24 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
                 // (moved SN card to Sensor tab)
                 // report-style header
-                const AppHeading('Settings', level: AppHeadingLevel.h1),
+                AppHeading('settings_page_title'.tr(), level: AppHeadingLevel.h1),
                 const SizedBox(height: 6),
-                const AppHeading('Application preferences', level: AppHeadingLevel.h3),
+                AppHeading('settings_app_prefs'.tr(), level: AppHeadingLevel.h3),
                 const SizedBox(height: 12),
                 const SizedBox(height: 8),
+                // ST_01_xx: 별도 "Notifications" 행 없음 — 알림은 Alarm 탭(유형별) + 로컬 저장의 notificationsEnabled(저장 시 true)로 처리.
                 ReportCard(
-                  title: 'General',
-                  subtitle: 'Language, Region, Notifications',
+                  title: 'settings_general'.tr(),
+                  subtitle: 'settings_general_sub'.tr(),
                   child: Column(children: [
                     _notifItem(
                       context,
                       icon: Icons.public,
-                      title: 'Region',
-                      subtitle: autoRegion ? 'Auto-detect: $region' : region,
+                      title: 'settings_region'.tr(),
+                      subtitle: autoRegion ? '${'settings_region_auto'.tr()}: $region' : region,
                       onTap: () => _showSelectSheet(
                         context,
-                        title: 'Region',
+                        title: 'settings_region'.tr(),
                         options: const ['KR', 'US', 'GB', 'CA', 'EU'],
                         current: region,
                         onSelected: (v) => setState(() { region = v; _save(); AppSettingsBus.notify(); }),
@@ -499,24 +596,25 @@ class _SettingsPageState extends State<SettingsPage> {
                     _notifItem(
                       context,
                       icon: Icons.translate,
-                      title: 'Language',
-                      subtitle: language,
+                      title: 'settings_language'.tr(),
+                      subtitle: language == 'ko' ? 'settings_language_ko'.tr() : 'settings_language_en'.tr(),
                       onTap: () => _showSelectSheet(
                         context,
-                        title: 'Language',
-                        options: const ['en', 'ar'],
+                        title: 'settings_language'.tr(),
+                        options: const ['en', 'ko'],
                         current: language,
+                        labelFor: (code) => code == 'ko' ? tr('settings_language_ko') : tr('settings_language_en'),
                         onSelected: (v) => setState(() { language = v; _save(); AppSettingsBus.notify(); }),
                       ),
                     ),
                     _notifItem(
                       context,
                       icon: Icons.access_time,
-                      title: 'Time format',
+                      title: 'settings_time_format'.tr(),
                       subtitle: timeFormat,
                       onTap: () => _showSelectSheet(
                         context,
-                        title: 'Time format',
+                        title: 'settings_time_format'.tr(),
                         options: const ['24h', '12h'],
                         current: timeFormat,
                         onSelected: (v) => setState(() { timeFormat = v; _save(); AppSettingsBus.notify(); }),
@@ -525,35 +623,25 @@ class _SettingsPageState extends State<SettingsPage> {
                     _notifItem(
                       context,
                       icon: Icons.scatter_plot,
-                      title: 'Chart dot size',
+                      title: 'settings_chart_dot'.tr(),
                       subtitle: '${chartDotSize}px',
                       onTap: () => _openDotSizeSheet(context),
                     ),
-                    _toggleItem('Notifications', notificationsEnabled, (v) async {
-                      setState(() { notificationsEnabled = v; });
-                      await _save();
-                      AppSettingsBus.notify();
-                    }),
-                    _toggleItem('Mute all alarms (AR_01_01)', alarmsMuteAll, (v) async {
-                      setState(() { alarmsMuteAll = v; });
-                      await _save();
-                      AppSettingsBus.notify();
-                    }),
                   ]),
                 ),
                 const SizedBox(height: 12),
                 ReportCard(
-                  title: 'Units',
-                  subtitle: 'Glucose unit',
+                  title: 'settings_units'.tr(),
+                  subtitle: 'settings_units_sub'.tr(),
                   child: Column(children: [
                     _notifItem(
                       context,
                       icon: Icons.straighten,
-                      title: 'Glucose unit',
+                      title: 'settings_glucose_unit'.tr(),
                       subtitle: glucoseUnit == 'mgdl' ? 'mg/dL' : 'mmol/L',
                       onTap: () => _showSelectSheet(
                         context,
-                        title: 'Glucose unit',
+                        title: 'settings_glucose_unit'.tr(),
                         options: const ['mg/dL', 'mmol/L'],
                         current: glucoseUnit == 'mgdl' ? 'mg/dL' : 'mmol/L',
                         onSelected: (v) => setState(() {
@@ -568,20 +656,20 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 12),
                 // NOTE: Sensors 패널은 Sensor 탭과 중복 — req_remove.md 참조. 제거함.
                 ReportCard(
-                  title: 'Accessibility',
-                  subtitle: 'Contrast and font',
+                  title: 'settings_accessibility'.tr(),
+                  subtitle: 'settings_accessibility_sub'.tr(),
                   child: Column(children: [
-                    _toggleItem('High contrast', accHighContrast, (v) async {
+                    _toggleItem('settings_acc_high_contrast'.tr(), accHighContrast, (v) async {
                       setState(() { accHighContrast = v; });
                       await _save();
                       AppSettingsBus.notify();
                     }),
-                    _toggleItem('Larger font', accLargerFont, (v) async {
+                    _toggleItem('settings_acc_larger_font'.tr(), accLargerFont, (v) async {
                       setState(() { accLargerFont = v; });
                       await _save();
                       AppSettingsBus.notify();
                     }),
-                    _toggleItem('Color blind mode', accColorblind, (v) async {
+                    _toggleItem('settings_acc_colorblind'.tr(), accColorblind, (v) async {
                       setState(() { accColorblind = v; });
                       await _save();
                       AppSettingsBus.notify();
@@ -590,22 +678,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 12),
                 ReportCard(
-                  title: 'Developer',
-                  subtitle: 'Debug options',
+                  title: 'settings_developer'.tr(),
+                  subtitle: 'settings_developer_sub'.tr(),
                   child: Column(children: [
                     _notifItem(
                       context,
                       icon: Icons.bug_report,
-                      title: 'Requirement overlay',
-                      subtitle: DebugConfig.overlayEnabled ? 'On' : 'Off',
+                      title: 'settings_req_overlay'.tr(),
+                      subtitle: DebugConfig.overlayEnabled ? 'common_on'.tr() : 'common_off'.tr(),
                       onTap: () => setState(() { DebugConfig.overlayEnabled = !DebugConfig.overlayEnabled; }),
                     ),
                     const SizedBox(height: 8),
                     _notifItem(
                       context,
                       icon: Icons.list_alt,
-                      title: 'BLE Logs',
-                      subtitle: 'Most recent BLE/OPS/Notify debug logs',
+                      title: 'settings_ble_logs'.tr(),
+                      subtitle: 'settings_ble_logs_sub'.tr(),
                       onTap: () async {
                         await showModalBottomSheet(
                           context: context,
@@ -620,10 +708,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Text('BLE Logs', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                        Text('settings_ble_logs_sheet_title'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                                         TextButton(
                                           onPressed: () => BleLogService().clear(),
-                                          child: const Text('Clear'),
+                                          child: Text('settings_ble_clear'.tr()),
                                         ),
                                       ],
                                     ),
@@ -655,7 +743,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     _notifItem(
                       context,
                       icon: Icons.support_agent,
-                      title: 'Log Data Transmission',
+                      title: 'settings_log_tx'.tr(),
                       subtitle: _logTxSubtitle(),
                       onTap: _sendLogTx,
                     ),
@@ -663,8 +751,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     _notifItem(
                       context,
                       icon: Icons.fingerprint,
-                      title: 'Biometric (LO_02_06)',
-                      subtitle: 'Enable / Debug bypass / Test',
+                      title: 'settings_biometric_row'.tr(),
+                      subtitle: 'settings_biometric_row_sub'.tr(),
                       onTap: () {
                         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BiometricSettingsScreen()));
                       },
@@ -673,13 +761,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     _notifItem(
                       context,
                       icon: Icons.delete_sweep,
-                      title: 'Clear Data (points + events)',
-                      subtitle: 'Delete all glucose points and events for current user',
+                      title: 'settings_clear_points'.tr(),
+                      subtitle: 'settings_clear_points_sub'.tr(),
                       onTap: () async {
                         final ok = await _svc.clearAllData();
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(ok ? 'Cleared' : 'Failed to clear')),
+                          SnackBar(content: Text(ok ? 'settings_dev_cleared'.tr() : 'settings_dev_clear_fail'.tr())),
                         );
                       },
                     ),
@@ -687,13 +775,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     _notifItem(
                       context,
                       icon: Icons.bolt,
-                      title: 'Seed 1 day (1-min interval)',
-                      subtitle: 'Generate 1-day data ending now',
+                      title: 'settings_seed_1d'.tr(),
+                      subtitle: 'settings_seed_1d_sub'.tr(),
                       onTap: () async {
                         final ok = await _svc.seedGlucoseDay();
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(ok ? 'Seeded' : 'Failed to seed')),
+                          SnackBar(content: Text(ok ? 'settings_dev_seeded'.tr() : 'settings_dev_seed_fail'.tr())),
                         );
                       },
                     ),
@@ -701,13 +789,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     _notifItem(
                       context,
                       icon: Icons.bolt,
-                      title: 'Seed 3 days (1-min interval)',
-                      subtitle: 'Generate 3 days of data ending now',
+                      title: 'settings_seed_3d'.tr(),
+                      subtitle: 'settings_seed_3d_sub'.tr(),
                       onTap: () async {
                         final ok = await _svc.seedGlucoseDays(3);
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(ok ? 'Seeded 3 days' : 'Failed to seed')),
+                          SnackBar(content: Text(ok ? 'settings_dev_seeded_3'.tr() : 'settings_dev_seed_fail'.tr())),
                         );
                       },
                     ),
@@ -715,13 +803,31 @@ class _SettingsPageState extends State<SettingsPage> {
                     _notifItem(
                       context,
                       icon: Icons.bolt,
-                      title: 'Seed 14 days (1-min interval)',
-                      subtitle: 'Generate 14 days of data ending now',
+                      title: 'settings_seed_nd'.tr(args: <String>[AppConstants.defaultSensorValidityDays.toString()]),
+                      subtitle: 'settings_seed_nd_sub'.tr(args: <String>[AppConstants.defaultSensorValidityDays.toString()]),
                       onTap: () async {
-                        final ok = await _svc.seedGlucoseDays(14);
+                        final ok = await _svc.seedGlucoseDays(AppConstants.defaultSensorValidityDays);
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(ok ? 'Seeded 14 days' : 'Failed to seed')),
+                          SnackBar(content: Text(ok ? 'settings_dev_seeded_n'.tr(args: <String>[AppConstants.defaultSensorValidityDays.toString()]) : 'settings_dev_seed_fail'.tr())),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _notifItem(
+                      context,
+                      icon: Icons.history,
+                      title: 'settings_seed_pd_title'.tr(),
+                      subtitle: 'settings_seed_pd_sub'.tr(),
+                      onTap: () async {
+                        final ok = await _svc.seedPd0101PreviousData();
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              ok ? 'settings_seed_pd_ok'.tr() : 'settings_seed_pd_fail'.tr(),
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -914,7 +1020,14 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _showSelectSheet(BuildContext context, {required String title, required List<String> options, required String current, required ValueChanged<String> onSelected}) async {
+  Future<void> _showSelectSheet(
+    BuildContext context, {
+    required String title,
+    required List<String> options,
+    required String current,
+    required ValueChanged<String> onSelected,
+    String Function(String value)? labelFor,
+  }) async {
     await showModalBottomSheet(
       context: context,
       builder: (_) {
@@ -925,7 +1038,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
             ...options.map((o) => ListTile(
-                  title: Text(o),
+                  title: Text(labelFor != null ? labelFor(o) : o),
                   trailing: o == current ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary) : null,
                   onTap: () {
                     Navigator.of(context).pop();
@@ -940,65 +1053,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-
-Widget _userCard(BuildContext context) {
-  final bool isDark = Theme.of(context).brightness == Brightness.dark;
-  final _SettingsPageState? st = context.findAncestorStateOfType<_SettingsPageState>();
-  final DateTime start = st?.sensorStart ?? DateTime.now();
-  final int total = st?.lifeDays ?? 14;
-  final Duration used = DateTime.now().difference(start);
-  final int remain = (total - used.inDays).clamp(0, total);
-  final String name = (st?.displayName ?? '').toString().trim().isEmpty ? 'Guest' : (st!.displayName.toString().trim());
-  final String e = (st?.email ?? '').toString().trim();
-  final String email = e.isEmpty ? '—' : e;
-
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => UserDetailPage(displayName: name, email: email),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1D1D1D) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
-        ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            CircleAvatar(radius: 22, child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary)),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
-              Text(email, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            ])),
-            const Icon(Icons.chevron_right),
-          ]),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(children: [
-              const Icon(Icons.hourglass_bottom, color: Colors.teal),
-              const SizedBox(width: 8),
-              Expanded(child: Text('Remaining days: $remain / $total', style: const TextStyle(fontSize: 13))),
-            ]),
-          ),
-        ]),
-      ),
-    ),
-  );
-}
 
 // removed unused _navButton
 

@@ -6,6 +6,7 @@ import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/presentation/auth/lo_01_02_04_sns_login_process_screens.dart';
 import 'package:helpcare/presentation/auth/lo_02_signup_flow_screens.dart';
 import 'package:helpcare/widgets/custom_button.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Main login selection screen
 ///
@@ -45,11 +46,13 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
+      appBar: AppBar(title: Text('auth_login_title'.tr())),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // splash image on top
@@ -69,14 +72,14 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
             const SizedBox(height: 24),
             CustomButton(
               width: double.infinity,
-              text: 'EASY LOGIN (GOOGLE / APPLE / KAKAO)',
+              text: 'auth_easy_login_upper'.tr(),
               variant: ButtonVariant.FillLoginGreen,
               onTap: () => _showEasyLogin(context),
             ),
             const SizedBox(height: 12),
             CustomButton(
               width: double.infinity,
-              text: 'CREATE ACCOUNT',
+              text: 'auth_create_account_upper'.tr(),
               variant: ButtonVariant.OutlinePrimaryWhite,
               fontStyle: ButtonFontStyle.GilroyMedium16Primary,
               onTap: () {
@@ -88,7 +91,7 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
             const SizedBox(height: 12),
             CustomButton(
               width: double.infinity,
-              text: 'EXISTING LOGIN',
+              text: 'auth_existing_login_upper'.tr(),
               variant: ButtonVariant.OutlinePrimaryWhite,
               fontStyle: ButtonFontStyle.GilroyMedium16Primary,
               onTap: () {
@@ -100,7 +103,7 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
             const SizedBox(height: 12),
             CustomButton(
               width: double.infinity,
-              text: 'CONTINUE AS GUEST',
+              text: 'auth_continue_guest_upper'.tr(),
               variant: ButtonVariant.OutlinePrimaryWhite,
               fontStyle: ButtonFontStyle.GilroyMedium16Primary,
               onTap: () => _enterGuestMode(context),
@@ -108,6 +111,7 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -156,7 +160,7 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.account_circle, color: Colors.red),
-                  title: const Text('Continue with Google'),
+                  title: Text('auth_continue_google'.tr()),
                   onTap: () async {
                     Navigator.pop(context);
                     await _markProviderTapped('google');
@@ -168,7 +172,7 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.apple),
-                  title: const Text('Continue with Apple'),
+                  title: Text('auth_continue_apple'.tr()),
                   onTap: () async {
                     Navigator.pop(context);
                     await _markProviderTapped('apple');
@@ -180,7 +184,7 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.chat_bubble, color: Colors.amber),
-                  title: const Text('Continue with Kakao'),
+                  title: Text('auth_continue_kakao'.tr()),
                   onTap: () async {
                     Navigator.pop(context);
                     await _markProviderTapped('kakao');
@@ -191,7 +195,7 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
                   },
                 ),
                 const SizedBox(height: 8),
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+                TextButton(onPressed: () => Navigator.pop(context), child: Text('common_close'.tr())),
               ],
             ),
           ),

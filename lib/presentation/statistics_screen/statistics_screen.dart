@@ -19,7 +19,7 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
-  List<String> dropdownItemList2 = ["3일", "7일", "14일", "30일"];
+  List<String> dropdownItemList2 = ["3일", "7일", "15일", "30일"];
   Object? value2;
   Object? value1;
   @override

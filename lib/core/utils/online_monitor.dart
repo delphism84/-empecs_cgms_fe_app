@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/material.dart';
 import 'package:helpcare/core/utils/api_client.dart';
+import 'package:helpcare/core/utils/app_nav.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/event_local_repo.dart';
@@ -43,10 +45,40 @@ class OnlineMonitor {
     } catch (_) {}
 
     if (online && !_prevOnline) {
-      // transition to online → push backlog
       unawaited(_pushBacklog());
+      unawaited(_showPostOnlineSyncUi());
     }
     _prevOnline = online;
+  }
+
+  /// req 2-1: 온라인 전환 직후 로컬→서버 동기화 UX — 애니메이션 후 업로드 동기화 실패 표시(현행 스텁).
+  Future<void> _showPostOnlineSyncUi() async {
+    final BuildContext? ctx = AppNav.navigatorKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
+    try {
+      showDialog<void>(
+        context: ctx,
+        barrierDismissible: false,
+        builder: (dCtx) => const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Expanded(child: Text('Syncing with server...')),
+            ],
+          ),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 2600));
+      final NavigatorState? nav = AppNav.navigatorKey.currentState;
+      if (nav != null && nav.canPop()) nav.pop();
+      final BuildContext? ctx2 = AppNav.navigatorKey.currentContext;
+      if (ctx2 != null && ctx2.mounted) {
+        ScaffoldMessenger.of(ctx2).showSnackBar(
+          const SnackBar(content: Text('Upload sync failed')),
+        );
+      }
+    } catch (_) {}
   }
 
   Future<void> _pushBacklog() async {

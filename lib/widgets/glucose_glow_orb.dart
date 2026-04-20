@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 
+/// 홈 Last Update 카드와 동일 톤의 배경 녹색(글로우 베이스).
+const Color _kOrbPanelGreen = Color(0xFF628d71);
+
 class GlucoseGlowOrb extends StatefulWidget {
   const GlucoseGlowOrb({
     super.key,
@@ -40,13 +43,8 @@ class _GlucoseGlowOrbState extends State<GlucoseGlowOrb> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    // color cycle (solid color only)
-    final double tCycle = (DateTime.now().millisecondsSinceEpoch % (widget.cycleSeconds * 1000)) / (widget.cycleSeconds * 1000);
-    final Color ringColor = Color.lerp(
-      Color.lerp(Colors.cyan, const Color.fromARGB(255, 188, 225, 255), _segment(tCycle, 0.0, 0.1)),
-      Color.lerp(Colors.blue, const Color.fromARGB(255, 204, 240, 245), _segment(tCycle, 0.1, 0.2)),
-      _segment(tCycle, 0.1, 0.2),
-    ) ?? Theme.of(context).colorScheme.primary;
+    // Last Update 사각 패널 색(0x628d71)과 맞춘 은은한 글로우 — theme primary 미사용
+    final Color ringColor = Color.lerp(Colors.white, _kOrbPanelGreen, 0.11) ?? _kOrbPanelGreen;
 
     // 크기 20% 축소 적용
     final double bounded = (widget.size * 0.8).clamp(0.0, 160.0);
@@ -89,9 +87,9 @@ class _GlucoseGlowOrbState extends State<GlucoseGlowOrb> with SingleTickerProvid
                 child: ImageFiltered(
                   imageFilter: ui.ImageFilter.blur(sigmaX: glowSigma2, sigmaY: glowSigma2),
                   child: ColorFiltered(
-                    colorFilter: ui.ColorFilter.mode(ringColor.withOpacity(0.9), BlendMode.srcATop),
+                    colorFilter: ui.ColorFilter.mode(ringColor.withValues(alpha: 0.9), BlendMode.srcATop),
                     child: Transform.scale(
-                      scale: 1.02,
+                      scale: 1.12,
                       child: Image.asset(
                         'assets/images/eq.png',
                         fit: BoxFit.contain,
@@ -114,10 +112,4 @@ class _GlucoseGlowOrbState extends State<GlucoseGlowOrb> with SingleTickerProvid
       ),
     );
   }
-}
-
-double _segment(double t, double a, double b) {
-  if (t <= a) return 0;
-  if (t >= b) return 1;
-  return (t - a) / (b - a);
 }

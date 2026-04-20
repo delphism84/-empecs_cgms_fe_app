@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:helpcare/core/utils/image_constant.dart';
+import 'package:helpcare/core/config/app_constants.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SensorRemovePage extends StatelessWidget {
   const SensorRemovePage({super.key});
@@ -17,7 +19,7 @@ class SensorRemovePage extends StatelessWidget {
     }();
     // removed unused theme variable
     return Scaffold(
-      appBar: AppBar(title: const Text('How to remove')),
+      appBar: AppBar(title: Text('sensor_remove_title'.tr())),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -37,32 +39,30 @@ class SensorRemovePage extends StatelessWidget {
               _card(
                 context,
                 leading: Icons.info_outline,
-                title: 'How to Remove the Sensor',
-                body: 'Medisign CG01 can be used for up to 14 days.\n'
-                    'You will receive a notification 72 hours before the sensor expires.\n'
-                    'When it expires, the sensor will automatically disconnect, and you can then remove it.',
+                title: 'sensor_remove_heading'.tr(),
+                body: 'sensor_remove_intro'.tr(args: <String>[AppConstants.defaultSensorValidityDays.toString()]),
               ),
               _card(
                 context,
                 leading: Icons.format_list_numbered,
-                title: 'Steps',
+                title: 'sensor_remove_steps_title'.tr(),
                 children: [
-                  _step(context, '1) Remove the sensor from your arm. Gently peel it off from the edge of the adhesive tape.'),
-                  _step(context, '2) If the tape does not come off easily, apply a small amount of baby oil around the edges and rub gently.'),
-                  _step(context, '3) Wash the area and apply moisturizer to care for your skin.'),
+                  _step(context, 'sensor_remove_step1'.tr()),
+                  _step(context, 'sensor_remove_step2'.tr()),
+                  _step(context, 'sensor_remove_step3'.tr()),
                 ],
               ),
               _card(
                 context,
                 leading: Icons.warning_amber_rounded,
-                title: 'Caution',
-                body: 'If you experience pain, itching, redness, fever, or signs of infection after removing the sensor, consult a healthcare professional, such as a dermatologist.',
+                title: 'sensor_remove_caution_title'.tr(),
+                body: 'sensor_remove_caution_body'.tr(),
               ),
               _card(
                 context,
                 leading: Icons.link_off,
-                title: 'Removing Before Expiration',
-                body: 'If you want to remove the sensor before it expires, press the Disconnect button in the app.',
+                title: 'sensor_remove_early_title'.tr(),
+                body: 'sensor_remove_early_body'.tr(),
               ),
               const SizedBox(height: 16),
             ],
