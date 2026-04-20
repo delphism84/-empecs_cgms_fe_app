@@ -57,8 +57,12 @@ class BleService {
 
   /// 끊김 후 마지막 MAC으로 주기적 자동 재연결
   Timer? _autoReconnectTimer;
+  /// 첫 재연결 시도 전 5~10초 구간(링크 안정화·스캔 준비)
+  Timer? _firstReconnectKickTimer;
   /// 링크 손실 알람(AR_01_06) 설정 주기만큼 재발화 — disconnect 이벤트는 1회만 오므로 타이머로 보강
   Timer? _signalLossRepeatTimer;
+  /// [listAlarms] await 중·자동 재연결로 phase가 잠깐 connecting이면 체인이 끊기지 않게 짧게 재시도
+  Timer? _signalLossChainRetryTimer;
   /// 사용자가 설정/센서 화면에서 [disconnect]를 호출한 경우, 링크 손실 알람(AR_01_06)을 띄우지 않음.
   bool _userInitiatedDisconnect = false;
   /// CGM measurement notify 구독 성공 후에만 true — 접속 전·구독 실패 시 AR_01_06(signal loss) 알림 없음.
@@ -217,20 +221,31 @@ class BleService {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('cgms.last_mac', deviceId);
           } catch (_) {}
-          // 센서 시작 시각: 재연결마다 덮어쓰지 않음(웜업/남은일수·히스토리 동기와 충돌 방지). 비어 있을 때만 기록.
+          // 센서 시작 시각: 재연결마다 무조건 덮어쓰지 않음. 다만 저장된 SN과 불일치하면 새 센서로 간주하고 초기화.
           try {
             final st = await SettingsStorage.load();
             final String eqsn = (st['eqsn'] as String? ?? '').trim();
             final DateTime now = DateTime.now().toUtc();
+            final String owner = (st['sensorStartAtEqsn'] as String? ?? '').trim();
+            bool dirty = false;
+            if (eqsn.isNotEmpty && owner.isNotEmpty && owner.toUpperCase() != eqsn.toUpperCase()) {
+              st['sensorStartAt'] = '';
+              st['sensorStartAtEqsn'] = '';
+              dirty = true;
+            }
             final String existingStart = (st['sensorStartAt'] as String? ?? '').trim();
             if (existingStart.isEmpty) {
               st['sensorStartAt'] = now.toIso8601String();
-              await SettingsStorage.save(st);
+              st['sensorStartAtEqsn'] = eqsn.isNotEmpty ? eqsn : '';
+              dirty = true;
               if (eqsn.isNotEmpty) {
                 try {
                   await SettingsService().upsertEqStart(serial: eqsn, startAt: now);
                 } catch (_) {}
               }
+            }
+            if (dirty) {
+              await SettingsStorage.save(st);
             }
           } catch (_) {}
           // NRF Toolbox 스타일: CCCD 먼저 on (RACP indicate, Measurement notify)
@@ -286,9 +301,7 @@ class BleService {
         // 저장된 last_mac이 있을 때만 자동 재연결(SC_01_01 등 “의도적 끊김” 후 반복 연결 시도 방지).
         unawaited(() async {
           try {
-            final prefs = await SharedPreferences.getInstance();
-            final String mac = (prefs.getString('cgms.last_mac') ?? '').trim();
-            if (mac.isNotEmpty) {
+            if (await _hasReconnectTarget()) {
               _startAutoReconnectPoller();
             }
           } catch (_) {}
@@ -298,8 +311,18 @@ class BleService {
   }
 
   void _cancelSignalLossRepeatTimer() {
+    _signalLossChainRetryTimer?.cancel();
+    _signalLossChainRetryTimer = null;
     _signalLossRepeatTimer?.cancel();
     _signalLossRepeatTimer = null;
+  }
+
+  void _armSignalLossChainRetry(Duration delay) {
+    _signalLossChainRetryTimer?.cancel();
+    _signalLossChainRetryTimer = Timer(delay, () {
+      _signalLossChainRetryTimer = null;
+      unawaited(_runSignalLossRepeatChain());
+    });
   }
 
   Future<int> _systemSignalLossRepeatMinutes() async {
@@ -307,25 +330,59 @@ class BleService {
       final list = await SettingsService().listAlarms();
       for (final raw in list) {
         if ((raw['type'] ?? '').toString() == 'system') {
-          return ((raw['repeatMin'] as num?)?.toInt() ?? 10).clamp(1, 120);
+          return SettingsService.parseAlarmRepeatMinutes(raw['repeatMin']);
         }
       }
     } catch (_) {}
-    return 10;
+    return SettingsService.parseAlarmRepeatMinutes(null);
   }
 
   void _scheduleSignalLossRepeats() {
     _cancelSignalLossRepeatTimer();
-    unawaited(() async {
-      final int mins = await _systemSignalLossRepeatMinutes();
-      _signalLossRepeatTimer = Timer.periodic(Duration(minutes: mins), (Timer tm) async {
+    unawaited(_runSignalLossRepeatChain());
+  }
+
+  /// disconnect 이벤트는 1회뿐이라, 이후 재알림은 타이머로만 가능.
+  /// [Timer.periodic]은 최초 간격만 고정되어 저장된 repeatMin 변경이 반영되지 않을 수 있어,
+  /// 원샷 타이머를 연쇄하고 매번 [listAlarms]에서 간격을 다시 읽는다.
+  /// 앱이 백그라운드일 때는 OS가 Dart 타이머를 지연시킬 수 있음(배터리 정책).
+  Future<void> _runSignalLossRepeatChain() async {
+    if (phase.value != BleConnPhase.off) {
+      // 자동 재연결 중일 때만 잠시 뒤 재시도 — 이미 연결된 상태면 [connectToDevice]에서 타이머 취소됨
+      if (phase.value == BleConnPhase.connecting) {
+        _armSignalLossChainRetry(const Duration(seconds: 3));
+      }
+      return;
+    }
+    final int mins = await _systemSignalLossRepeatMinutes();
+    if (phase.value != BleConnPhase.off) {
+      if (phase.value == BleConnPhase.connecting) {
+        _armSignalLossChainRetry(const Duration(seconds: 3));
+      }
+      return;
+    }
+    final int safeMins = mins.clamp(1, 120);
+    _signalLossRepeatTimer?.cancel();
+    _signalLossRepeatTimer = Timer(Duration(minutes: safeMins), () {
+      unawaited(() async {
         if (phase.value != BleConnPhase.off) {
           _cancelSignalLossRepeatTimer();
           return;
         }
-        await AlertEngine().notifyBleLinkLost();
-      });
-    }());
+        await AlertEngine().notifyBleLinkLost(fromScheduledRepeat: true);
+        if (phase.value != BleConnPhase.off) {
+          _cancelSignalLossRepeatTimer();
+          return;
+        }
+        await _runSignalLossRepeatChain();
+      }());
+    });
+  }
+
+  /// Signal Loss 알람에서 반복(분) 저장 후, 링크가 아직 끊긴 상태면 다음 대기를 새 간격으로 다시 잡는다.
+  void rescheduleSignalLossRepeatsIfDisconnected() {
+    if (phase.value != BleConnPhase.off) return;
+    _scheduleSignalLossRepeats();
   }
 
   /// Starts (or resumes) the 30-minute warm-up flow and navigates to `SC_01_06`.
@@ -406,28 +463,64 @@ class BleService {
     }
   }
 
-  Future<void> tryAutoReconnect() async {
-    final prefs = await SharedPreferences.getInstance();
-    final id = prefs.getString('cgms.last_mac');
-    if (id != null && id.isNotEmpty) {
-      unawaited(connectToDevice(id));
+  static String _bleAddressKey(String id) =>
+      id.replaceAll(RegExp(r'[^0-9A-Fa-f]'), '').toUpperCase();
+
+  Future<List<String>> _reconnectDeviceIdCandidates() async {
+    final List<String> out = <String>[];
+    void add(String? raw) {
+      final String t = (raw ?? '').trim();
+      if (t.isEmpty) return;
+      if (_bleAddressKey(t).isEmpty) return;
+      if (!out.any((e) => _bleAddressKey(e) == _bleAddressKey(t))) {
+        out.add(t);
+      }
     }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      add(prefs.getString('cgms.last_mac'));
+    } catch (_) {}
+    try {
+      final Map<String, dynamic> s = await SettingsStorage.load();
+      add(s['lastScannedQrMac'] as String?);
+    } catch (_) {}
+    return out;
+  }
+
+  Future<bool> _hasReconnectTarget() async {
+    final List<String> ids = await _reconnectDeviceIdCandidates();
+    return ids.isNotEmpty;
+  }
+
+  /// `cgms.last_mac` 우선, 없으면 마지막 QR의 MAC(동일 주소 다른 표기는 한 번만 시도).
+  Future<void> tryAutoReconnect() async {
+    final List<String> ids = await _reconnectDeviceIdCandidates();
+    if (ids.isEmpty) return;
+    final String id = ids.first;
+    unawaited(BleLogService().add('BLE', 'auto-reconnect -> $id (candidates=${ids.length})'));
+    unawaited(connectToDevice(id));
   }
 
   void _startAutoReconnectPoller() {
-    _autoReconnectTimer?.cancel();
+    _stopAutoReconnectPoller();
+    // 5~10초: 무선 스택·센서 쪽이 안정된 뒤 첫 시도
+    _firstReconnectKickTimer = Timer(const Duration(seconds: 8), () {
+      if (phase.value == BleConnPhase.off) {
+        unawaited(tryAutoReconnect());
+      }
+    });
     _autoReconnectTimer = Timer.periodic(const Duration(seconds: 12), (_) async {
       if (phase.value == BleConnPhase.connecting) return;
       if (phase.value != BleConnPhase.off) return;
-      final prefs = await SharedPreferences.getInstance();
-      final id = (prefs.getString('cgms.last_mac') ?? '').trim();
-      if (id.isEmpty) return;
-      unawaited(BleLogService().add('BLE', 'auto-reconnect poll -> $id'));
+      if (!await _hasReconnectTarget()) return;
+      unawaited(BleLogService().add('BLE', 'auto-reconnect poll'));
       unawaited(tryAutoReconnect());
     });
   }
 
   void _stopAutoReconnectPoller() {
+    _firstReconnectKickTimer?.cancel();
+    _firstReconnectKickTimer = null;
     _autoReconnectTimer?.cancel();
     _autoReconnectTimer = null;
   }

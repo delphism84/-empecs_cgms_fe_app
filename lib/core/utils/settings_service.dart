@@ -105,6 +105,19 @@ class SettingsService {
   }
 
   // alarms — 로컬만 읽기. 비어 있으면 기본 알람 시드 후 반환. 저장 시 로컬 성공 후 BE 업로드, 실패 시 폴백 없음.
+  /// 서버/JSON에서 repeatMin이 int·double·문자열로 올 수 있음 — 알람 간격 계산에 공통 사용.
+  static int parseAlarmRepeatMinutes(dynamic v, {int fallback = 10}) {
+    final int fb = fallback.clamp(1, 120);
+    if (v == null) return fb;
+    if (v is int) return v.clamp(1, 120);
+    if (v is num) return v.toInt().clamp(1, 120);
+    if (v is String) {
+      final n = int.tryParse(v.trim());
+      if (n != null) return n.clamp(1, 120);
+    }
+    return fb;
+  }
+
   Future<List<Map<String, dynamic>>> listAlarms() async {
     final st = await SettingsStorage.load();
     List<Map<String, dynamic>> list = (st['alarmsCache'] is List)

@@ -55,11 +55,19 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
       }
       // 신규 회원가입: 이전 게스트/세션의 센서 메타·BLE MAC 제거 (req 1-7)
       st['sensorStartAt'] = '';
+      st['sensorStartAtEqsn'] = '';
       st['eqsn'] = '';
+      st['lastTrid'] = 0;
       st['sc0106WarmupDoneAt'] = '';
       st['sc0106WarmupActive'] = false;
       st['sc0106WarmupEqsn'] = '';
       st['registeredDevices'] = <Map<String, dynamic>>[];
+      st['lastScannedQrRaw'] = '';
+      st['lastScannedQrFullSn'] = '';
+      st['lastScannedQrSerial'] = '';
+      st['lastScannedQrAt'] = '';
+      st['lastScannedQrRegistered'] = false;
+      st['lastScannedQrMac'] = '';
       await SettingsStorage.save(st);
       try {
         final prefs = await SharedPreferences.getInstance();

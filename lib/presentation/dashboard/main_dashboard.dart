@@ -244,8 +244,14 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
       final now = DateTime.now();
       final from = now.subtract(const Duration(hours: 24));
       final to = now.add(const Duration(hours: 1));
-      // 오프라인 우선: 로컬 DB에서 24h 범위 조회
-      final rows = await GlucoseLocalRepo().range(from: from, to: to, limit: 2000);
+      String? eqsn;
+      try {
+        final st = await SettingsStorage.load();
+        final String q = (st['eqsn'] as String? ?? '').trim();
+        eqsn = q.isEmpty ? null : q;
+      } catch (_) {}
+      // 오프라인 우선: 로컬 DB에서 24h 범위 조회 (현재 SN·계정 범위)
+      final rows = await GlucoseLocalRepo().range(from: from, to: to, limit: 2000, eqsn: eqsn);
       _series.clear();
       for (final r in rows) {
         final int ms = (r['time_ms'] as int?) ?? 0;

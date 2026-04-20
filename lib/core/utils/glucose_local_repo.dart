@@ -51,18 +51,24 @@ class GlucoseLocalRepo {
     _stream.add({'op': 'add-batch', 'count': times.length, if (eqsn != null) 'eqsn': eqsn, if (userId != null) 'userId': userId});
   }
 
+  /// 로그인 사용자(`lastUserId` 있음)는 익명(NULL) 행을 제외해 이전 게스트/다른 계정 데이터가 섞이지 않게 한다.
+  bool _strictUserScope(String uid) => uid.isNotEmpty && uid != 'guest';
+
   Future<List<Map<String, dynamic>>> range({required DateTime from, required DateTime to, int limit = 2000, String? eqsn, String? userId}) async {
     final db = await LocalDb().db;
     userId ??= await _inferUserId();
+    final String uid = userId ?? '';
+    final bool strict = _strictUserScope(uid);
+    final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
     final List<Map<String, dynamic>> rows = await db.query(
       'glucose_points',
       columns: ['time_ms', 'value', 'trid'],
       where: (eqsn != null && eqsn.isNotEmpty)
-          ? 'time_ms BETWEEN ? AND ? AND eqsn = ? AND (user_id = ? OR user_id IS NULL)'
-          : 'time_ms BETWEEN ? AND ? AND (user_id = ? OR user_id IS NULL)',
+          ? 'time_ms BETWEEN ? AND ? AND eqsn = ? AND $userClause'
+          : 'time_ms BETWEEN ? AND ? AND $userClause',
       whereArgs: (eqsn != null && eqsn.isNotEmpty)
-          ? [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch, eqsn, userId ?? '']
-          : [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch, userId ?? ''],
+          ? [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch, eqsn, uid]
+          : [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch, uid],
       orderBy: 'time_ms ASC',
       limit: limit,
     );
@@ -73,12 +79,14 @@ class GlucoseLocalRepo {
   Future<Map<String, dynamic>?> latestPoint({String? eqsn}) async {
     final db = await LocalDb().db;
     final String userId = (await _inferUserId()) ?? '';
+    final bool strict = _strictUserScope(userId);
+    final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
     final List<Map<String, dynamic>> rows = await db.query(
       'glucose_points',
       columns: ['time_ms', 'value'],
       where: (eqsn != null && eqsn.isNotEmpty)
-          ? 'eqsn = ? AND (user_id = ? OR user_id IS NULL)'
-          : '(user_id = ? OR user_id IS NULL)',
+          ? 'eqsn = ? AND $userClause'
+          : userClause,
       whereArgs: (eqsn != null && eqsn.isNotEmpty) ? [eqsn, userId] : [userId],
       orderBy: 'time_ms DESC',
       limit: 1,
@@ -92,12 +100,14 @@ class GlucoseLocalRepo {
     if (n <= 0) return const [];
     final db = await LocalDb().db;
     final String userId = (await _inferUserId()) ?? '';
+    final bool strict = _strictUserScope(userId);
+    final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
     final List<Map<String, dynamic>> rows = await db.query(
       'glucose_points',
       columns: ['time_ms', 'value'],
       where: (eqsn != null && eqsn.isNotEmpty)
-          ? 'eqsn = ? AND (user_id = ? OR user_id IS NULL)'
-          : '(user_id = ? OR user_id IS NULL)',
+          ? 'eqsn = ? AND $userClause'
+          : userClause,
       whereArgs: (eqsn != null && eqsn.isNotEmpty) ? [eqsn, userId] : [userId],
       orderBy: 'time_ms DESC',
       limit: n,
@@ -121,9 +131,12 @@ class GlucoseLocalRepo {
   Future<int> maxTrid({String? eqsn, String? userId}) async {
     final db = await LocalDb().db;
     userId ??= await _inferUserId();
+    final String uid = userId ?? '';
+    final bool strict = _strictUserScope(uid);
+    final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
     final List<Map<String, Object?>> res = (eqsn != null && eqsn.isNotEmpty)
-        ? await db.rawQuery('SELECT MAX(trid) AS max_trid FROM glucose_points WHERE eqsn = ? AND (user_id = ? OR user_id IS NULL)', [eqsn, userId])
-        : await db.rawQuery('SELECT MAX(trid) AS max_trid FROM glucose_points WHERE (user_id = ? OR user_id IS NULL)', [userId]);
+        ? await db.rawQuery('SELECT MAX(trid) AS max_trid FROM glucose_points WHERE eqsn = ? AND $userClause', [eqsn, uid])
+        : await db.rawQuery('SELECT MAX(trid) AS max_trid FROM glucose_points WHERE $userClause', [uid]);
     final Object? v = res.isNotEmpty ? res.first['max_trid'] : null;
     if (v == null) return 0;
     if (v is int) return v;
@@ -212,13 +225,16 @@ class GlucoseLocalRepo {
   Future<List<Map<String, dynamic>>> listEqsnRanges({String? userId}) async {
     final db = await LocalDb().db;
     userId ??= await _inferUserId();
+    final String uid = userId ?? '';
+    final bool strict = _strictUserScope(uid);
+    final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
     final List<Map<String, Object?>> rows = await db.rawQuery(
       "SELECT eqsn AS eqsn, MIN(time_ms) AS min_ms, MAX(time_ms) AS max_ms, COUNT(*) AS c "
       "FROM glucose_points "
-      "WHERE eqsn IS NOT NULL AND eqsn != '' AND (user_id = ? OR user_id IS NULL) "
+      "WHERE eqsn IS NOT NULL AND eqsn != '' AND $userClause "
       "GROUP BY eqsn "
       "ORDER BY max_ms DESC",
-      [userId ?? ''],
+      [uid],
     );
     return rows.map((r) {
       final String eqsn = (r['eqsn'] as String?) ?? '';

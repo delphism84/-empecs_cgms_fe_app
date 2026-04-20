@@ -51,7 +51,10 @@ class AlertEngine {
   }
 
   /// BLE 링크가 끊겼을 때 (재연결 시도 전·중 포함). Weak RSSI 전용 알림은 사용하지 않음(req 1-2).
-  Future<void> notifyBleLinkLost() async {
+  ///
+  /// [fromScheduledRepeat]: true면 [BleService] 주기 타이머에서 호출 — 이미 repeatMin만큼 대기했으므로
+  /// 동일 간격 스로틀을 다시 적용하지 않는다(타이머·스로틀 이중 필터로 재알림이 막히는 것 방지).
+  Future<void> notifyBleLinkLost({bool fromScheduledRepeat = false}) async {
     try {
       if (await _isWarmupActive()) return;
       invalidateAlarmsCache();
@@ -60,7 +63,7 @@ class AlertEngine {
         if ((raw['type'] ?? '').toString() != 'system') continue;
         final Map<String, dynamic> a = Map<String, dynamic>.from(raw);
         SignalLossMonitorLog.append('BLE disconnected — evaluating signal_loss alarm');
-        await _fireSystemAlarmFromConfig(a, reason: 'signal_loss');
+        await _fireSystemAlarmFromConfig(a, reason: 'signal_loss', bypassRepeatThrottle: fromScheduledRepeat);
         return;
       }
     } catch (e) {
@@ -86,6 +89,7 @@ class AlertEngine {
   Future<void> _fireSystemAlarmFromConfig(
     Map<String, dynamic> a, {
     required String reason,
+    bool bypassRepeatThrottle = false,
   }) async {
     try {
       if (await _isWarmupActive()) return;
@@ -97,10 +101,12 @@ class AlertEngine {
 
       bool sound = (a['sound'] is bool) ? (a['sound'] == true) : true;
       bool vibrate = (a['vibrate'] is bool) ? (a['vibrate'] == true) : true;
-      final int repeatMin = (a['repeatMin'] as num?)?.toInt() ?? 10;
+      final int repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
       const String repeatKey = 'system:signal_loss';
       final last = _lastFired[repeatKey];
-      if (last != null && DateTime.now().difference(last) < Duration(minutes: repeatMin.clamp(1, 120))) {
+      if (!bypassRepeatThrottle &&
+          last != null &&
+          DateTime.now().difference(last) < Duration(minutes: repeatMin)) {
         SignalLossMonitorLog.append('alarm skipped (repeat every $repeatMin min · signal_loss)');
         return;
       }
@@ -276,9 +282,9 @@ class AlertEngine {
 
       if (!hit) continue;
 
-      final int repeatMin = (a['repeatMin'] as num?)?.toInt() ?? 10;
+      final int repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
       final last = _lastFired[type];
-      if (last != null && DateTime.now().difference(last) < Duration(minutes: repeatMin.clamp(1, 120))) {
+      if (last != null && DateTime.now().difference(last) < Duration(minutes: repeatMin)) {
         continue;
       }
       _lastFired[type] = DateTime.now();

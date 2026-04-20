@@ -75,7 +75,19 @@ class UserDetailPage extends StatelessWidget {
                     s['guestMode'] = false;
                     s['biometricEnabled'] = false;
                     s['eqsn'] = '';
+                    s['sensorStartAt'] = '';
+                    s['sensorStartAtEqsn'] = '';
+                    s['lastTrid'] = 0;
+                    s['sc0106WarmupDoneAt'] = '';
+                    s['sc0106WarmupActive'] = false;
+                    s['sc0106WarmupEqsn'] = '';
                     s['registeredDevices'] = <Map<String, dynamic>>[];
+                    s['lastScannedQrRaw'] = '';
+                    s['lastScannedQrFullSn'] = '';
+                    s['lastScannedQrSerial'] = '';
+                    s['lastScannedQrAt'] = '';
+                    s['lastScannedQrRegistered'] = false;
+                    s['lastScannedQrMac'] = '';
                     await SettingsStorage.save(s);
                   } catch (_) {}
                   if (!context.mounted) return;

@@ -96,15 +96,22 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
       final String serial = _parsed!['serial'] ?? '';
       final String fullSn = QrSnParser.fullSn(_raw) ?? _raw.trim().toUpperCase();
       final String? mac = (_parsed!['mac'] ?? '').trim().isNotEmpty ? _parsed!['mac'] : null;
+      final String existingStart = (s['sensorStartAt'] as String? ?? '').trim();
       // 다른 시리얼로 QR 재스캔 시 이전 sensorStartAt·웜업이 남지 않도록 정리 (검수 1-7)
-      if (prevEqsn.isNotEmpty && fullSn.toUpperCase() != prevEqsn.toUpperCase()) {
+      // 로그아웃 등으로 eqsn만 비워진 경우(prevEqsn 빈 값)에도 이전 시작일이 남는 문제 방지
+      final bool snChanged = prevEqsn.isNotEmpty && fullSn.toUpperCase() != prevEqsn.toUpperCase();
+      final bool orphanStart = prevEqsn.isEmpty && existingStart.isNotEmpty;
+      if (snChanged || orphanStart) {
         s['sensorStartAt'] = '';
+        s['sensorStartAtEqsn'] = '';
         s['sc0106WarmupDoneAt'] = '';
         s['sc0106WarmupActive'] = false;
         s['sc0106WarmupEqsn'] = '';
-        try {
-          await GlucoseLocalRepo().clearForEqsn(prevEqsn);
-        } catch (_) {}
+        if (snChanged && prevEqsn.isNotEmpty) {
+          try {
+            await GlucoseLocalRepo().clearForEqsn(prevEqsn);
+          } catch (_) {}
+        }
         try {
           DataSyncBus().emitGlucoseBulk(count: 0);
         } catch (_) {}

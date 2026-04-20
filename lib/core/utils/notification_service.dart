@@ -59,73 +59,84 @@ class NotificationService {
 
     // Android는 (O+) 채널 단위로 사운드/진동 설정이 고정되므로,
     // 요구사항(사운드만/진동만/둘다)을 충족하기 위해 채널을 분리한다.
+    // 채널 ID는 한 번 생성되면 소리/오디오 속성을 바꿀 수 없다(Android O+).
+    // 과거 채널이 무음·notification 스트림으로 고정된 기기에서 알람음이 나지 않는 문제를 피하려고
+    // ID를 갱신하고 알람 스트림(alarm usage)으로 새로 등록한다.
     final List<AndroidNotificationChannel> channels = [
       AndroidNotificationChannel(
-        'cgms_alerts_both',
+        'cgms_glucose_alert_both',
         'CGMS Alerts (Sound+Vibration)',
         description: 'Glucose alerts: sound + vibration',
         importance: Importance.high,
         playSound: true,
         enableVibration: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       ),
       AndroidNotificationChannel(
-        'cgms_alerts_sound',
+        'cgms_glucose_alert_sound',
         'CGMS Alerts (Sound Only)',
         description: 'Glucose alerts: sound only',
         importance: Importance.high,
         playSound: true,
         enableVibration: false,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       ),
       AndroidNotificationChannel(
-        'cgms_alerts_vibrate',
+        'cgms_glucose_alert_vibrate',
         'CGMS Alerts (Vibration Only)',
         description: 'Glucose alerts: vibration only',
         importance: Importance.high,
         playSound: false,
         enableVibration: true,
+        audioAttributesUsage: AudioAttributesUsage.notification,
       ),
       AndroidNotificationChannel(
-        'cgms_alerts_silent',
+        'cgms_glucose_alert_silent',
         'CGMS Alerts (Silent)',
         description: 'Glucose alerts: silent',
         importance: Importance.high,
         playSound: false,
         enableVibration: false,
+        audioAttributesUsage: AudioAttributesUsage.notification,
       ),
       // "방해 금지 모드 무시"는 사용자/OS 설정이 필요할 수 있음.
       // (현재 사용 중인 flutter_local_notifications 버전에서는 bypassDnd 플래그가 노출되지 않음)
       // 따라서 앱에서는 "critical 채널"로 라우팅만 하고, 실제 DND 예외 허용은 OS 설정에 의존한다.
       AndroidNotificationChannel(
-        'cgms_critical_both',
+        'cgms_glucose_critical_both',
         'CGMS Critical (Sound+Vibration)',
         description: 'Very low critical: sound + vibration (bypass DND if allowed)',
         importance: Importance.max,
         playSound: true,
         enableVibration: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       ),
       AndroidNotificationChannel(
-        'cgms_critical_sound',
+        'cgms_glucose_critical_sound',
         'CGMS Critical (Sound Only)',
         description: 'Very low critical: sound only (bypass DND if allowed)',
         importance: Importance.max,
         playSound: true,
         enableVibration: false,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       ),
       AndroidNotificationChannel(
-        'cgms_critical_vibrate',
+        'cgms_glucose_critical_vibrate',
         'CGMS Critical (Vibration Only)',
         description: 'Very low critical: vibration only (bypass DND if allowed)',
         importance: Importance.max,
         playSound: false,
         enableVibration: true,
+        audioAttributesUsage: AudioAttributesUsage.notification,
       ),
       AndroidNotificationChannel(
-        'cgms_critical_silent',
+        'cgms_glucose_critical_silent',
         'CGMS Critical (Silent)',
         description: 'Very low critical: silent (bypass DND if allowed)',
         importance: Importance.max,
         playSound: false,
         enableVibration: false,
+        audioAttributesUsage: AudioAttributesUsage.notification,
       ),
       // AR_01_08: Lock screen banner / ongoing glucose
       AndroidNotificationChannel(
@@ -165,8 +176,8 @@ class NotificationService {
       } catch (_) {}
     }
     final String channelId = critical
-        ? (sound && vibrate ? 'cgms_critical_both' : sound ? 'cgms_critical_sound' : vibrate ? 'cgms_critical_vibrate' : 'cgms_critical_silent')
-        : (sound && vibrate ? 'cgms_alerts_both' : sound ? 'cgms_alerts_sound' : vibrate ? 'cgms_alerts_vibrate' : 'cgms_alerts_silent');
+        ? (sound && vibrate ? 'cgms_glucose_critical_both' : sound ? 'cgms_glucose_critical_sound' : vibrate ? 'cgms_glucose_critical_vibrate' : 'cgms_glucose_critical_silent')
+        : (sound && vibrate ? 'cgms_glucose_alert_both' : sound ? 'cgms_glucose_alert_sound' : vibrate ? 'cgms_glucose_alert_vibrate' : 'cgms_glucose_alert_silent');
     final AndroidNotificationDetails android = AndroidNotificationDetails(
       channelId,
       critical ? 'CGMS Critical' : 'CGMS Alerts',
@@ -179,11 +190,14 @@ class NotificationService {
       enableVibration: vibrate,
       audioAttributesUsage: sound ? AudioAttributesUsage.alarm : AudioAttributesUsage.notification,
     );
+    // iOS(flutter_local_notifications): presentSound==true 이고 sound 미지정(null)이면 시스템 기본 알림음.
+    // 예전에 쓰던 sound: '' 는 잘못된 커스텀 파일명으로 처리되어 무음이 될 수 있음.
+    // 배너/목록은 DarwinInitializationSettings 기본값(defaultPresentBanner/List=true)에 맡김.
     final DarwinNotificationDetails ios = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: sound,
-      sound: sound ? '' : null,
+      sound: null,
       interruptionLevel: sound ? InterruptionLevel.active : null,
     );
     final NotificationDetails details = NotificationDetails(android: android, iOS: ios);

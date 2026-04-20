@@ -7,6 +7,7 @@ import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/core/utils/signal_loss_monitor_log.dart';
+import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class AlarmDetailPage extends StatefulWidget {
@@ -46,7 +47,7 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
     _sound = (a['sound'] is bool) ? (a['sound'] == true) : true;
     _vibrate = (a['vibrate'] is bool) ? (a['vibrate'] == true) : true;
     _overrideDnd = a['overrideDnd'] == true;
-    _repeatMin = (a['repeatMin'] is num) ? (a['repeatMin'] as num).toInt() : 10;
+    _repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
     final dynamic thRaw = a['threshold'];
     final String thStr = (thRaw == null) ? '' : thRaw.toString();
     String thInitial = thStr;
@@ -105,6 +106,9 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
       st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
       await SettingsStorage.save(st);
       AlertEngine().invalidateAlarmsCache();
+      if (_type == 'system') {
+        BleService().rescheduleSignalLossRepeatsIfDisconnected();
+      }
       AppSettingsBus.notify(); // 메인 차트 고/저 라인(AR_01_03/AR_01_04) 즉시 반영
     } catch (_) {}
   }
