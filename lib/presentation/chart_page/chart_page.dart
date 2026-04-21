@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 // removed unused async import
 import 'dart:math' as math;
@@ -12,6 +13,7 @@ import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/widgets/custom_text_form_field.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChartPage extends StatefulWidget {
   const ChartPage({
@@ -470,7 +472,7 @@ class _ChartPageState extends State<ChartPage> {
                                             final ok = await ds.deleteEvent(delId);
                                             if (!context.mounted) return;
                                             ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(ok ? 'Event deleted' : 'Failed to delete')),
+                                              SnackBar(content: Text(ok ? 'chart_event_deleted'.tr() : 'chart_event_delete_failed'.tr())),
                                             );
                                             if (ok) {
                                               setState(() {
@@ -503,7 +505,7 @@ class _ChartPageState extends State<ChartPage> {
                                         FloatingActionButton.small(
                                           heroTag: 'chart_prev_data',
                                           onPressed: widget.onPreviousData,
-                                          tooltip: 'Previous data',
+                                          tooltip: 'chart_tooltip_previous_data'.tr(),
                                           child: const Icon(Icons.history),
                                         ),
                                         const SizedBox(width: 10),
@@ -556,20 +558,19 @@ class _ChartPageState extends State<ChartPage> {
   }
 
   static String _eventLabel(EventType t) {
-    // 라벨은 요구된 6개 명칭으로 고정
     switch (_categoryForType(t)) {
       case EventCategory.bloodGlucose:
-        return 'Blood glucose';
+        return 'chart_type_blood_glucose'.tr();
       case EventCategory.insulin:
-        return 'Insulin';
+        return 'chart_type_insulin'.tr();
       case EventCategory.medication:
-        return 'Medication';
+        return 'chart_type_medication'.tr();
       case EventCategory.exercise:
-        return 'Exercise';
+        return 'chart_type_exercise'.tr();
       case EventCategory.meal:
-        return 'Meal';
+        return 'chart_type_meal'.tr();
       case EventCategory.memo:
-        return 'Memo';
+        return 'chart_type_memo'.tr();
     }
   }
 
@@ -821,7 +822,7 @@ class GlucoseChartPainter extends CustomPainter {
     // draw top date label on the very top layer (with background chip)
     final TextPainter tp2 = TextPainter(
       text: TextSpan(text: _topLabel, style: const TextStyle(fontSize: 11, color: Colors.black87, fontWeight: FontWeight.w700)),
-      textDirection: TextDirection.ltr,
+      textDirection: ui.TextDirection.ltr,
     )..layout(maxWidth: size.width - 12);
     final double tx = (size.width - tp2.width) / 2;
     final double ty = 8;
@@ -1039,7 +1040,7 @@ class EventViewPage extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final TextEditingController memo = TextEditingController(text: initial.memo ?? '');
     return Scaffold(
-      appBar: AppBar(title: const Text('Event Detail')),
+      appBar: AppBar(title: Text('chart_event_detail'.tr())),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -1093,7 +1094,7 @@ class EventViewPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Memo', style: TextStyle(fontSize: getFontSize(14), fontWeight: FontWeight.w600)),
+                    Text('chart_memo'.tr(), style: TextStyle(fontSize: getFontSize(14), fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     CustomTextFormField(
                       isDark: isDark,
@@ -1101,7 +1102,7 @@ class EventViewPage extends StatelessWidget {
                       controller: memo,
                       variant: TextFormFieldVariant.OutlineDeeppurple101,
                       padding: TextFormFieldPadding.PaddingT19,
-                      hintText: 'Enter memo...',
+                      hintText: 'chart_memo_hint'.tr(),
                       textInputAction: TextInputAction.newline,
                     ),
                   ],
@@ -1116,7 +1117,7 @@ class EventViewPage extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).pop('deleted'),
                     icon: const Icon(Icons.delete_outline),
-                    label: const Text('Delete'),
+                    label: Text('common_delete'.tr()),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1124,7 +1125,7 @@ class EventViewPage extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.of(context).pop('saved:${memo.text}'),
                     icon: const Icon(Icons.save),
-                    label: const Text('Save'),
+                    label: Text('common_save'.tr()),
                   ),
                 ),
               ],
@@ -1859,7 +1860,7 @@ class _FlGlucoseChartState extends State<_FlGlucoseChart> {
                       children: [
                         const Icon(Icons.show_chart, size: 16, color: Colors.black54),
                         const SizedBox(width: 6),
-                        Text('Avg ${_viewportAverage().toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                        Text('chart_avg_prefix'.tr(namedArgs: {'v': _viewportAverage().toStringAsFixed(0)}), style: const TextStyle(fontSize: 12, color: Colors.black87)),
                       ],
                     ),
                   ),

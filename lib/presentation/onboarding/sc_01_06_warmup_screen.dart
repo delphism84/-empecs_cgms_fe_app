@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/warmup_state.dart';
@@ -122,7 +123,7 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
     return PopScope(
       canPop: !(_active && !_done),
       child: Scaffold(
-      appBar: AppBar(title: const Text('SC_01_06 · Warm-Up')),
+      appBar: AppBar(title: Text('warmup_appbar'.tr())),
       body: SafeArea(
         child: Column(
           children: [
@@ -130,14 +131,14 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  const Text(
-                    'Initial sensor connection warm-up',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  Text(
+                    'warmup_title_line'.tr(),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'During warm-up, readings may be unavailable.',
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                  Text(
+                    'warmup_readings_unavailable'.tr(),
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                   const SizedBox(height: 8),
                   Card(
@@ -147,7 +148,9 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _done ? 'Warm-up complete' : (_active ? 'Warming up...' : 'Not started'),
+                            _done
+                                ? 'warmup_complete'.tr()
+                                : (_active ? 'warmup_in_progress'.tr() : 'warmup_not_started'.tr()),
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 12),
@@ -165,18 +168,18 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
                           const SizedBox(height: 12),
                           if (_active && _startAt != null)
                             Text(
-                              'Started at: ${_startAt!.toIso8601String()}',
+                              'warmup_started_at'.tr(namedArgs: {'v': _startAt!.toIso8601String()}),
                               style: const TextStyle(fontSize: 12, color: Colors.black54),
                             ),
                           if (_active && _endsAt != null)
                             Text(
-                              'Ends at: ${_endsAt!.toIso8601String()}',
+                              'warmup_ends_at'.tr(namedArgs: {'v': _endsAt!.toIso8601String()}),
                               style: const TextStyle(fontSize: 12, color: Colors.black54),
                             ),
                           if (!_active && !_done)
-                            const Text(
-                              'After the sensor is connected, a 30-minute warm-up countdown starts.',
-                              style: TextStyle(fontSize: 12, color: Colors.black54),
+                            Text(
+                              'warmup_countdown_hint'.tr(),
+                              style: const TextStyle(fontSize: 12, color: Colors.black54),
                             ),
                         ],
                       ),
@@ -187,7 +190,7 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
                     OutlinedButton.icon(
                       onPressed: () => _startWarmup(seconds: total),
                       icon: const Icon(Icons.play_arrow),
-                      label: const Text('Start warm-up (debug)'),
+                      label: Text('warmup_debug_start'.tr()),
                     ),
                 ],
               ),

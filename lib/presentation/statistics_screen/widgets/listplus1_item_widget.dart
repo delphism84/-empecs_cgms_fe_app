@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:helpcare/core/app_export.dart';
 import 'package:helpcare/widgets/custom_icon_button.dart';
@@ -50,7 +51,7 @@ class Listplus1ItemWidget extends StatelessWidget {
                   right: 19,
                 ),
                 child: Text(
-                  "Active",
+                  'stats_demo_active'.tr(),
                   overflow: TextOverflow.ellipsis,
                   textAlign:   TextAlign.start,
                   style: TextStyle(

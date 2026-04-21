@@ -2,12 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/presentation/auth/lo_02_signup_flow_screens.dart';
 import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/profile_sync_service.dart';
 import 'package:helpcare/core/utils/auth_response_parser.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
+import 'package:helpcare/core/utils/glucose_local_repo.dart';
+import 'package:helpcare/core/utils/event_local_repo.dart';
+import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Create Account Step 5: Confirmation & Permissions (local-first signup, server sync when online)
@@ -33,7 +37,7 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
       final dob = (st['signupDraftDob'] as String? ?? '').toString().trim();
       if (email.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email is required.')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('auth_email_required_snack'.tr())));
         }
         return;
       }
@@ -69,6 +73,14 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
       st['lastScannedQrRegistered'] = false;
       st['lastScannedQrMac'] = '';
       await SettingsStorage.save(st);
+      try {
+        await GlucoseLocalRepo().clear();
+        await EventLocalRepo().clear();
+      } catch (_) {}
+      try {
+        DataSyncBus().emitGlucoseBulk(count: 0);
+        DataSyncBus().emitEventBulk(count: 0);
+      } catch (_) {}
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('cgms.last_mac');
@@ -120,18 +132,18 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Confirm Account Creation')),
+      appBar: AppBar(title: Text('auth_confirm_account_title'.tr())),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('We will create your account with the provided information. Required permissions:'),
+              Text('auth_confirm_account_body'.tr()),
               const SizedBox(height: 16),
-              const _PermTile(icon: Icons.location_on, title: 'Location', desc: 'May be required for BLE scan and device connection.'),
-              const _PermTile(icon: Icons.bluetooth, title: 'Bluetooth', desc: 'Required for communication with the sensor.'),
-              const _PermTile(icon: Icons.notifications, title: 'Notifications', desc: 'Needed to deliver glucose alerts and warnings.'),
+              _PermTile(icon: Icons.location_on, title: 'auth_signup_perm_location'.tr(), desc: 'auth_signup_perm_location_desc'.tr()),
+              _PermTile(icon: Icons.bluetooth, title: 'auth_signup_perm_bluetooth'.tr(), desc: 'auth_signup_perm_bluetooth_desc'.tr()),
+              _PermTile(icon: Icons.notifications, title: 'auth_signup_perm_notifications'.tr(), desc: 'auth_signup_perm_notifications_desc'.tr()),
               const SizedBox(height: 24),
               SizedBox(
                 height: 48,
@@ -139,7 +151,7 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
                   onPressed: _busy ? null : _createAccount,
                   child: _busy
                       ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Create Account'),
+                      : Text('auth_create_account_button'.tr()),
                 ),
               ),
             ],

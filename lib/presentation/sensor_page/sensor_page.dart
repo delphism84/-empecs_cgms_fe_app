@@ -57,6 +57,9 @@ class _SensorPageState extends State<SensorPage> {
 
   Future<Map<String, dynamic>> _readUsage() async {
     final st = await SettingsStorage.load();
+    if (SettingsService.stripStaleSensorStart(st)) {
+      await SettingsStorage.save(st);
+    }
     final String raw = (st['sensorStartAt'] as String? ?? '').trim();
     final DateTime now = DateTime.now();
     DateTime startAt = now.subtract(const Duration(days: 3));
@@ -111,7 +114,7 @@ class _SensorPageState extends State<SensorPage> {
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Row(
                         children: [
-                          const Expanded(child: Text('Usage period', style: TextStyle(fontWeight: FontWeight.w700))),
+                          Expanded(child: Text('sensor_usage_period'.tr(), style: const TextStyle(fontWeight: FontWeight.w700))),
                           if (warn) Icon(Icons.warning_amber, color: Colors.amber.shade700),
                         ],
                       ),
@@ -124,12 +127,20 @@ class _SensorPageState extends State<SensorPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Remaining: ${remainDays}d ${remainHours}h  (valid ${valid?.inDays ?? AppConstants.defaultSensorValidityDays}d)',
+                        'sensor_remaining_summary'.tr(namedArgs: {
+                          'days': '$remainDays',
+                          'hours': '$remainHours',
+                          'validDays': '${valid?.inDays ?? AppConstants.defaultSensorValidityDays}',
+                        }),
                         style: const TextStyle(fontSize: 13),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Start: ${startAt == null ? '—' : '${startAt.year}/${startAt.month.toString().padLeft(2, '0')}/${startAt.day.toString().padLeft(2, '0')} ${startAt.hour.toString().padLeft(2, '0')}:${startAt.minute.toString().padLeft(2, '0')}'}',
+                        'sensor_start_line'.tr(namedArgs: {
+                          'v': startAt == null
+                              ? '—'
+                              : '${startAt.year}/${startAt.month.toString().padLeft(2, '0')}/${startAt.day.toString().padLeft(2, '0')} ${startAt.hour.toString().padLeft(2, '0')}:${startAt.minute.toString().padLeft(2, '0')}',
+                        }),
                         style: const TextStyle(fontSize: 12, color: Colors.black54),
                       ),
                     ]),
@@ -139,19 +150,19 @@ class _SensorPageState extends State<SensorPage> {
               // New group like notification page
               Text('sensor_section_new'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
-              _notifItem(context, isDark, Icons.bluetooth_connected, 'Status', 'Battery, signal, warm-up', const SensorStatusPage(), 'SC_03_01'),
-              _notifItem(context, isDark, Icons.bluetooth_searching, 'Scan & Connect', 'BLE scan/connect · battery/usage', const SensorBleScanPage(), 'SC_01_01'),
-              _notifItem(context, isDark, Icons.confirmation_number, 'Serial Number', 'Current sensor SN', const SensorSerialPage(), 'SC_04_01'),
-              _notifItem(context, isDark, Icons.schedule, 'Start Time', 'YYYY/MM/DD HH:mm', const SensorStartTimePage(), 'SC_05_01'),
+              _notifItem(context, isDark, Icons.bluetooth_connected, 'sensor_notif_status'.tr(), 'sensor_notif_status_sub'.tr(), const SensorStatusPage(), 'SC_03_01'),
+              _notifItem(context, isDark, Icons.bluetooth_searching, 'sensor_menu_scan_connect'.tr(), 'sensor_menu_scan_connect_sub'.tr(), const SensorBleScanPage(), 'SC_01_01'),
+              _notifItem(context, isDark, Icons.confirmation_number, 'sensor_menu_serial'.tr(), 'sensor_menu_serial_sub'.tr(), const SensorSerialPage(), 'SC_04_01'),
+              _notifItem(context, isDark, Icons.schedule, 'sensor_menu_start_time'.tr(), 'sensor_menu_start_time_sub'.tr(), const SensorStartTimePage(), 'SC_05_01'),
               // removed old reconnect items; replaced with QR & Connect under Scan & Connect
-              _notifItemRoute(context, isDark, Icons.share, 'Share Data', 'Share with caregiver', '/sc/07/01', 'SC_07_01'),
+              _notifItemRoute(context, isDark, Icons.share, 'sensor_menu_share_data'.tr(), 'sensor_menu_share_data_sub'.tr(), '/sc/07/01', 'SC_07_01'),
               const SizedBox(height: 16),
               _notifItem(
                 context,
                 isDark,
                 Icons.delete_outline,
-                'How to remove',
-                'Sensor removal guide',
+                'sensor_menu_remove_howto'.tr(),
+                'sensor_menu_remove_howto_sub'.tr(),
                 const SensorRemovePageWrapper(),
                 'SC_08_01',
               ),
@@ -197,6 +208,9 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
   Future<void> _loadUsage() async {
     try {
       final st = await SettingsStorage.load();
+      if (SettingsService.stripStaleSensorStart(st)) {
+        await SettingsStorage.save(st);
+      }
       final String raw = (st['sensorStartAt'] as String? ?? '').trim();
       final dt = raw.isEmpty ? null : DateTime.tryParse(raw)?.toLocal();
       if (!mounted) return;
@@ -214,13 +228,13 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _group(context, title: 'Basic', children: [
+          _group(context, title: 'sensor_group_basic'.tr(), children: [
             ValueListenableBuilder<BleConnPhase>(
               valueListenable: BleService().phase,
               builder: (context, ph, _) {
                 final bool on = ph != BleConnPhase.off;
                 return AppSwitchRow(
-                  label: 'Enable connection',
+                  label: 'sensor_enable_connection'.tr(),
                   value: on,
                   onChanged: (v) async {
                     if (v && ph == BleConnPhase.off) {
@@ -240,11 +254,11 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
               valueListenable: BleService().rxCount,
               builder: (context, n, _) => ListTile(dense: true, leading: Icon(Icons.circle, color: primary, size: 12), title: Text('sensor_packets'.tr()), trailing: Text('$n')),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Text(
-                '거리로 연결이 끊기면 로컬에 기록되며, 미연결 상태에서는 저장된 마지막 MAC으로 주기적으로 자동 재연결을 시도합니다. 스캔·연결은 Sensor 탭의 Scan & Connect(SC_01_01)에서 하세요.',
-                style: TextStyle(fontSize: 12, color: Colors.black54),
+                'sensor_ble_disconnect_help'.tr(),
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
               ),
             ),
           ]),
@@ -252,7 +266,7 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
             valueListenable: BleService().phase,
             builder: (context, ph, _) {
               if (ph == BleConnPhase.off) return const SizedBox.shrink();
-              return _group(context, title: 'Usage period', children: [
+              return _group(context, title: 'sensor_usage_period'.tr(), children: [
                 ListTile(title: Text('sensor_connected_device'.tr()), subtitle: Text(deviceName)),
                 Builder(builder: (context) {
                   final DateTime now = DateTime.now();
@@ -265,8 +279,11 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
                       '${t.year}/${t.month.toString().padLeft(2, '0')}/${t.day.toString().padLeft(2, '0')} '
                       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
                   final String remainLabel = remain.inSeconds <= 0
-                      ? 'Expired'
-                      : 'Remaining ${remain.inDays}d ${remain.inHours % 24}h';
+                      ? 'sensor_usage_expired'.tr()
+                      : 'sensor_remaining_compact'.tr(namedArgs: {
+                          'days': '${remain.inDays}',
+                          'hours': '${remain.inHours % 24}',
+                        });
                   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     LinearProgressIndicator(value: pct, minHeight: 8, color: primary, backgroundColor: primary.withValues(alpha: 0.15)),
                     const SizedBox(height: 8),
@@ -275,7 +292,7 @@ class _SensorStatusPageState extends State<SensorStatusPage> {
                       if (warn) Icon(Icons.warning_amber, color: Colors.amber.shade700),
                     ]),
                     const SizedBox(height: 6),
-                    Text('Start: ${fmtStart(baseStart)}', style: const TextStyle(color: Colors.grey)),
+                    Text('sensor_start_line'.tr(namedArgs: {'v': fmtStart(baseStart)}), style: const TextStyle(color: Colors.grey)),
                   ]);
                 }),
                 Row(children: [
@@ -333,9 +350,16 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
     try {
       final s = await SettingsStorage.load();
       if (!mounted) return;
+      final String eqsn = (s['eqsn'] as String? ?? '').trim().toUpperCase();
+      String fs = (s['lastScannedQrFullSn'] as String? ?? '').trim();
+      String at = (s['lastScannedQrAt'] as String? ?? '').trim();
+      if (eqsn.isNotEmpty && fs.isNotEmpty && fs.toUpperCase() != eqsn) {
+        fs = '';
+        at = '';
+      }
       setState(() {
-        _lastScannedQrFullSn = (s['lastScannedQrFullSn'] as String? ?? '').trim();
-        _lastScannedQrAt = (s['lastScannedQrAt'] as String? ?? '').trim();
+        _lastScannedQrFullSn = fs;
+        _lastScannedQrAt = at;
         _lastScannedQrRegistered = s['lastScannedQrRegistered'] == true;
       });
     } catch (_) {}
@@ -530,7 +554,14 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
       );
       return;
     }
-    st['eqsn'] = newEqsn; await SettingsStorage.save(st);
+    final String nowIso = DateTime.now().toUtc().toIso8601String();
+    final String up = newEqsn.toUpperCase();
+    st['eqsn'] = newEqsn;
+    st['lastScannedQrFullSn'] = up;
+    st['lastScannedQrSerial'] = up;
+    st['lastScannedQrAt'] = nowIso;
+    st['lastScannedQrRegistered'] = true;
+    await SettingsStorage.save(st);
     try {
       // SN 변경 시 로컬 데이터 전부 초기화 (혼섞임 방지)
       await GlucoseLocalRepo().clear();
@@ -547,17 +578,20 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
         final prefs = await SharedPreferences.getInstance();
         final String? mac = prefs.getString('cgms.last_mac');
         final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: newEqsn, bleMac: mac);
-        final String? stRemote = (eq['startAt'] as String?);
-        if (stRemote != null && stRemote.trim().isNotEmpty) {
-          startLocal = DateTime.tryParse(stRemote)?.toLocal();
+        if (SettingsService.shouldApplyResolvedEqStart(eq, newEqsn)) {
+          final String? stRemote = (eq['startAt'] as String?);
+          if (stRemote != null && stRemote.trim().isNotEmpty) {
+            startLocal = DateTime.tryParse(stRemote)?.toLocal();
+          }
+          final String? srvSn = (eq['serial'] as String?)?.trim();
+          if (srvSn != null && srvSn.isNotEmpty) resolvedEqsn = srvSn;
         }
-        final String? srvSn = (eq['serial'] as String?)?.trim();
-        if (srvSn != null && srvSn.isNotEmpty) resolvedEqsn = srvSn;
       } catch (_) {}
       startLocal ??= DateTime.now();
       try {
         final m = await SettingsStorage.load();
         m['sensorStartAt'] = startLocal.toUtc().toIso8601String();
+        m['sensorStartAtEqsn'] = resolvedEqsn;
         if (resolvedEqsn != newEqsn) m['eqsn'] = resolvedEqsn;
         await SettingsStorage.save(m);
       } catch (_) {}
@@ -596,6 +630,7 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
     try {
       final m = await SettingsStorage.load();
       m['sensorStartAt'] = DateTime.now().toUtc().toIso8601String();
+      m['sensorStartAtEqsn'] = sn;
       await SettingsStorage.save(m);
     } catch (_) {}
     // inform dashboard to refresh days-left (without requiring clear)
@@ -683,6 +718,9 @@ class _SensorStartTimePageState extends State<SensorStartTimePage> {
   Future<void> _load() async {
     try {
       final st = await SettingsStorage.load();
+      if (SettingsService.stripStaleSensorStart(st)) {
+        await SettingsStorage.save(st);
+      }
       final String raw = (st['sensorStartAt'] as String? ?? '').trim();
       final dt = raw.isEmpty ? null : DateTime.tryParse(raw);
       if (!mounted) return;
@@ -1506,6 +1544,9 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
     DateTime start = now.subtract(const Duration(days: 3));
     try {
       final st = await SettingsStorage.load();
+      if (SettingsService.stripStaleSensorStart(st)) {
+        await SettingsStorage.save(st);
+      }
       final String raw = (st['sensorStartAt'] as String? ?? '').trim();
       final dt = raw.isEmpty ? null : DateTime.tryParse(raw)?.toLocal();
       if (dt != null) start = dt;

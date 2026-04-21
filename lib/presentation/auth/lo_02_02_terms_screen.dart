@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
 /// LO_02_02: 약관동의
@@ -64,40 +65,40 @@ class _Lo0202TermsScreenState extends State<Lo0202TermsScreen> {
   Widget build(BuildContext context) {
     final bool canNext = agreeTerms && agreePrivacy && agreeAge;
     return Scaffold(
-      appBar: AppBar(title: const Text('LO_02_02 · Terms')),
+      appBar: AppBar(title: Text('terms_appbar'.tr())),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Terms of Service', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            Text('terms_tos_title'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
             CheckboxListTile(
               value: agreeTerms,
               onChanged: (v) => setState(() => agreeTerms = v ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('[Required] Terms of Service'),
-              secondary: TextButton(onPressed: () => _openDoc('Terms of Service', _termsText), child: const Text('View')),
+              title: Text('terms_required_tos_label'.tr()),
+              secondary: TextButton(onPressed: () => _openDoc('terms_tos_title'.tr(), _termsText), child: Text('terms_view'.tr())),
             ),
             CheckboxListTile(
               value: agreePrivacy,
               onChanged: (v) => setState(() => agreePrivacy = v ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('[Required] Privacy Policy'),
-              secondary: TextButton(onPressed: () => _openDoc('Privacy Policy', _privacyText), child: const Text('View')),
+              title: Text('terms_required_privacy_label'.tr()),
+              secondary: TextButton(onPressed: () => _openDoc('terms_privacy_title'.tr(), _privacyText), child: Text('terms_view'.tr())),
             ),
             CheckboxListTile(
               value: agreeAge,
               onChanged: (v) => setState(() => agreeAge = v ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('[Required] I am 14 years or older'),
+              title: Text('terms_required_age_label'.tr()),
             ),
             CheckboxListTile(
               value: agreeMarketing,
               onChanged: (v) => setState(() => agreeMarketing = v ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('[Optional] Marketing consent'),
-              secondary: TextButton(onPressed: () => _openDoc('Marketing', _marketingText), child: const Text('View')),
+              title: Text('terms_optional_marketing_label'.tr()),
+              secondary: TextButton(onPressed: () => _openDoc('terms_marketing_title'.tr(), _marketingText), child: Text('terms_view'.tr())),
             ),
             const Spacer(),
             ElevatedButton(
@@ -108,7 +109,7 @@ class _Lo0202TermsScreenState extends State<Lo0202TermsScreen> {
                       if (!context.mounted) return;
                       Navigator.of(context).pop();
                     },
-              child: const Text('Agree and continue'),
+              child: Text('terms_agree_continue'.tr()),
             ),
           ],
         ),

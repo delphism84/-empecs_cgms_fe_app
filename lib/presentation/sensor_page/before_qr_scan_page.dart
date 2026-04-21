@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/presentation/sensor_page/sensor_qr_connect_page.dart';
 
@@ -10,7 +11,7 @@ class BeforeQrScanPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Before QR Scan'),
+        title: Text('before_qr_appbar'.tr()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
@@ -32,37 +33,37 @@ class BeforeQrScanPage extends StatelessWidget {
                     height: 200,
                     color: Colors.grey[200],
                     alignment: Alignment.center,
-                    child: const Text('sensorguide.png'),
+                    child: Text('before_qr_asset_hint'.tr()),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                '1. Scan the QR code on your sensor',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              Text(
+                'before_qr_step1'.tr(),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
-              const Text(
-                '2. Confirm the sensor information',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              Text(
+                'before_qr_step2'.tr(),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
-              const Text(
-                '3. Save & Sync to register your device',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              Text(
+                'before_qr_step3'.tr(),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 32),
               CustomButton(
                 width: double.infinity,
-                text: 'Scan QR Code',
+                text: 'before_qr_scan_button'.tr(),
                 variant: ButtonVariant.FillLoginGreen,
                 onTap: () async {
                   // SensorQrConnectPage에서 `pushReplacement`로 다음 페이지(StartMonitorPage)로 교체되는
                   // 케이스가 있어, 여기서 pop(true)를 수행하면 UX가 뒤로 튕기는 문제가 생길 수 있다.
                   await Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const SensorQrConnectPage(
-                        title: 'QR Sensor Scan',
+                      builder: (_) => SensorQrConnectPage(
+                        title: 'sensor_qr_sensor_scan_title'.tr(),
                         reqId: 'SC_01_04',
                       ),
                     ),

@@ -28,7 +28,13 @@ class BleService {
   static final BleService _instance = BleService._internal();
   factory BleService() => _instance;
 
-  final FlutterReactiveBle _ble = FlutterReactiveBle();
+  FlutterReactiveBle? _ble;
+  FlutterReactiveBle get _nativeBle {
+    if (kIsWeb) {
+      throw UnsupportedError('BLE is not available on web');
+    }
+    return _ble ??= FlutterReactiveBle();
+  }
   StreamSubscription<DiscoveredDevice>? _scanSub;
   StreamSubscription<ConnectionStateUpdate>? _connSub;
   StreamSubscription<List<int>>? _notifySub;
@@ -136,7 +142,7 @@ class BleService {
     }
     _scanSub?.cancel();
     // broad scan (no service filter) to capture devices that don't advertise 0x181F
-    _scanSub = _ble.scanForDevices(withServices: const [], scanMode: ScanMode.lowLatency).listen(addIfMatch);
+    _scanSub = _nativeBle.scanForDevices(withServices: const [], scanMode: ScanMode.lowLatency).listen(addIfMatch);
     // stop after timeout
     Future.delayed(timeout, () async {
       await _scanSub?.cancel();
@@ -204,7 +210,7 @@ class BleService {
     DebugToastBus().show('BLE: connecting to $deviceId');
     unawaited(BleLogService().add('BLE', 'connect -> $deviceId'));
     _connSub?.cancel();
-    _connSub = _ble.connectToDevice(id: deviceId, connectionTimeout: const Duration(seconds: 8)).listen((update) async {
+    _connSub = _nativeBle.connectToDevice(id: deviceId, connectionTimeout: const Duration(seconds: 8)).listen((update) async {
       if (update.connectionState == DeviceConnectionState.connected) {
         _cancelSignalLossRepeatTimer();
         _stopAutoReconnectPoller();
@@ -221,18 +227,12 @@ class BleService {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('cgms.last_mac', deviceId);
           } catch (_) {}
-          // 센서 시작 시각: 재연결마다 무조건 덮어쓰지 않음. 다만 저장된 SN과 불일치하면 새 센서로 간주하고 초기화.
+          // 센서 시작 시각: 재연결마다 무조건 덮어쓰지 않음. eqsn·sensorStartAtEqsn 불일치·고아 시작일은 제거 후 비어 있을 때만 설정.
           try {
             final st = await SettingsStorage.load();
             final String eqsn = (st['eqsn'] as String? ?? '').trim();
             final DateTime now = DateTime.now().toUtc();
-            final String owner = (st['sensorStartAtEqsn'] as String? ?? '').trim();
-            bool dirty = false;
-            if (eqsn.isNotEmpty && owner.isNotEmpty && owner.toUpperCase() != eqsn.toUpperCase()) {
-              st['sensorStartAt'] = '';
-              st['sensorStartAtEqsn'] = '';
-              dirty = true;
-            }
+            bool dirty = SettingsService.stripStaleSensorStart(st);
             final String existingStart = (st['sensorStartAt'] as String? ?? '').trim();
             if (existingStart.isEmpty) {
               st['sensorStartAt'] = now.toIso8601String();
@@ -348,15 +348,16 @@ class BleService {
   /// 앱이 백그라운드일 때는 OS가 Dart 타이머를 지연시킬 수 있음(배터리 정책).
   Future<void> _runSignalLossRepeatChain() async {
     if (phase.value != BleConnPhase.off) {
-      // 자동 재연결 중일 때만 잠시 뒤 재시도 — 이미 연결된 상태면 [connectToDevice]에서 타이머 취소됨
-      if (phase.value == BleConnPhase.connecting) {
+      // 재연결 스캔/연결 중에는 분 타이머만으로는 알 수 없으므로 짧게 재시도한다.
+      // (connecting만 처리하고 scanning 등에서 return 하면 반복 체인이 영구 정지할 수 있음)
+      if (phase.value == BleConnPhase.connecting || phase.value == BleConnPhase.scanning) {
         _armSignalLossChainRetry(const Duration(seconds: 3));
       }
       return;
     }
     final int mins = await _systemSignalLossRepeatMinutes();
     if (phase.value != BleConnPhase.off) {
-      if (phase.value == BleConnPhase.connecting) {
+      if (phase.value == BleConnPhase.connecting || phase.value == BleConnPhase.scanning) {
         _armSignalLossChainRetry(const Duration(seconds: 3));
       }
       return;
@@ -365,12 +366,22 @@ class BleService {
     _signalLossRepeatTimer?.cancel();
     _signalLossRepeatTimer = Timer(Duration(minutes: safeMins), () {
       unawaited(() async {
-        if (phase.value != BleConnPhase.off) {
+        final BleConnPhase ph = phase.value;
+        if (ph == BleConnPhase.scanning || ph == BleConnPhase.connecting) {
+          _armSignalLossChainRetry(const Duration(seconds: 3));
+          return;
+        }
+        if (ph != BleConnPhase.off) {
           _cancelSignalLossRepeatTimer();
           return;
         }
         await AlertEngine().notifyBleLinkLost(fromScheduledRepeat: true);
-        if (phase.value != BleConnPhase.off) {
+        final BleConnPhase ph2 = phase.value;
+        if (ph2 == BleConnPhase.scanning || ph2 == BleConnPhase.connecting) {
+          _armSignalLossChainRetry(const Duration(seconds: 3));
+          return;
+        }
+        if (ph2 != BleConnPhase.off) {
           _cancelSignalLossRepeatTimer();
           return;
         }
@@ -422,7 +433,7 @@ class BleService {
 
   Future<void> _validateCgmsProfile(String deviceId) async {
     try {
-      final List<DiscoveredService> services = await _ble.discoverServices(deviceId);
+      final List<DiscoveredService> services = await _nativeBle.discoverServices(deviceId);
       DiscoveredService? svc;
       for (final DiscoveredService ds in services) {
         if (ds.serviceId == serviceCgms) { svc = ds; break; }
@@ -545,7 +556,7 @@ class BleService {
       });
     }
     try {
-      _notifySub = _ble.subscribeToCharacteristic(ch).listen((data) async {
+      _notifySub = _nativeBle.subscribeToCharacteristic(ch).listen((data) async {
       await _handleCgmsNotifyPacket(data, source: 'ble', silent: _historyInProgress);
       }, onError: (e, st) {
       DebugToastBus().show('CGMS: notify error');
@@ -627,7 +638,7 @@ class BleService {
     bool acked = false;
     // subscribe indication first
     try {
-      _opsIndSub = _ble.subscribeToCharacteristic(ch).listen((data) async {
+      _opsIndSub = _nativeBle.subscribeToCharacteristic(ch).listen((data) async {
       // any indication bytes → count and log
       rxCount.value = rxCount.value + 1;
       try {
@@ -662,7 +673,7 @@ class BleService {
 
     // write Start Session opcode (0x1A per CGMS Specific Ops Control Point)
     try {
-      await _ble.writeCharacteristicWithResponse(ch, value: const [0x1A]);
+      await _nativeBle.writeCharacteristicWithResponse(ch, value: const [0x1A]);
       unawaited(BleLogService().add('CGMS', 'ops start write sent'));
     } catch (_) {
       if (!completer.isCompleted) completer.complete(false);
@@ -684,7 +695,7 @@ class BleService {
     Future<bool> _try(Uuid serviceId) async {
       final ch = QualifiedCharacteristic(serviceId: serviceId, characteristicId: charRacp, deviceId: deviceId);
       try {
-        _racpIndSub = _ble.subscribeToCharacteristic(ch).listen((data) async {
+        _racpIndSub = _nativeBle.subscribeToCharacteristic(ch).listen((data) async {
       // RACP indication parser (minimal)
       rxCount.value = rxCount.value + 1;
       try {
@@ -759,7 +770,7 @@ class BleService {
     Future<bool> _try(Uuid serviceId) async {
       final ch = QualifiedCharacteristic(serviceId: serviceId, characteristicId: charRacp, deviceId: deviceId);
       try {
-        await _ble.writeCharacteristicWithResponse(ch, value: value);
+        await _nativeBle.writeCharacteristicWithResponse(ch, value: value);
         unawaited(BleLogService().add('CGMS', 'racp write [${value.map((e)=>e.toRadixString(16).padLeft(2,'0')).join(' ')}]'));
         return true;
       } catch (_) { return false; }
@@ -811,7 +822,7 @@ class BleService {
         adjust,
       ];
       final ch = QualifiedCharacteristic(serviceId: serviceCurrentTime, characteristicId: charCurrentTime, deviceId: deviceId);
-      await _ble.writeCharacteristicWithResponse(ch, value: payload);
+      await _nativeBle.writeCharacteristicWithResponse(ch, value: payload);
       return true;
     } catch (_) {
       return false;
@@ -924,7 +935,7 @@ class BleService {
         characteristicId: charSerialNumberString,
         deviceId: deviceId,
       );
-      final List<int> data = await _ble.readCharacteristic(ch);
+      final List<int> data = await _nativeBle.readCharacteristic(ch);
       if (data.isEmpty) return null;
       // Serial Number String is usually ASCII/UTF-8 text.
       final String s = String.fromCharCodes(data).replaceAll('\u0000', '').trim();

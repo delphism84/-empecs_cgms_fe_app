@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/image_constant.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
@@ -27,7 +28,7 @@ class _Um0101AttachGuideScreenState extends State<Um0101AttachGuideScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('UM_01_01 · Sensor attachment guide')),
+      appBar: AppBar(title: Text('um0101_appbar'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -38,12 +39,11 @@ class _Um0101AttachGuideScreenState extends State<Um0101AttachGuideScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Before QR Scan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                    Text('um0101_before_qr_heading'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Follow the steps below to attach the sensor properly.\n'
-                      '(영상/사진 안내는 추후 실제 컨텐츠로 교체)',
-                      style: TextStyle(fontSize: 13),
+                    Text(
+                      'um0101_intro'.tr(),
+                      style: const TextStyle(fontSize: 13),
                     ),
                     const SizedBox(height: 12),
                     ClipRRect(
@@ -57,7 +57,7 @@ class _Um0101AttachGuideScreenState extends State<Um0101AttachGuideScreen> {
                           height: 170,
                           color: Colors.black12,
                           alignment: Alignment.center,
-                          child: const Text('Attachment image placeholder'),
+                          child: Text('um0101_image_placeholder'.tr()),
                         ),
                       ),
                     ),
@@ -66,18 +66,18 @@ class _Um0101AttachGuideScreenState extends State<Um0101AttachGuideScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text('Steps', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            Text('um0101_steps'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            _step(1, 'Clean the skin area and dry completely.'),
-            _step(2, 'Attach the sensor firmly for a few seconds.'),
-            _step(3, 'Open the app and proceed to QR scan.'),
+            _step(1, 'um0101_step1'.tr()),
+            _step(2, 'um0101_step2'.tr()),
+            _step(3, 'um0101_step3'.tr()),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(context).pushNamed('/sc/01/04');
               },
               icon: const Icon(Icons.qr_code_scanner),
-              label: const Text('Proceed to QR Scan (SC_01_04)'),
+              label: Text('um0101_proceed_qr'.tr()),
             ),
           ],
         ),

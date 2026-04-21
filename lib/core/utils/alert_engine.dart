@@ -86,6 +86,15 @@ class AlertEngine {
     }
   }
 
+  Future<bool> _alarmsMuteAll() async {
+    try {
+      final st = await SettingsStorage.load();
+      return st['alarmsMuteAll'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _fireSystemAlarmFromConfig(
     Map<String, dynamic> a, {
     required String reason,
@@ -93,14 +102,19 @@ class AlertEngine {
   }) async {
     try {
       if (await _isWarmupActive()) return;
-      if (a['enabled'] != true) return;
+      if (!SettingsService.parseAlarmBool(a['enabled'], defaultValue: true)) return;
       if (_inQuietHours(a['quietFrom'] as String?, a['quietTo'] as String?)) {
         SignalLossMonitorLog.append('alarm skipped (quiet hours)');
         return;
       }
 
-      bool sound = (a['sound'] is bool) ? (a['sound'] == true) : true;
-      bool vibrate = (a['vibrate'] is bool) ? (a['vibrate'] == true) : true;
+      SettingsService.normalizeAlarmMethodFields(a);
+      bool sound = SettingsService.parseAlarmBool(a['sound'], defaultValue: true);
+      bool vibrate = SettingsService.parseAlarmBool(a['vibrate'], defaultValue: true);
+      if (await _alarmsMuteAll()) {
+        sound = false;
+        vibrate = false;
+      }
       final int repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
       const String repeatKey = 'system:signal_loss';
       final last = _lastFired[repeatKey];
@@ -230,15 +244,20 @@ class AlertEngine {
 
     for (final a in _alarms) {
       final String type = (a['type'] ?? '').toString();
-      final bool enabled = a['enabled'] == true;
+      if (!SettingsService.parseAlarmBool(a['enabled'], defaultValue: true)) continue;
       final num? th = a['threshold'] as num?;
-      if (!enabled || th == null) continue;
+      if (th == null) continue;
 
       // quiet hours
       if (_inQuietHours(a['quietFrom'] as String?, a['quietTo'] as String?)) continue;
 
-      bool sound = (a['sound'] is bool) ? (a['sound'] == true) : true;
-      bool vibrate = (a['vibrate'] is bool) ? (a['vibrate'] == true) : true;
+      SettingsService.normalizeAlarmMethodFields(a);
+      bool sound = SettingsService.parseAlarmBool(a['sound'], defaultValue: true);
+      bool vibrate = SettingsService.parseAlarmBool(a['vibrate'], defaultValue: true);
+      if (await _alarmsMuteAll()) {
+        sound = false;
+        vibrate = false;
+      }
 
       bool hit = false;
       bool critical = false;

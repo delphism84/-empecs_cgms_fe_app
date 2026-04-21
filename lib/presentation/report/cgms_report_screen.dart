@@ -13,6 +13,7 @@ import 'package:helpcare/presentation/settings_page/user_detail_page.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/widgets/debug_badge.dart';
 import 'package:helpcare/widgets/spacing.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CgmsReportScreen extends StatefulWidget {
   const CgmsReportScreen({super.key});
@@ -26,7 +27,7 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
   bool _loading = false;
   List<double> _values = const [];
 
-  String displayName = 'Guest';
+  String displayName = '';
   String email = '';
   DateTime sensorStart = DateTime.now().subtract(const Duration(days: 3));
   int lifeDays = AppConstants.defaultSensorValidityDays;
@@ -68,7 +69,6 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
         email = _storageString(local['lastUserId']);
         displayName = _storageString(local['displayName']);
         if (displayName.isEmpty && email.isNotEmpty) displayName = email;
-        if (displayName.isEmpty) displayName = 'Guest';
         lifeDays = AppConstants.defaultSensorValidityDays;
         final String ssRaw = _storageString(local['sensorStartAt']);
         if (ssRaw.isNotEmpty) {
@@ -87,7 +87,7 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
     final int total = lifeDays;
     final Duration used = DateTime.now().difference(start);
     final int remain = (total - used.inDays).clamp(0, total);
-    final String name = displayName.trim().isEmpty ? 'Guest' : displayName.trim();
+    final String name = displayName.trim().isEmpty ? 'common_guest'.tr() : displayName.trim();
     final String e = email.trim();
     final String emailLine = e.isEmpty ? '—' : e;
 
@@ -130,7 +130,12 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
               child: Row(children: [
                 const Icon(Icons.hourglass_bottom, color: Colors.teal),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Remaining days: $remain / $total', style: const TextStyle(fontSize: 13))),
+                Expanded(
+                  child: Text(
+                    'report_remaining_days'.tr(namedArgs: {'remain': '$remain', 'total': '$total'}),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
               ]),
             ),
           ]),
@@ -191,8 +196,8 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
             ),
             VerticalSpace(height: 12),
             ReportCard(
-              title: 'Profile',
-              subtitle: 'User information (same as Settings)',
+              title: 'report_profile_title'.tr(),
+              subtitle: 'report_profile_subtitle'.tr(),
               trailing: const Icon(Icons.person, color: Colors.black54),
               child: _buildReportUserCard(context),
             ),
@@ -201,7 +206,7 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
               children: [
                 Expanded(
                   child: CustomButton(
-                    text: 'Share',
+                    text: 'report_share'.tr(),
                     padding: ButtonPadding.PaddingAll12,
                     variant: ButtonVariant.FillWhiteA700,
                     fontStyle: ButtonFontStyle.GilroyMedium16IndigoA700,
@@ -213,7 +218,7 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
                 HorizontalSpace(width: 8),
                 Expanded(
                   child: CustomButton(
-                    text: 'Export',
+                    text: 'report_export'.tr(),
                     padding: ButtonPadding.PaddingAll12,
                     onTap: () {},
                   ),
@@ -225,26 +230,26 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
             DebugBadge(
               reqId: 'RP_01_01',
               child: ReportCard(
-                title: 'Summary',
-                subtitle: 'Key Metrics',
+                title: 'report_summary_title'.tr(),
+                subtitle: 'report_summary_subtitle'.tr(),
                 trailing: const Icon(Icons.analytics, color: Colors.black54),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(children: [
-                      Expanded(child: _kpiTile('Time in Range', _tirPct().toStringAsFixed(0) + '%')),
+                      Expanded(child: _kpiTile('chart_time_in_range'.tr(), _tirPct().toStringAsFixed(0) + '%')),
                       HorizontalSpace(width: 8),
-                      Expanded(child: _kpiTile('Average', _avgGlucose().toStringAsFixed(0))),
+                      Expanded(child: _kpiTile('report_kpi_average'.tr(), _avgGlucose().toStringAsFixed(0))),
                     ]),
                     VerticalSpace(height: 8),
                     Row(children: [
-                      Expanded(child: _kpiTile('StdDev / CV', _stdDevCv())),
+                      Expanded(child: _kpiTile('report_kpi_std_cv'.tr(), _stdDevCv())),
                       HorizontalSpace(width: 8),
-                      Expanded(child: _kpiTile('Hypo/Hyper', _hypoHyper())),
+                      Expanded(child: _kpiTile('report_kpi_hypo_hyper'.tr(), _hypoHyper())),
                     ]),
                     VerticalSpace(height: 8),
                     Row(children: [
-                      Expanded(child: _kpiTile('GMI', '${_gmi(_avgGlucose()).toStringAsFixed(1)}%')),
+                      Expanded(child: _kpiTile('report_kpi_gmi'.tr(), '${_gmi(_avgGlucose()).toStringAsFixed(1)}%')),
                       HorizontalSpace(width: 8),
                       const Expanded(child: SizedBox()),
                     ]),
@@ -255,8 +260,8 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
             VerticalSpace(height: 12),
             // chart section 1: Range distribution (bars)
             ReportCard(
-              title: 'Range Distribution',
-              subtitle: 'Percent by range',
+              title: 'report_range_dist_title'.tr(),
+              subtitle: 'report_range_dist_subtitle'.tr(),
               trailing: const Icon(Icons.pie_chart_rounded, color: Colors.black54),
               child: _rangePieChart(context),
             ),
@@ -359,7 +364,7 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
       final String n = v.substring(0, v.length - 1);
       final int? d = int.tryParse(n);
       if (d != null) {
-        final String label = d == 1 ? '1 day' : '$d days';
+        final String label = d == 1 ? 'report_period_1_day'.tr() : 'report_period_n_days'.tr(namedArgs: {'n': '$d'});
         return FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(label, style: style, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
@@ -474,13 +479,13 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
         const SizedBox(width: 12),
         // legend with percent prefix
         Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-          _PieLegendDot(color: Colors.orange, label: '${high.toStringAsFixed(0)}% High'),
+          _PieLegendDot(color: Colors.orange, label: 'chart_legend_high'.tr(namedArgs: {'p': high.toStringAsFixed(0)})),
           const SizedBox(height: 6),
-          _PieLegendDot(color: Colors.green, label: '${inRange.toStringAsFixed(0)}% In Range'),
+          _PieLegendDot(color: Colors.green, label: 'chart_legend_in_range'.tr(namedArgs: {'p': inRange.toStringAsFixed(0)})),
           const SizedBox(height: 6),
-          _PieLegendDot(color: Colors.pink, label: '${low.toStringAsFixed(0)}% Low'),
+          _PieLegendDot(color: Colors.pink, label: 'chart_legend_low'.tr(namedArgs: {'p': low.toStringAsFixed(0)})),
           const SizedBox(height: 6),
-          _PieLegendDot(color: Colors.red, label: '${veryLow.toStringAsFixed(0)}% Very Low'),
+          _PieLegendDot(color: Colors.red, label: 'chart_legend_very_low'.tr(namedArgs: {'p': veryLow.toStringAsFixed(0)})),
         ]),
       ]),
     );
@@ -516,11 +521,11 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
                   bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, m) {
                     switch (v.toInt()) {
                       case 0:
-                        return const Text('High');
+                        return Text('report_bar_label_high'.tr());
                       case 1:
-                        return const Text('In Range');
+                        return Text('report_bar_label_in_range'.tr());
                       case 2:
-                        return const Text('Low');
+                        return Text('report_bar_label_low'.tr());
                     }
                     return const SizedBox.shrink();
                   }))),
@@ -534,8 +539,8 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Avg: ${_avgGlucose().toStringAsFixed(0)} mg/dL'),
-              Text('GMI: ${_gmi(_avgGlucose()).toStringAsFixed(1)}%'),
+              Text('report_avg_mgdl'.tr(namedArgs: {'v': _avgGlucose().toStringAsFixed(0)})),
+              Text('report_gmi_pct'.tr(namedArgs: {'v': _gmi(_avgGlucose()).toStringAsFixed(1)})),
             ],
           )
         ],

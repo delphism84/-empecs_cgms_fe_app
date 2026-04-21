@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'create_account_step5_confirm.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
@@ -46,21 +47,21 @@ class _CreateAccountStep4ProfilePageState extends State<CreateAccountStep4Profil
   }
 
   String? _validateRequired(String? v, String label) {
-    if (v == null || v.trim().isEmpty) return 'Please enter $label.';
+    if (v == null || v.trim().isEmpty) return 'auth_validate_required'.tr(namedArgs: {'label': label});
     return null;
   }
 
   String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Please enter your email.';
+    if (v == null || v.trim().isEmpty) return 'auth_validate_email_empty'.tr();
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(v.trim())) return 'Invalid email format.';
+    if (!emailRegex.hasMatch(v.trim())) return 'auth_validate_email_invalid'.tr();
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile Information')),
+      appBar: AppBar(title: Text('auth_profile_info_title'.tr())),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -76,8 +77,8 @@ class _CreateAccountStep4ProfilePageState extends State<CreateAccountStep4Profil
                       textInputAction: TextInputAction.next,
                       textCapitalization: TextCapitalization.words,
                       autofillHints: const [AutofillHints.givenName],
-                      decoration: const InputDecoration(labelText: 'First Name', border: OutlineInputBorder()),
-                      validator: (v) => _validateRequired(v, 'First Name'),
+                      decoration: InputDecoration(labelText: 'auth_label_first_name'.tr(), border: const OutlineInputBorder()),
+                      validator: (v) => _validateRequired(v, 'auth_label_first_name'.tr()),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -87,8 +88,8 @@ class _CreateAccountStep4ProfilePageState extends State<CreateAccountStep4Profil
                       textInputAction: TextInputAction.next,
                       textCapitalization: TextCapitalization.words,
                       autofillHints: const [AutofillHints.familyName],
-                      decoration: const InputDecoration(labelText: 'Last Name', border: OutlineInputBorder()),
-                      validator: (v) => _validateRequired(v, 'Last Name'),
+                      decoration: InputDecoration(labelText: 'auth_label_last_name'.tr(), border: const OutlineInputBorder()),
+                      validator: (v) => _validateRequired(v, 'auth_label_last_name'.tr()),
                     ),
                   ),
                 ]),
@@ -98,7 +99,7 @@ class _CreateAccountStep4ProfilePageState extends State<CreateAccountStep4Profil
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.email],
-                  decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: 'auth_label_email_field'.tr(), border: const OutlineInputBorder()),
                   validator: _validateEmail,
                 ),
             const SizedBox(height: 12),
@@ -115,19 +116,25 @@ class _CreateAccountStep4ProfilePageState extends State<CreateAccountStep4Profil
                     );
                     if (picked != null) setState(() => _birth = picked);
                   },
-                  child: Text(_birth == null ? 'Select Date of Birth' : '${_birth!.year}-${_birth!.month.toString().padLeft(2, '0')}-${_birth!.day.toString().padLeft(2, '0')}'),
+                  child: Text(_birth == null ? 'auth_select_dob'.tr() : '${_birth!.year}-${_birth!.month.toString().padLeft(2, '0')}-${_birth!.day.toString().padLeft(2, '0')}'),
                 ),
               ),
               const SizedBox(width: 12),
               DropdownButton<String>(
                 value: _gender,
-                items: const [DropdownMenuItem(value: 'male', child: Text('Male')), DropdownMenuItem(value: 'female', child: Text('Female'))],
+                items: [
+                  DropdownMenuItem(value: 'male', child: Text('auth_gender_male'.tr())),
+                  DropdownMenuItem(value: 'female', child: Text('auth_gender_female'.tr())),
+                ],
                 onChanged: (v) => setState(() => _gender = v ?? 'male'),
               ),
               const SizedBox(width: 12),
               DropdownButton<String>(
                 value: _unit,
-                items: const [DropdownMenuItem(value: 'mg/dL', child: Text('mg/dL')), DropdownMenuItem(value: 'mmol', child: Text('mmol'))],
+                items: const [
+                  DropdownMenuItem(value: 'mg/dL', child: Text('mg/dL')),
+                  DropdownMenuItem(value: 'mmol', child: Text('mmol')),
+                ],
                 onChanged: (v) => setState(() => _unit = v ?? 'mg/dL'),
               ),
             ]),
@@ -139,7 +146,7 @@ class _CreateAccountStep4ProfilePageState extends State<CreateAccountStep4Profil
                       if (_formKey.currentState?.validate() ?? false) {
                         if (_birth == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please select date of birth.')),
+                            SnackBar(content: Text('auth_snackbar_dob_required'.tr())),
                           );
                           return;
                         }
@@ -159,7 +166,7 @@ class _CreateAccountStep4ProfilePageState extends State<CreateAccountStep4Profil
                         );
                       }
                     },
-                    child: const Text('Next'),
+                    child: Text('common_next'.tr()),
                   ),
                 ),
               ],

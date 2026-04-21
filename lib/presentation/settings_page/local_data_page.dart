@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
@@ -63,13 +64,13 @@ class _LocalDataPageState extends State<LocalDataPage> {
     if (!mounted) return;
     await _load();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Local DB reset completed')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('local_data_reset_done'.tr())));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Data · Local cache')),
+      appBar: AppBar(title: Text('local_data_appbar'.tr())),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -81,7 +82,7 @@ class _LocalDataPageState extends State<LocalDataPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Total points: $_totalPoints',
+                      'local_data_total_points'.tr(namedArgs: {'n': '$_totalPoints'}),
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                     ),
                   ),
@@ -95,7 +96,7 @@ class _LocalDataPageState extends State<LocalDataPage> {
                       height: 44,
                       child: OutlinedButton(
                         onPressed: _loading ? null : _load,
-                        child: const Text('REFRESH'),
+                        child: Text('local_data_refresh'.tr()),
                       ),
                     ),
                   ),
@@ -105,7 +106,7 @@ class _LocalDataPageState extends State<LocalDataPage> {
                       height: 44,
                       child: OutlinedButton(
                         onPressed: _loading ? null : _resetLocalDb,
-                        child: const Text('RESET DB'),
+                        child: Text('local_data_reset_db'.tr()),
                       ),
                     ),
                   ),
@@ -121,9 +122,9 @@ class _LocalDataPageState extends State<LocalDataPage> {
                       if (_loading)
                         const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
                       if (!_loading && _days.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24),
-                          child: Text('No local data days', style: TextStyle(color: Colors.grey)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Text('local_data_no_days'.tr(), style: const TextStyle(color: Colors.grey)),
                         ),
                       if (!_loading && _days.isNotEmpty)
                         ..._days.map((d) {

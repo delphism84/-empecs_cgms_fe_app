@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/api_client.dart';
@@ -82,10 +83,10 @@ class _Pd0101PreviousDataScreenState extends State<Pd0101PreviousDataScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Previous data'),
+        title: Text('pd0101_title'.tr()),
         actions: [
           IconButton(
-            tooltip: 'Refresh — download from server',
+            tooltip: 'pd0101_refresh_tooltip'.tr(),
             onPressed: _loading ? null : () => _reload(fetchRemote: true),
             icon: const Icon(Icons.refresh),
           ),
@@ -94,18 +95,17 @@ class _Pd0101PreviousDataScreenState extends State<Pd0101PreviousDataScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Sensor periods (newest first). Tap a row for the graph.',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          Text(
+            'pd0101_list_intro'.tr(),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           if (_loading) const LinearProgressIndicator(minHeight: 3),
           const SizedBox(height: 12),
           if (_items.isEmpty)
-            const Text(
-              'No previous sensor periods in local storage.\n'
-              'On the main screen, open Previous data → Refresh / download to cache server data for offline use.',
-              style: TextStyle(color: Colors.black54, height: 1.35),
+            Text(
+              'pd0101_empty_hint'.tr(),
+              style: const TextStyle(color: Colors.black54, height: 1.35),
             )
           else
             ..._items.map((m) {
@@ -118,7 +118,10 @@ class _Pd0101PreviousDataScreenState extends State<Pd0101PreviousDataScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade300)),
                 child: ListTile(
                   title: Text(eqsn, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  subtitle: Text('${_fmtRange(fromMs, toMs)}  ·  points $count'),
+                  subtitle: Text('pd0101_row_points'.tr(namedArgs: {
+                    'range': _fmtRange(fromMs, toMs),
+                    'n': '$count',
+                  })),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.of(context).push(
@@ -136,9 +139,9 @@ class _Pd0101PreviousDataScreenState extends State<Pd0101PreviousDataScreen> {
               );
             }),
           const SizedBox(height: 10),
-          const Text(
-            'Sensors are listed with the most recent period first. Tap a row to open the graph for that sensor and date range.',
-            style: TextStyle(color: Colors.black54, fontSize: 12, height: 1.35),
+          Text(
+            'pd0101_footer_help'.tr(),
+            style: const TextStyle(color: Colors.black54, fontSize: 12, height: 1.35),
           ),
         ],
       ),

@@ -44,16 +44,37 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
   @override
   void initState() {
     super.initState();
-    // 화면 로드 완료 후 약간의 딜레이를 두고 테스트 계정 입력
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 250), () {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreSavedCredentials());
+  }
+
+  Future<void> _restoreSavedCredentials() async {
+    try {
+      final st = await SettingsStorage.load();
+      final String savedEmail = (st['savedLoginEmail'] as String? ?? '').trim();
+      final String savedPw = (st['savedLoginPassword'] as String? ?? '');
+      if (!mounted) return;
+      if (savedEmail.isNotEmpty) _idCtrl.text = savedEmail;
+      if (savedPw.isNotEmpty) _pwCtrl.text = savedPw;
+      if (savedEmail.isNotEmpty || savedPw.isNotEmpty) {
+        setState(() => switchVal = true);
+      }
+      if (_idCtrl.text.isEmpty && _pwCtrl.text.isEmpty) {
+        await Future<void>.delayed(const Duration(milliseconds: 200));
         if (!mounted) return;
-        if (_idCtrl.text.isEmpty && _pwCtrl.text.isEmpty) {
-          _idCtrl.text = DefaultDevAccount.email;
-          _pwCtrl.text = DefaultDevAccount.password;
-        }
-      });
-    });
+        _idCtrl.text = DefaultDevAccount.email;
+        _pwCtrl.text = DefaultDevAccount.password;
+      }
+      if (mounted) setState(() {});
+    } catch (_) {}
+  }
+
+  Future<void> _persistLoginCredentials(String email, String password) async {
+    try {
+      final st = await SettingsStorage.load();
+      st['savedLoginEmail'] = email;
+      st['savedLoginPassword'] = password;
+      await SettingsStorage.save(st);
+    } catch (_) {}
   }
 
   bool _loggingIn = false;
@@ -431,7 +452,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                                   return;
                                 }
                                 if (!mounted) return;
-                                await showDialog(context: context, builder: (_) => AlertDialog(title: Text('auth_login_failed'.tr()), content: Text('Error: $e'), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text('common_ok'.tr()))]));
+                                await showDialog(context: context, builder: (_) => AlertDialog(title: Text('auth_login_failed'.tr()), content: Text('auth_error_with_detail'.tr(namedArgs: {'e': '$e'})), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text('common_ok'.tr()))]));
                                 return;
                               }
                               if (resp.statusCode == 200) {
@@ -447,6 +468,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                                 if (token != null && token.isNotEmpty) {
                                   await api.saveToken(token);
                                 try {
+                                  await _persistLoginCredentials(prof.email, password);
                                   final st = await SettingsStorage.load();
                                   st['lastUserId'] = prof.email;
                                   st['displayName'] = prof.displayName.isNotEmpty ? prof.displayName : prof.email;
@@ -499,6 +521,11 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                                   return;
                                 }
                                 userId = typedId;
+                                try {
+                                  final st2 = await SettingsStorage.load();
+                                  st2['savedLoginEmail'] = typedId;
+                                  await SettingsStorage.save(st2);
+                                } catch (_) {}
                               }
                               await _enterOfflineMode(api, userId: userId);
                             } finally {

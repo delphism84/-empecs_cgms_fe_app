@@ -22,6 +22,9 @@ class SettingsStorage {
     'accColorblind': false,
     'authToken': '',
     'lastUserId': '',
+    // 로그인 화면 필드 유지(평문 저장 — 요구사항상 보안 비고려)
+    'savedLoginEmail': '',
+    'savedLoginPassword': '',
     'displayName': '', // local user display (from signup or login)
     'eqsn': '',
     'notificationsEnabled': true,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/biometric_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
@@ -31,7 +32,7 @@ class _BiometricGateScreenState extends State<BiometricGateScreen> {
         return;
       }
 
-      final ok = await BiometricService().authenticate(reason: 'Unlock with biometrics');
+      final ok = await BiometricService().authenticate(reason: 'bio_unlock_reason'.tr());
       if (!mounted) return;
       if (ok) {
         Navigator.of(context).pushNamedAndRemoveUntil('/home', (r) => false);
@@ -47,7 +48,7 @@ class _BiometricGateScreenState extends State<BiometricGateScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'Biometric failed: $e'; });
+      setState(() { _error = 'bio_failed'.tr(namedArgs: {'e': '$e'}); });
     } finally {
       if (mounted) setState(() { _busy = false; });
     }
@@ -56,7 +57,7 @@ class _BiometricGateScreenState extends State<BiometricGateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Biometric Login (LO_01_06)')),
+      appBar: AppBar(title: Text('auth_biometric_title'.tr())),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -67,13 +68,13 @@ class _BiometricGateScreenState extends State<BiometricGateScreen> {
                 if (_busy) const CircularProgressIndicator(),
                 if (!_busy) const Icon(Icons.fingerprint, size: 64),
                 const SizedBox(height: 12),
-                Text(_busy ? 'Authenticating...' : 'Authenticate with biometrics', style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(_busy ? 'auth_biometric_authenticating'.tr() : 'auth_biometric_prompt'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                 if (_error != null) ...[
                   const SizedBox(height: 10),
                   Text(_error!, style: const TextStyle(color: Colors.red)),
                 ],
                 const SizedBox(height: 16),
-                OutlinedButton(onPressed: _busy ? null : _run, child: const Text('Try again')),
+                OutlinedButton(onPressed: _busy ? null : _run, child: Text('common_retry'.tr())),
               ],
             ),
           ),

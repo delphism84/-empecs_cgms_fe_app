@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/qr_sn_parser.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
@@ -130,6 +132,7 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
       });
       s['registeredDevices'] = list;
       s['eqsn'] = fullSn;
+      SettingsService.stripStaleSensorStart(s);
       s['lastScannedQrRegistered'] = true;
       s['lastScannedQrFullSn'] = fullSn;
       s['lastScannedQrSerial'] = serial;
@@ -138,7 +141,7 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
       s['lastScannedQrAt'] = DateTime.now().toUtc().toIso8601String();
       await SettingsStorage.save(s);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved & Synced')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('qr_saved_synced'.tr())));
       // stack 정리를 위해 기존 QR 화면을 교체(pushReplacement)한다.
       // (pushAndRemoveUntil은 조건에 따라 이전 화면이 남아 "Sensor로 복귀"처럼 보일 수 있음)
       await Navigator.of(context).pushReplacement(
@@ -158,7 +161,7 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
   Widget build(BuildContext context) {
     final Size sz = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title ?? 'QR Sensor Scan')),
+      appBar: AppBar(title: Text(widget.title ?? 'sensor_qr_sensor_scan_title'.tr())),
       body: Column(
         children: [
           Expanded(
@@ -182,7 +185,7 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
                           foregroundColor: Colors.white,
                           side: BorderSide(color: Colors.white.withOpacity(0.9)),
                         ),
-                        child: const Text('SN'),
+                        child: Text('qr_field_sn'.tr()),
                       ),
                     ),
                     Positioned.fill(
@@ -217,7 +220,7 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Detected Result', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                  Text('qr_detected_result'.tr(), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                   const SizedBox(height: 4),
                   Text(
                     _raw.isEmpty ? '—' : _raw,
@@ -244,15 +247,15 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
                   ],
                   const SizedBox(height: 8),
                   Wrap(spacing: 6, runSpacing: 6, children: [
-                    if ((_parsed?['advName'] ?? '').isNotEmpty) _InfoCard(title: 'ADV', value: _parsed!['advName'], icon: Icons.bluetooth),
-                    if ((_parsed?['mac'] ?? '').isNotEmpty) _InfoCard(title: 'MAC', value: _parsed!['mac'], icon: Icons.router),
-                    _InfoCard(title: 'Model', value: _parsed?['model'], icon: Icons.precision_manufacturing),
-                    _InfoCard(title: 'Serial', value: _parsed != null ? (_parsed!['serial'] ?? '') : (_raw.isNotEmpty ? '—' : null), icon: Icons.confirmation_number_outlined),
+                    if ((_parsed?['advName'] ?? '').isNotEmpty) _InfoCard(title: 'qr_field_adv'.tr(), value: _parsed!['advName'], icon: Icons.bluetooth),
+                    if ((_parsed?['mac'] ?? '').isNotEmpty) _InfoCard(title: 'qr_field_mac'.tr(), value: _parsed!['mac'], icon: Icons.router),
+                    _InfoCard(title: 'qr_field_model'.tr(), value: _parsed?['model'], icon: Icons.precision_manufacturing),
+                    _InfoCard(title: 'sensor_detail_serial'.tr(), value: _parsed != null ? (_parsed!['serial'] ?? '') : (_raw.isNotEmpty ? '—' : null), icon: Icons.confirmation_number_outlined),
                   ]),
                   const SizedBox(height: 12),
                   CustomButton(
                     width: double.infinity,
-                    text: _saving ? 'SAVING...' : 'Save & Sync',
+                    text: _saving ? 'qr_saving'.tr() : 'qr_save_sync'.tr(),
                     variant: ButtonVariant.FillLoginGreen,
                     onTap: (_parsed == null || _saving) ? null : _saveDevice,
                   ),

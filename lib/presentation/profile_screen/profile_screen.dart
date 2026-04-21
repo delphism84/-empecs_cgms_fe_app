@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -11,20 +12,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text('report_profile_title'.tr())),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const CircleAvatar(radius: 40, child: Icon(Icons.person, size: 40)),
             const SizedBox(height: 12),
-            const Text('User', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text('profile_demo_name'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            const Text('user@example.com', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            Text('profile_demo_email'.tr(), style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {},
-              child: const Text('Edit Profile'),
+              child: Text('profile_edit'.tr()),
             ),
           ],
         ),

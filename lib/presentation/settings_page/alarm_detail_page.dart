@@ -41,11 +41,12 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
   @override
   void initState() {
     super.initState();
-    final a = widget.alarm;
+    final a = Map<String, dynamic>.from(widget.alarm);
+    SettingsService.normalizeAlarmMethodFields(a);
     _type = (widget.fixedType ?? (a['type'] ?? 'high')).toString();
-    _enabled = a['enabled'] == true;
-    _sound = (a['sound'] is bool) ? (a['sound'] == true) : true;
-    _vibrate = (a['vibrate'] is bool) ? (a['vibrate'] == true) : true;
+    _enabled = SettingsService.parseAlarmBool(a['enabled'], defaultValue: true);
+    _sound = SettingsService.parseAlarmBool(a['sound'], defaultValue: true);
+    _vibrate = SettingsService.parseAlarmBool(a['vibrate'], defaultValue: true);
     _overrideDnd = a['overrideDnd'] == true;
     _repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
     final dynamic thRaw = a['threshold'];

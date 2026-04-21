@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/biometric_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
@@ -13,7 +14,7 @@ class BiometricSettingsScreen extends StatefulWidget {
 class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
   bool _enabled = false;
   bool _bypass = false;
-  String _status = '';
+  String? _statusKey;
 
   @override
   void initState() {
@@ -36,25 +37,25 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
     st['biometricEnabled'] = _enabled;
     if (kDebugMode) st['biometricDebugBypass'] = _bypass;
     await SettingsStorage.save(st);
-    setState(() { _status = 'Saved'; });
+    setState(() { _statusKey = 'bio_status_saved'; });
   }
 
   Future<void> _test() async {
-    final ok = await BiometricService().authenticate(reason: 'Test biometrics');
+    final ok = await BiometricService().authenticate(reason: 'bio_test_auth'.tr());
     if (!mounted) return;
-    setState(() { _status = ok ? 'Success' : 'Failed'; });
+    setState(() { _statusKey = ok ? 'bio_status_success' : 'bio_status_failed'; });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Biometric (LO_02_06)')),
+      appBar: AppBar(title: Text('bio_settings_appbar'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SwitchListTile(
-            title: const Text('Enable biometrics'),
-            subtitle: const Text('Use fingerprint/face to login'),
+            title: Text('bio_enable_title'.tr()),
+            subtitle: Text('bio_enable_sub'.tr()),
             value: _enabled,
             onChanged: (v) async {
               setState(() { _enabled = v; });
@@ -64,8 +65,8 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
           if (kDebugMode) ...[
             const Divider(),
             SwitchListTile(
-              title: const Text('[DEBUG] Bypass biometric prompt'),
-              subtitle: const Text('For bot automation only'),
+              title: Text('bio_debug_bypass_title'.tr()),
+              subtitle: Text('bio_debug_bypass_sub'.tr()),
               value: _bypass,
               onChanged: (v) async {
                 setState(() { _bypass = v; });
@@ -77,10 +78,10 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
           ElevatedButton.icon(
             onPressed: _enabled ? _test : null,
             icon: const Icon(Icons.fingerprint),
-            label: const Text('Test authentication'),
+            label: Text('bio_test_auth'.tr()),
           ),
           const SizedBox(height: 12),
-          Text('Status: $_status'),
+          if (_statusKey != null) Text('bio_status_label'.tr(namedArgs: {'v': _statusKey!.tr()})),
         ],
       ),
     );

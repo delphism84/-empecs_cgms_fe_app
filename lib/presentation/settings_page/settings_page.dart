@@ -337,8 +337,14 @@ class _SettingsPageState extends State<SettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('settings_sn_unchanged'.tr())));
       return;
     }
-    // 1) update settings
+    // 1) update settings (+ Serial 화면 "마지막 QR" 메타가 현재 SN과 어긋나지 않게)
+    final String nowIso = DateTime.now().toUtc().toIso8601String();
+    final String up = newEqsn.toUpperCase();
     st['eqsn'] = newEqsn;
+    st['lastScannedQrFullSn'] = up;
+    st['lastScannedQrSerial'] = up;
+    st['lastScannedQrAt'] = nowIso;
+    st['lastScannedQrRegistered'] = true;
     await SettingsStorage.save(st);
     // 2) SN 변경 시 로컬 데이터 전부 초기화 (혼섞임 방지)
     try {
@@ -354,17 +360,20 @@ class _SettingsPageState extends State<SettingsPage> {
         final prefs = await SharedPreferences.getInstance();
         final String? mac = prefs.getString('cgms.last_mac');
         final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: newEqsn, bleMac: mac);
-        final String? stRemote = (eq['startAt'] as String?);
-        if (stRemote != null && stRemote.trim().isNotEmpty) {
-          startLocal = DateTime.tryParse(stRemote)?.toLocal();
+        if (SettingsService.shouldApplyResolvedEqStart(eq, newEqsn)) {
+          final String? stRemote = (eq['startAt'] as String?);
+          if (stRemote != null && stRemote.trim().isNotEmpty) {
+            startLocal = DateTime.tryParse(stRemote)?.toLocal();
+          }
+          final String? srvSn = (eq['serial'] as String?)?.trim();
+          if (srvSn != null && srvSn.isNotEmpty) resolvedEqsn = srvSn;
         }
-        final String? srvSn = (eq['serial'] as String?)?.trim();
-        if (srvSn != null && srvSn.isNotEmpty) resolvedEqsn = srvSn;
       } catch (_) {}
       startLocal ??= DateTime.now();
       try {
         final m = await SettingsStorage.load();
         m['sensorStartAt'] = startLocal.toUtc().toIso8601String();
+        m['sensorStartAtEqsn'] = resolvedEqsn;
         if (resolvedEqsn != newEqsn) {
           m['eqsn'] = resolvedEqsn;
           st['eqsn'] = resolvedEqsn;
@@ -722,7 +731,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       valueListenable: BleLogService().lines,
                                       builder: (context, lines, _) {
                                         if (lines.isEmpty) {
-                                          return const Center(child: Text('No logs'));
+                                          return Center(child: Text('settings_ble_no_logs'.tr()));
                                         }
                                         return ListView.builder(
                                           padding: const EdgeInsets.all(12),

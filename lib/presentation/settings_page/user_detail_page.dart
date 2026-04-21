@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,20 +17,20 @@ class UserDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('User')),
+      appBar: AppBar(title: Text('user_detail_appbar'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           children: [
-            _section(context, title: 'Account', children: [
+            _section(context, title: 'user_detail_account_section'.tr(), children: [
               ListTile(
                 leading: const Icon(Icons.person),
-                title: const Text('Name'),
+                title: Text('common_name'.tr()),
                 subtitle: Text(displayName.isEmpty ? '—' : displayName),
               ),
               ListTile(
                 leading: const Icon(Icons.email),
-                title: const Text('Email'),
+                title: Text('common_email'.tr()),
                 subtitle: Text(email.isEmpty ? '—' : email),
               ),
             ]),
@@ -39,21 +40,21 @@ class UserDetailPage extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.logout, size: 20),
-                label: const Text('Logout'),
+                label: Text('common_logout'.tr()),
                 onPressed: () async {
                   final ok = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: const Text('Logout'),
-                      content: const Text('Are you sure you want to log out?'),
+                      title: Text('auth_logout_confirm_title'.tr()),
+                      content: Text('auth_logout_confirm_body'.tr()),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(ctx).pop(false),
-                          child: const Text('Cancel'),
+                          child: Text('common_cancel'.tr()),
                         ),
                         FilledButton(
                           onPressed: () => Navigator.of(ctx).pop(true),
-                          child: const Text('Logout'),
+                          child: Text('common_logout'.tr()),
                         ),
                       ],
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
@@ -43,7 +44,7 @@ class _MemoModalState extends State<MemoModal> {
               const SizedBox(height: 12),
               CustomButton(
                 width: double.infinity,
-                text: 'SAVE',
+                text: 'common_save'.tr(),
                 variant: ButtonVariant.FillLoginGreen,
                 onTap: () {
                   _mmLog('save pressed payload=${payload ?? const {}}');
@@ -78,13 +79,20 @@ class _MemoModalContentState extends State<MemoModalContent> {
   // 차트와 동일 아이콘 매핑
   // order: Blood glucose, Exercise, Insulin, Memo, Meal, Medication
   static const List<_EventItem> _items = <_EventItem>[
-    _EventItem(key: 'Blood glucose', label: 'Blood glucose', icon: Icons.water_drop),
-    _EventItem(key: 'Exercise', label: 'Exercise', icon: Icons.directions_run),
-    _EventItem(key: 'Insulin', label: 'Insulin', icon: Icons.vaccines),
-    _EventItem(key: 'Memo', label: 'Memo', icon: Icons.sticky_note_2_outlined),
-    _EventItem(key: 'Meal', label: 'Meal', icon: Icons.restaurant),
-    _EventItem(key: 'Medication', label: 'Medication', icon: Icons.medication),
+    _EventItem(key: 'Blood glucose', labelKey: 'memo_event_type_blood_glucose', icon: Icons.water_drop),
+    _EventItem(key: 'Exercise', labelKey: 'memo_event_type_exercise', icon: Icons.directions_run),
+    _EventItem(key: 'Insulin', labelKey: 'memo_event_type_insulin', icon: Icons.vaccines),
+    _EventItem(key: 'Memo', labelKey: 'memo_event_type_memo', icon: Icons.sticky_note_2_outlined),
+    _EventItem(key: 'Meal', labelKey: 'memo_event_type_meal', icon: Icons.restaurant),
+    _EventItem(key: 'Medication', labelKey: 'memo_event_type_medication', icon: Icons.medication),
   ];
+
+  String _displayTypeLabel(String k) {
+    for (final _EventItem e in _items) {
+      if (e.key == k) return e.labelKey.tr();
+    }
+    return k;
+  }
 
   Color _badgeColorFor(String key) {
     switch (key) {
@@ -227,9 +235,9 @@ class _MemoModalContentState extends State<MemoModalContent> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Event Editor', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text('memo_event_editor'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               IconButton(
-                tooltip: 'Close',
+                tooltip: 'memo_close_tooltip'.tr(),
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).pop(null),
               ),
@@ -252,7 +260,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                '$type',
+                _displayTypeLabel(type),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w600,
@@ -267,7 +275,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
             focusNode: noteFocus,
             style: const TextStyle(fontSize: 13), // 한 단계 작게
             decoration: InputDecoration(
-              labelText: 'Content',
+              labelText: 'memo_content_label'.tr(),
               border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
               focusedBorder: OutlineInputBorder(
                 borderRadius: const BorderRadius.all(Radius.circular(5)),
@@ -290,16 +298,16 @@ class _MemoModalContentState extends State<MemoModalContent> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.photo_camera, size: 18, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('Food shot', style: TextStyle(fontWeight: FontWeight.w700)),
+                      const Icon(Icons.photo_camera, size: 18, color: Colors.black54),
+                      const SizedBox(width: 8),
+                      Text('memo_food_shot'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                     ],
                   ),
                   const SizedBox(height: 10),
                   if (_foodShotAsset.trim().isEmpty)
-                    const Text('No photo attached', style: TextStyle(color: Colors.black54))
+                    Text('memo_no_photo'.tr(), style: const TextStyle(color: Colors.black54))
                   else
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
@@ -316,7 +324,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
                           child: OutlinedButton.icon(
                             onPressed: _attachSampleFoodShot,
                             icon: const Icon(Icons.image, size: 18),
-                            label: const Text('ATTACH SAMPLE'),
+                            label: Text('memo_attach_sample'.tr()),
                           ),
                         ),
                       if (kDebugMode) const SizedBox(width: 8),
@@ -324,7 +332,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
                         child: OutlinedButton.icon(
                           onPressed: _foodShotAsset.trim().isEmpty ? null : _clearFoodShot,
                           icon: const Icon(Icons.delete_outline, size: 18),
-                          label: const Text('CLEAR'),
+                          label: Text('memo_clear'.tr()),
                         ),
                       ),
                     ],
@@ -349,7 +357,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Time', style: TextStyle(fontWeight: FontWeight.w600)),
+                    Text('memo_time'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
                     Text('${when.year}-${when.month}-${when.day} ${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}'),
                   ],
                 ),
@@ -359,7 +367,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
                     child: OutlinedButton.icon(
                       onPressed: _pickDate,
                       icon: const Icon(Icons.calendar_month, size: 18),
-                      label: const Text('DATE'),
+                      label: Text('memo_pick_date'.tr()),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -367,7 +375,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
                     child: OutlinedButton.icon(
                       onPressed: _pickTime,
                       icon: const Icon(Icons.schedule, size: 18),
-                      label: const Text('TIME'),
+                      label: Text('memo_pick_time'.tr()),
                     ),
                   ),
                 ]),
@@ -377,7 +385,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
                   child: TextButton.icon(
                     onPressed: _setNow,
                     icon: const Icon(Icons.my_location, size: 18),
-                    label: const Text('현재'),
+                    label: Text('memo_now_button'.tr()),
                   ),
                 ),
               ],
@@ -426,7 +434,7 @@ class _MemoModalContentState extends State<MemoModalContent> {
               child: Icon(e.icon, color: Colors.white),
             ),
             const SizedBox(height: 6),
-            Text(e.label, style: const TextStyle(fontSize: 12)),
+            Text(e.labelKey.tr(), style: const TextStyle(fontSize: 12)),
           ],
         ),
       ),
@@ -435,9 +443,9 @@ class _MemoModalContentState extends State<MemoModalContent> {
 }
 
 class _EventItem {
-  const _EventItem({required this.key, required this.label, required this.icon});
+  const _EventItem({required this.key, required this.labelKey, required this.icon});
   final String key;
-  final String label;
+  final String labelKey;
   final IconData icon;
 }
 

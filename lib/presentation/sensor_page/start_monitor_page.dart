@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,8 +79,8 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
         _allFailed = true;
       });
       _showFailureDialog(
-        title: 'BLE Connection Failed',
-        message: 'QR에 MAC 주소가 없습니다.\n\nQR을 다시 스캔해 주세요.',
+        title: 'start_monitor_fail_title'.tr(),
+        message: 'start_monitor_fail_no_mac'.tr(),
       );
       return;
     }
@@ -91,7 +93,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
       setState(() {
         _statuses.add(_DeviceStatus(
           id: d.id,
-          name: d.name.isEmpty ? 'Device' : d.name,
+          name: d.name.isEmpty ? 'common_device'.tr() : d.name,
           rssi: d.rssi,
           state: _DeviceState.pending,
         ));
@@ -105,9 +107,8 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
     if (devices.isEmpty) {
       setState(() => _allFailed = true);
       _showFailureDialog(
-        title: 'BLE Connection Failed',
-        message:
-            'No BLE devices were found.\n\nPlease ensure Bluetooth is on and the sensor is nearby, then try again.',
+        title: 'start_monitor_fail_title'.tr(),
+        message: 'start_monitor_fail_no_ble'.tr(),
       );
       return;
     }
@@ -134,9 +135,8 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
         _allFailed = true;
       });
       _showFailureDialog(
-        title: 'BLE Connection Failed',
-        message:
-            '스캔된 기기 중 QR MAC과 일치하는 센서가 없습니다.\n\n블루투스를 켜고 센서를 가까이 둔 뒤 다시 시도하세요.',
+        title: 'start_monitor_fail_title'.tr(),
+        message: 'start_monitor_fail_no_match'.tr(),
       );
       return;
     }
@@ -200,9 +200,8 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
         _allFailed = true;
       });
       _showFailureDialog(
-        title: 'BLE Connection Failed',
-        message:
-            'MAC이 일치하는 센서에 연결하지 못했습니다.\n\n센서 전원·거리를 확인한 뒤 다시 시도하세요.',
+        title: 'start_monitor_fail_title'.tr(),
+        message: 'start_monitor_fail_connect'.tr(),
       );
       return;
     }
@@ -236,6 +235,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
       final st = await SettingsStorage.load();
       if (expectedSerial.isNotEmpty) {
         st['eqsn'] = expectedSerial;
+        SettingsService.stripStaleSensorStart(st);
         await SettingsStorage.save(st);
       }
     } catch (_) {}
@@ -247,11 +247,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
     await BleService().startWarmupAndNavigate();
   }
 
-  void _showFailureDialog({
-    String title = 'BLE Connection Failed',
-    String message =
-        'No sensor matching the QR MAC was found.\n\nPlease ensure Bluetooth is on and the sensor is nearby, then try again.',
-  }) {
+  void _showFailureDialog({required String title, required String message}) {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -261,7 +257,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
+            child: Text('common_ok'.tr()),
           ),
         ],
       ),
@@ -292,7 +288,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
     final bottomHeight = sz.height * 0.30;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Start the Monitor')),
+      appBar: AppBar(title: Text('start_monitor_appbar'.tr())),
       body: Column(
         children: [
           Expanded(
@@ -328,12 +324,12 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
                     ),
                     Text(
                       _connecting
-                          ? 'Connecting to MAC-matched sensor...'
+                          ? 'start_monitor_connecting'.tr()
                           : _allFailed
-                              ? 'Search complete'
+                              ? 'start_monitor_search_complete'.tr()
                               : _scanning
-                                  ? 'Searching...'
-                                  : 'Devices',
+                                  ? 'start_monitor_searching'.tr()
+                                  : 'start_monitor_devices_label'.tr(),
                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   ],
@@ -352,13 +348,18 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  _scanning ? 'Searching BLE devices...' : 'Devices ($_currentIndex / $_totalCount)',
+                  _scanning
+                      ? 'start_monitor_searching_ble'.tr()
+                      : 'start_monitor_devices_header'.tr(namedArgs: {
+                          'cur': '$_currentIndex',
+                          'total': '$_totalCount',
+                        }),
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
                 const SizedBox(height: 8),
                 Expanded(
                   child: _statuses.isEmpty && !_scanning
-                      ? const Center(child: Text('No devices found'))
+                      ? Center(child: Text('start_monitor_no_devices'.tr()))
                       : ListView.builder(
                           itemCount: _statuses.length,
                           itemBuilder: (_, i) {
@@ -385,14 +386,14 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'DEVICE [${s.id}]',
+                                      'start_monitor_device_row'.tr(namedArgs: {'id': s.id}),
                                       style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
                                     ),
                                   ),
                                   Text(
                                     s.state == _DeviceState.matched
                                         ? (s.sn ?? 'OK')
-                                        : 'SKIP',
+                                        : 'start_monitor_skip'.tr(),
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -408,7 +409,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
                 const SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: _onCancel,
-                  child: const Text('Cancel'),
+                  child: Text('common_cancel'.tr()),
                 ),
               ],
             ),

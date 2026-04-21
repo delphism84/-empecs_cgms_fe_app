@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
 /// AR_01_01: 무음모드 설정(모든 알람 무음)
@@ -41,7 +42,7 @@ class _Ar0101MuteAllScreenState extends State<Ar0101MuteAllScreen> {
     final Color sectionBg = isDark ? const Color(0xFF1D1D1D) : Colors.white;
     final Color sectionBorder = isDark ? Colors.white24 : Colors.black12;
     return Scaffold(
-      appBar: AppBar(title: const Text('AR_01_01 · Mute all alarms')),
+      appBar: AppBar(title: Text('alarm_mute_all_title'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -57,12 +58,12 @@ class _Ar0101MuteAllScreenState extends State<Ar0101MuteAllScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Mute all alarms',
+                    'alarm_mute_all_heading'.tr(),
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : Colors.black87),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'All alerts will be delivered silently. Sound, vibration, and override-DND will be disabled.',
+                    'alarm_mute_all_body'.tr(),
                     style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
                   ),
                   const SizedBox(height: 14),
@@ -70,7 +71,7 @@ class _Ar0101MuteAllScreenState extends State<Ar0101MuteAllScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Mute all alarms',
+                          'alarm_mute_all_heading'.tr(),
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
                         ),
                       ),

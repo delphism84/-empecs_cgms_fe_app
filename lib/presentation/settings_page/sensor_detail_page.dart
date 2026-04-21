@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/presentation/report/_report_widgets.dart';
 
@@ -59,22 +60,22 @@ class _SensorDetailPageState extends State<SensorDetailPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           children: [
             ReportCard(
-              title: 'Sensor',
-              subtitle: 'Basic information',
+              title: 'sensor_detail_title'.tr(),
+              subtitle: 'sensor_detail_basic_sub'.tr(),
               child: Column(children: [
-                _textField(label: 'Name', controller: _name, icon: Icons.memory),
+                _textField(label: 'common_name'.tr(), controller: _name, icon: Icons.memory),
                 const SizedBox(height: 10),
-                _textField(label: 'Serial', controller: _serial, icon: Icons.tag),
+                _textField(label: 'sensor_detail_serial'.tr(), controller: _serial, icon: Icons.tag),
               ]),
             ),
             const SizedBox(height: 12),
             ReportCard(
-              title: 'Calibration',
-              subtitle: 'Offset and Scale',
+              title: 'sensor_detail_calibration'.tr(),
+              subtitle: 'sensor_detail_offset_scale'.tr(),
               child: Column(children: [
-                _textField(label: 'Offset', controller: _offset, icon: Icons.tune, keyboardType: TextInputType.number),
+                _textField(label: 'sensor_detail_offset'.tr(), controller: _offset, icon: Icons.tune, keyboardType: TextInputType.number),
                 const SizedBox(height: 10),
-                _textField(label: 'Scale', controller: _scale, icon: Icons.straighten, keyboardType: TextInputType.number),
+                _textField(label: 'sensor_detail_scale'.tr(), controller: _scale, icon: Icons.straighten, keyboardType: TextInputType.number),
               ]),
             ),
             const SizedBox(height: 12),
@@ -94,7 +95,7 @@ class _SensorDetailPageState extends State<SensorDetailPage> {
               child: ElevatedButton.icon(
                 onPressed: _save,
                 icon: const Icon(Icons.save),
-                label: const Text('Save'),
+                label: Text('common_save'.tr()),
               ),
             ),
           ],

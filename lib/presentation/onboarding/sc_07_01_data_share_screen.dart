@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/color_constant.dart';
+import 'package:helpcare/core/utils/glucose_local_repo.dart';
+import 'package:helpcare/core/utils/api_client.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:easy_localization/easy_localization.dart';
 
 class Sc0701DataShareScreen extends StatefulWidget {
   const Sc0701DataShareScreen({super.key});
@@ -94,9 +98,59 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
 
   String _fmtDate(DateTime d) => '${d.year.toString().padLeft(4, '0')}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}';
 
+  /// 로컬 자정~종료일 23:59:59.999 (DB time_ms와 동일 기준으로 하루 전체 포함)
+  (DateTime, DateTime) _rangeToLocalBounds(DateTimeRange r) {
+    final DateTime start = DateTime(r.start.year, r.start.month, r.start.day);
+    final DateTime end = DateTime(r.end.year, r.end.month, r.end.day, 23, 59, 59, 999);
+    return (start, end);
+  }
+
+  Future<List<Map<String, dynamic>>> _loadGlucoseRowsForRange(DateTimeRange r) async {
+    final (DateTime from, DateTime to) = _rangeToLocalBounds(r);
+    final Map<String, dynamic> st = await SettingsStorage.load();
+    final String eqsn = (st['eqsn'] as String? ?? '').trim();
+    final String userId = (st['lastUserId'] as String? ?? '').trim();
+    List<Map<String, dynamic>> rows = await GlucoseLocalRepo().range(
+      from: from,
+      to: to,
+      limit: 200000,
+      eqsn: eqsn.isEmpty ? null : eqsn,
+      userId: userId,
+    );
+    // Ingest/BLE가 eqsn을 'LOCAL'·NULL·빈 문자열로 남기고 설정만 실제 SN인 경우 1차 조회가 0건이 됨.
+    if (rows.isEmpty && eqsn.isNotEmpty) {
+      final List<Map<String, dynamic>> loose = await GlucoseLocalRepo().range(
+        from: from,
+        to: to,
+        limit: 200000,
+        eqsn: null,
+        userId: userId,
+      );
+      if (loose.isNotEmpty) rows = loose;
+    }
+    return rows;
+  }
+
+  Map<String, int> _distributionCounts(Iterable<Map<String, dynamic>> rows) {
+    int veryLow = 0, low = 0, inRange = 0, high = 0;
+    for (final Map<String, dynamic> row in rows) {
+      final double v = ((row['value'] as num?) ?? 0).toDouble();
+      if (v < 54) {
+        veryLow++;
+      } else if (v < 70) {
+        low++;
+      } else if (v <= 180) {
+        inRange++;
+      } else {
+        high++;
+      }
+    }
+    return {'veryLow': veryLow, 'low': low, 'inRange': inRange, 'high': high};
+  }
+
   String _rangeLabel(DateTimeRange r) {
     final int days = r.end.difference(r.start).inDays + 1;
-    return '${_fmtDate(r.start)} ~ ${_fmtDate(r.end)} ($days days)';
+    return '${_fmtDate(r.start)} ~ ${_fmtDate(r.end)} (${'sensor_share_days_count'.tr(namedArgs: {'n': '$days'})})';
   }
 
   void _applyPreset(String p) {
@@ -121,7 +175,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
       firstDate: DateTime(now.year - 1, 1, 1),
       lastDate: DateTime(now.year + 1, 12, 31),
       initialDateRange: init,
-      helpText: 'Select sharing date range',
+      helpText: 'sensor_share_date_picker_help'.tr(),
     );
     if (picked == null) return;
     setState(() {
@@ -136,7 +190,9 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
   Future<void> _saveEvidence({required bool shared}) async {
     final r = customRange ?? _default7d();
     final int days = r.end.difference(r.start).inDays + 1;
-    final note = days == 1 ? 'Sharing 1 day only' : 'Sharing $days days';
+    final String note = days == 1
+        ? 'sensor_share_evidence_1day'.tr()
+        : 'sensor_share_evidence_ndays'.tr(namedArgs: {'n': '$days'});
     final st = await SettingsStorage.load();
 
     // legacy (호환)
@@ -168,69 +224,185 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
   Future<void> _share() async {
     if (!enable) return;
     if (customRange == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a date range.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_share_select_range_snack'.tr())));
       return;
     }
     if (!shareGlucoseSummary && !shareGlucoseDistribution && !shareGlucoseGraph && !shareUserProfile) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select at least one item to share.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_share_select_item_snack'.tr())));
       return;
     }
     await _saveEvidence(shared: true);
 
-    // "저장된 데이터가 어디로 가는지" 최소한의 근거를 남기기 위해 로컬 파일(placeholder)을 생성한다.
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final ext = exportFormat.toLowerCase();
-      final ts = DateTime.now().toUtc().toIso8601String().replaceAll(':', '').replaceAll('.', '');
-      final file = File('${dir.path}/cgms-share-$ts.$ext');
-      final r = customRange ?? _default7d();
+      final Directory dir = await getApplicationDocumentsDirectory();
+      final String ext = exportFormat.toLowerCase();
+      final String ts = DateTime.now().toUtc().toIso8601String().replaceAll(':', '').replaceAll('.', '');
+      final File file = File('${dir.path}/cgms-share-$ts.$ext');
+      final DateTimeRange r = customRange ?? _default7d();
+      final bool wantGlucose = shareGlucoseSummary || shareGlucoseDistribution || shareGlucoseGraph;
+      final (DateTime gFrom, DateTime gTo) = _rangeToLocalBounds(r);
+      if (wantGlucose) {
+        try {
+          await DataService().fetchGlucose(from: gFrom, to: gTo, limit: 200000, skipLocalCache: true);
+        } catch (_) {}
+      }
+      final List<Map<String, dynamic>> glucoseRows = wantGlucose ? await _loadGlucoseRowsForRange(r) : <Map<String, dynamic>>[];
+
       if (exportFormat.toUpperCase() == 'PDF') {
-        final doc = pw.Document();
+        final Map<String, dynamic> st0 = await SettingsStorage.load();
+        final String profileName = (st0['displayName'] as String? ?? '').trim();
+        final String profileId = (st0['lastUserId'] as String? ?? '').trim();
+
+        final pw.Document doc = pw.Document();
         doc.addPage(
-          pw.Page(
-            build: (ctx) => pw.Padding(
-              padding: const pw.EdgeInsets.all(28),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('CGMS Data Share', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-                  pw.SizedBox(height: 14),
-                  pw.Text('Range: ${_rangeLabel(r)}'),
-                  pw.SizedBox(height: 10),
-                  pw.Text('Glucose summary: $shareGlucoseSummary'),
-                  pw.Text('Distribution: $shareGlucoseDistribution'),
-                  pw.Text('Graph: $shareGlucoseGraph'),
-                  pw.Text('User profile: $shareUserProfile'),
-                  pw.SizedBox(height: 24),
-                  pw.Text('Generated (UTC): ${DateTime.now().toUtc().toIso8601String()}', style: const pw.TextStyle(fontSize: 9)),
-                ],
-              ),
-            ),
+          pw.MultiPage(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.all(28),
+            build: (pw.Context ctx) {
+              final List<pw.Widget> children = <pw.Widget>[
+                pw.Text('sensor_share_pdf_title'.tr(), style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 10),
+                pw.Text('${'sensor_share_date_range'.tr()}: ${_rangeLabel(r)}'),
+                pw.SizedBox(height: 8),
+                pw.Text(
+                  '${'sensor_share_glucose_summary'.tr()}: $shareGlucoseSummary · ${'sensor_share_glucose_dist'.tr()}: $shareGlucoseDistribution · '
+                  '${'sensor_share_glucose_graph'.tr()}: $shareGlucoseGraph · ${'sensor_share_user_profile'.tr()}: $shareUserProfile',
+                  style: const pw.TextStyle(fontSize: 9),
+                ),
+                pw.SizedBox(height: 12),
+              ];
+
+              if (shareUserProfile) {
+                children.add(pw.Text('${'sensor_share_user_profile'.tr()}:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)));
+                if (profileName.isNotEmpty) {
+                  children.add(pw.Text('${'common_name'.tr()}: $profileName'));
+                }
+                if (profileId.isNotEmpty) {
+                  children.add(pw.Text('${'common_email'.tr()}: $profileId'));
+                }
+                children.add(pw.SizedBox(height: 12));
+              }
+
+              if (wantGlucose) {
+                if (glucoseRows.isEmpty) {
+                  children.add(pw.Text('sensor_share_no_glucose_in_range'.tr(), style: pw.TextStyle(color: PdfColors.grey700)));
+                } else {
+                  if (shareGlucoseSummary) {
+                    double sum = 0;
+                    double minV = double.infinity;
+                    double maxV = -double.infinity;
+                    for (final Map<String, dynamic> row in glucoseRows) {
+                      final double v = ((row['value'] as num?) ?? 0).toDouble();
+                      sum += v;
+                      if (v < minV) minV = v;
+                      if (v > maxV) maxV = v;
+                    }
+                    final double avg = sum / glucoseRows.length;
+                    children.add(pw.Text(
+                      'sensor_share_points_count'.tr(namedArgs: {'n': '${glucoseRows.length}'}),
+                    ));
+                    children.add(pw.Text(
+                      'sensor_share_summary_stats'.tr(namedArgs: {
+                        'avg': avg.toStringAsFixed(1),
+                        'min': minV.toStringAsFixed(1),
+                        'max': maxV.toStringAsFixed(1),
+                      }),
+                    ));
+                    children.add(pw.SizedBox(height: 8));
+                  }
+                  if (shareGlucoseDistribution) {
+                    final Map<String, int> d = _distributionCounts(glucoseRows);
+                    children.add(pw.Text('sensor_share_distribution'.tr(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold)));
+                    children.add(pw.Text('<54: ${d['veryLow']} · 54–69: ${d['low']} · 70–180: ${d['inRange']} · >180: ${d['high']}'));
+                    children.add(pw.SizedBox(height: 8));
+                  }
+                  if (shareGlucoseGraph || shareGlucoseSummary || shareGlucoseDistribution) {
+                    const int maxRows = 80;
+                    final int n = glucoseRows.length > maxRows ? maxRows : glucoseRows.length;
+                    final List<List<String>> data = <List<String>>[];
+                    for (int i = 0; i < n; i++) {
+                      final Map<String, dynamic> row = glucoseRows[i];
+                      final int ms = (row['time_ms'] as int?) ?? 0;
+                      final String iso = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toIso8601String();
+                      final String v = ((row['value'] as num?) ?? 0).toString();
+                      final Object? tr = row['trid'];
+                      data.add(<String>[iso, v, '$tr']);
+                    }
+                    children.add(pw.Text('sensor_share_section_glucose'.tr(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold)));
+                    children.add(
+                      pw.Table.fromTextArray(
+                        headers: <String>['UTC ISO', 'mg/dL', 'trid'],
+                        data: data,
+                        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+                        cellStyle: const pw.TextStyle(fontSize: 8),
+                        cellAlignment: pw.Alignment.centerLeft,
+                      ),
+                    );
+                    if (glucoseRows.length > maxRows) {
+                      children.add(pw.SizedBox(height: 6));
+                      children.add(pw.Text(
+                        'sensor_share_truncated_note'.tr(namedArgs: {'n': '$maxRows'}),
+                        style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+                      ));
+                    }
+                  }
+                }
+              }
+
+              children.add(pw.SizedBox(height: 16));
+              children.add(pw.Text(
+                'Generated (UTC): ${DateTime.now().toUtc().toIso8601String()}',
+                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+              ));
+              return children;
+            },
           ),
         );
         await file.writeAsBytes(await doc.save());
       } else {
-        await file.writeAsString([
-          'CGMS Data Share (SC_07_01)',
-          'format=$exportFormat',
-          'range=${_rangeLabel(r)}',
-          'items: summary=$shareGlucoseSummary distribution=$shareGlucoseDistribution graph=$shareGlucoseGraph profile=$shareUserProfile',
-          'method: Android share sheet',
-          'generatedAt=${DateTime.now().toUtc().toIso8601String()}',
-        ].join('\n'));
+        final StringBuffer buf = StringBuffer();
+        buf.writeln('# CGMS Data Share (SC_07_01)');
+        buf.writeln('# range=${_rangeLabel(r)}');
+        buf.writeln('# generatedAt=${DateTime.now().toUtc().toIso8601String()}');
+        if (shareUserProfile) {
+          final Map<String, dynamic> st = await SettingsStorage.load();
+          buf.writeln('# profile.displayName=${st['displayName']}');
+          buf.writeln('# profile.userId=${st['lastUserId']}');
+        }
+        if (wantGlucose) {
+          buf.writeln('time_utc_iso,value_mg_dl,trid');
+          for (final Map<String, dynamic> row in glucoseRows) {
+            final int ms = (row['time_ms'] as int?) ?? 0;
+            final String iso = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toIso8601String();
+            final String v = ((row['value'] as num?) ?? 0).toString();
+            final Object? tr = row['trid'];
+            buf.writeln('$iso,$v,$tr');
+          }
+          if (glucoseRows.isEmpty) {
+            buf.writeln('# sensor_share_no_glucose_in_range');
+          }
+        }
+        await file.writeAsString(buf.toString());
       }
-      final st = await SettingsStorage.load();
+      final Map<String, dynamic> st = await SettingsStorage.load();
       st['sc0701LastFilePath'] = file.path;
       await SettingsStorage.save(st);
-      await Share.shareXFiles([XFile(file.path)], text: 'CGMS Data Share - ${_rangeLabel(r)}');
+      await Share.shareXFiles(
+        <XFile>[XFile(file.path)],
+        text: '${'sensor_share_pdf_title'.tr()} - ${_rangeLabel(r)}',
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Shared via Android share ($exportFormat)')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('sensor_share_done_snack'.tr(namedArgs: {'format': exportFormat}))),
+        );
       }
       return;
     } catch (_) {}
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Prepared share ($exportFormat)')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('sensor_share_prepared_snack'.tr(namedArgs: {'format': exportFormat}))),
+      );
     }
   }
 
@@ -239,33 +411,33 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
     final r = customRange ?? _default7d();
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_07_01 · Data Share')),
+      appBar: AppBar(title: Text('sensor_share_appbar'.tr())),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Sharing period and items. Share opens Android system share sheet.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              Text(
+                'sensor_share_subtitle'.tr(),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 12),
               _panel(
-                title: 'Basic',
+                title: 'sensor_share_basic'.tr(),
                 child: Column(
                   children: [
                     _rowSwitch(
-                      label: 'Enable sharing',
+                      label: 'sensor_share_enable'.tr(),
                       value: enable,
                       onChanged: (v) => setState(() => enable = v),
                     ),
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Expanded(child: _presetBtn('7D')),
+                        Expanded(child: _presetBtn('7D', label: 'sensor_share_preset_7d'.tr())),
                         const SizedBox(width: 8),
-                        Expanded(child: _presetBtn('Custom', onTap: enable ? _pickRange : null)),
+                        Expanded(child: _presetBtn('Custom', label: 'sensor_preset_custom'.tr(), onTap: enable ? _pickRange : null)),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -290,11 +462,11 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                 ),
               ),
               _panel(
-                title: 'Sharing items',
+                title: 'sensor_share_items'.tr(),
                 child: Column(
                   children: [
                     _rowSwitch(
-                      label: 'Glucose data',
+                      label: 'sensor_share_glucose_data'.tr(),
                       value: shareGlucoseSummary || shareGlucoseDistribution || shareGlucoseGraph,
                       onChanged: enable
                           ? (v) => setState(() {
@@ -305,7 +477,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                           : null,
                     ),
                     _rowSwitch(
-                      label: 'User profile',
+                      label: 'sensor_share_user_profile'.tr(),
                       value: shareUserProfile,
                       onChanged: enable ? (v) => setState(() => shareUserProfile = v) : null,
                     ),
@@ -313,7 +485,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                 ),
               ),
               _panel(
-                title: 'Export format',
+                title: 'sensor_share_export_group'.tr(),
                 child: Row(
                   children: [
                     Expanded(child: _formatBtn('PDF')),
@@ -334,7 +506,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('SHARE', style: TextStyle(fontWeight: FontWeight.w800)),
+                      child: Text('sensor_share_upper_share'.tr(), style: const TextStyle(fontWeight: FontWeight.w800)),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -353,7 +525,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                           side: BorderSide(color: ColorConstant.baseColor, width: 1),
                         ),
                       ),
-                      child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.w800)),
+                      child: Text('sensor_save_upper'.tr(), style: const TextStyle(fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ],
@@ -424,7 +596,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
     );
   }
 
-  Widget _presetBtn(String p, {VoidCallback? onTap}) {
+  Widget _presetBtn(String p, {String? label, VoidCallback? onTap}) {
     final selected = preset == p;
     final VoidCallback? handler = onTap ?? (enable ? () => _applyPreset(p) : null);
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
@@ -448,7 +620,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
         ),
         alignment: Alignment.center,
         child: Text(
-          p,
+          label ?? p,
           style: TextStyle(
             color: selected ? selectedFg : unselectedFg,
             fontWeight: FontWeight.w900,

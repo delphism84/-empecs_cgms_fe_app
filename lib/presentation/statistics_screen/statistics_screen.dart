@@ -342,7 +342,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                             right: 19,
                                           ),
                                           child: Text(
-                                            "Measured",
+                                            'stats_demo_measured'.tr(),
                                             overflow: TextOverflow.ellipsis,
                                             textAlign: TextAlign.start,
                                             style: TextStyle(
@@ -490,7 +490,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                             right: 19,
                                           ),
                                           child: Text(
-                                            "Alarm",
+                                            'stats_demo_alarm'.tr(),
                                             overflow: TextOverflow.ellipsis,
                                             textAlign: TextAlign.start,
                                             style: TextStyle(
@@ -551,7 +551,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Cases Overview",
+                                    'stats_demo_cases_overview'.tr(),
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.start,
                                     style: TextStyle(

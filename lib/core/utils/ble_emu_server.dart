@@ -37,6 +37,8 @@ class BleEmuServer {
   static Future<void> maybeStart({int? bindPort}) async {
     // QA 자동화는 debug/profile에서 모두 필요. release에서만 비활성.
     if (kReleaseMode) return;
+    // Web: dart:io HttpServer / InternetAddress 미지원
+    if (kIsWeb) return;
     if (_server != null) return;
     final int base = bindPort ?? port;
     // 에뮬레이터/호스트 환경 차이 대응:

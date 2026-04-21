@@ -169,6 +169,14 @@ class NotificationService {
       return;
     }
     if (p.startsWith('alarm:')) {
+      // AR_01_01: 알람 전체 무음 — 실제 노티에도 반영(엔진과 동일 정책)
+      try {
+        final st = await SettingsStorage.load();
+        if (st['alarmsMuteAll'] == true) {
+          sound = false;
+          vibrate = false;
+        }
+      } catch (_) {}
       // Ensure channel/method changes (sound/vibrate) apply immediately
       // instead of inheriting previous post state for the same notification id.
       try {

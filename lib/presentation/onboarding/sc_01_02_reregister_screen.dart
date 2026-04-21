@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
 class Sc0102ReregisterScreen extends StatefulWidget {
@@ -40,19 +41,19 @@ class _Sc0102ReregisterScreenState extends State<Sc0102ReregisterScreen> {
     final String sn = (_last?['sn'] ?? '').toString();
     final String model = (_last?['model'] ?? '').toString();
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_02 · Sensor re-register')),
+      appBar: AppBar(title: Text('sc0102_appbar'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text(
-              'Unexpected logout detected.',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            Text(
+              'sc0102_logout_title'.tr(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Please re-connect your sensor by rescanning.',
-              style: TextStyle(fontSize: 14),
+            Text(
+              'sc0102_rescan_hint'.tr(),
+              style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
             Card(
@@ -61,10 +62,13 @@ class _Sc0102ReregisterScreenState extends State<Sc0102ReregisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Registered sensors: $_count', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text('sc0102_registered_count'.tr(namedArgs: {'n': '$_count'}), style: const TextStyle(fontWeight: FontWeight.w700)),
                     if (sn.isNotEmpty || model.isNotEmpty) ...[
                       const SizedBox(height: 8),
-                      Text('Last sensor: ${model.isEmpty ? '-' : model} / ${sn.isEmpty ? '-' : sn}'),
+                      Text('sc0102_last_sensor'.tr(namedArgs: {
+                        'model': model.isEmpty ? '-' : model,
+                        'sn': sn.isEmpty ? '-' : sn,
+                      })),
                     ],
                   ],
                 ),
@@ -74,12 +78,12 @@ class _Sc0102ReregisterScreenState extends State<Sc0102ReregisterScreen> {
             ElevatedButton.icon(
               onPressed: () => Navigator.of(context).pushNamed('/sensor'),
               icon: const Icon(Icons.bluetooth_searching),
-              label: const Text('Scan & Connect'),
+              label: Text('sensor_menu_scan_connect'.tr()),
             ),
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: _load,
-              child: const Text('Refresh'),
+              child: Text('common_refresh'.tr()),
             ),
           ],
         ),

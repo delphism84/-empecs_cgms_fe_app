@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
@@ -239,7 +240,7 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _closeToMainChart,
-          tooltip: 'Close',
+          tooltip: 'common_close'.tr(),
         ),
         title: Text(
           _fmtRange(),
@@ -253,7 +254,7 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Sensor SN: ${widget.eqsn}',
+                'pd_chart_sensor_sn'.tr(namedArgs: {'sn': widget.eqsn}),
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
@@ -262,7 +263,7 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
               ),
               const SizedBox(height: 4),
               Text(
-                'Unit: $_unit',
+                'pd_chart_unit_label'.tr(namedArgs: {'unit': _unit}),
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? Colors.white70 : Colors.black54,
@@ -272,11 +273,10 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
               if (_loading)
                 const Expanded(child: Center(child: CircularProgressIndicator()))
               else if (_wearDays.isEmpty)
-                const Expanded(
+                Expanded(
                   child: Center(
                     child: Text(
-                      'No day range for this sensor.\n'
-                      'Use Refresh / download on the main screen, then try again.',
+                      'pd_chart_no_day_range'.tr(),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.black54, height: 1.35),
                     ),
@@ -291,7 +291,7 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
                       Row(
                         children: [
                           Text(
-                            'Glucose Trending',
+                            'pd_chart_glucose_trending'.tr(),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -319,8 +319,8 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
                               return Center(
                                 child: Text(
                                   _selectedDayIndices.isEmpty
-                                      ? 'Select one or more dates below.'
-                                      : 'No data for the selected day(s).',
+                                      ? 'pd_chart_select_dates'.tr()
+                                      : 'pd_chart_no_data_days'.tr(),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
                                 ),
@@ -451,7 +451,7 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Select two or more dates to compare.',
+                        'pd_chart_compare_hint'.tr(),
                         style: TextStyle(
                           fontSize: 11,
                           height: 1.2,
@@ -474,7 +474,7 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
                           GestureDetector(
                             onTap: () => _setSelectAll(!_allSelected),
                             child: Text(
-                              'Select All',
+                              'common_select_all'.tr(),
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 12,
@@ -484,7 +484,9 @@ class _PdPreviousPeriodChartScreenState extends State<PdPreviousPeriodChartScree
                           ),
                           const Spacer(),
                           Text(
-                            '${_daysBetweenInclusive(_wearDays.first, _wearDays.last)} days',
+                            'pd_chart_days_count'.tr(namedArgs: {
+                              'n': '${_daysBetweenInclusive(_wearDays.first, _wearDays.last)}',
+                            }),
                             style: TextStyle(
                               fontSize: 11,
                               color: isDark ? Colors.white54 : Colors.black45,

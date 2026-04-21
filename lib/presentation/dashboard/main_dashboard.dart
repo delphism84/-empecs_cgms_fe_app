@@ -44,8 +44,8 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   double _currentGlucose = 0;
   int _simulated = 0; // mock 비활성: 기본 0
   int _lastSpecOutYmd = -1; // 일 1회 스펙아웃 플래그 (yyyyMMdd)
-  /// e.g. "Last Update 04/01 14:55" or "Last Update —" when no data
-  String _lastUpdateLine = 'Last Update —';
+  /// e.g. localized "Last Update mm/dd HH:mm" or em dash when no data
+  late String _lastUpdateLine;
   Trend5 _trend5 = Trend5.flat;
   double _ratePerMin = 0; // mg/dL per minute
   bool _autoSimulate = false; // 자동 센서 데이터 시뮬레이션 게이트 (기본 off)
@@ -67,7 +67,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _toastController = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000));
-    _lastUpdateLine = 'Last Update —';
+    _lastUpdateLine = 'dash_last_update_none'.tr();
     _loadSensorInfo();
     _loadUnit();
     AppSettingsBus.changed.addListener(_onSettingsChanged);
@@ -188,7 +188,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
         final ok = await ds.postEvent(type: type, time: when, memo: note);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ok ? 'Event saved' : 'Failed to save event')),
+          SnackBar(content: Text(ok ? 'dash_event_saved'.tr() : 'dash_event_save_failed'.tr())),
         );
         if (ok) _chartRefresh.value++;
       } catch (_) {
@@ -272,6 +272,9 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
       try {
         final Map<String, dynamic> s = await SettingsStorage.load();
         final String eqsn = (s['eqsn'] as String? ?? '').trim();
+        if (SettingsService.stripStaleSensorStart(s)) {
+          await SettingsStorage.save(s);
+        }
         final String cached = (s['sensorStartAt'] as String? ?? '').trim();
         if (cached.isNotEmpty) {
           _sensorStart = DateTime.tryParse(cached)?.toLocal();
@@ -281,18 +284,25 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
             final prefs = await SharedPreferences.getInstance();
             final String? mac = prefs.getString('cgms.last_mac');
             final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: eqsn, bleMac: mac);
-            final String? st = (eq['startAt'] as String?);
-            if (st != null && st.isNotEmpty) {
-              _sensorStart = DateTime.tryParse(st)?.toLocal();
-              try { final m = await SettingsStorage.load(); m['sensorStartAt'] = st; await SettingsStorage.save(m); } catch (_) {}
-            }
-            final String? srvSn = (eq['serial'] as String?)?.trim();
-            if (srvSn != null && srvSn.isNotEmpty && srvSn != eqsn) {
-              try {
-                final m = await SettingsStorage.load();
-                m['eqsn'] = srvSn;
-                await SettingsStorage.save(m);
-              } catch (_) {}
+            if (SettingsService.shouldApplyResolvedEqStart(eq, eqsn)) {
+              final String? st = (eq['startAt'] as String?);
+              if (st != null && st.isNotEmpty) {
+                _sensorStart = DateTime.tryParse(st)?.toLocal();
+                try {
+                  final m = await SettingsStorage.load();
+                  m['sensorStartAt'] = st;
+                  m['sensorStartAtEqsn'] = eqsn;
+                  await SettingsStorage.save(m);
+                } catch (_) {}
+              }
+              final String? srvSn = (eq['serial'] as String?)?.trim();
+              if (srvSn != null && srvSn.isNotEmpty && srvSn != eqsn) {
+                try {
+                  final m = await SettingsStorage.load();
+                  m['eqsn'] = srvSn;
+                  await SettingsStorage.save(m);
+                } catch (_) {}
+              }
             }
           } catch (_) {}
         }
@@ -324,7 +334,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
       final int? c = ev.payload['count'] as int?;
       if (c != null && c == 0) {
         _series.clear();
-        _lastUpdateLine = 'Last Update —';
+        _lastUpdateLine = 'dash_last_update_none'.tr();
         _recompute();
         // SN 변경 신호로 간주하고 시작일 재조회 → 남은 일수 즉시 갱신
         try { _loadSensorInfo(); } catch (_) {}
@@ -362,7 +372,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
 
   void _recompute() {
     if (_series.isEmpty) {
-      _lastUpdateLine = 'Last Update —';
+      _lastUpdateLine = 'dash_last_update_none'.tr();
       return;
     }
     final DateTime now = DateTime.now();
@@ -445,13 +455,13 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     return '$h12:$mm $suffix';
   }
 
-  /// "Last Update 04/01 14:55" (로컬 날짜·시간)
+  /// Localized last-update line (로컬 날짜·시간)
   String _formatLastUpdateLine(DateTime t) {
     final DateTime local = t.toLocal();
     final String mo = local.month.toString().padLeft(2, '0');
     final String dy = local.day.toString().padLeft(2, '0');
     final String timePart = _formatTime(local);
-    return 'Last Update $mo/$dy $timePart';
+    return 'dash_last_update_fmt'.tr(namedArgs: {'mo': mo, 'dy': dy, 'time': timePart});
   }
 
   void _onBlePhase() {
@@ -598,9 +608,9 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
                                               fontWeight: FontWeight.w800,
                                             ),
                                           ),
-                                          const TextSpan(
-                                            text: ' Days',
-                                            style: TextStyle(
+                                          TextSpan(
+                                            text: 'dash_sensor_days_suffix'.tr(),
+                                            style: const TextStyle(
                                               color: Colors.black,
                                               fontSize: 10,
                                               fontWeight: FontWeight.w700,
@@ -609,9 +619,9 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
                                         ]),
                                       ),
                                       const SizedBox(height: 2),
-                                      const Text(
-                                        'left',
-                                        style: TextStyle(
+                                      Text(
+                                        'dash_sensor_left_label'.tr(),
+                                        style: const TextStyle(
                                           color: Colors.black54,
                                           fontSize: 9,
                                           fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'create_account_step4_profile.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/auth_input_validation.dart';
@@ -34,27 +35,29 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
   }
 
   String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Please enter your email.';
-    if (!isValidLoginEmailId(v)) return 'Invalid email format.';
+    if (v == null || v.trim().isEmpty) return 'auth_validate_email_empty'.tr();
+    if (!isValidLoginEmailId(v)) return 'auth_validate_email_invalid'.tr();
     return null;
   }
 
   String? _validatePassword(String? v) {
-    if (v == null || v.isEmpty) return 'Please enter your password.';
-    if (v.length < _minPasswordLength) return 'Password must be at least $_minPasswordLength characters.';
+    if (v == null || v.isEmpty) return 'auth_validate_password_empty'.tr();
+    if (v.length < _minPasswordLength) {
+      return 'auth_validate_password_min'.tr(namedArgs: {'n': '$_minPasswordLength'});
+    }
     return null;
   }
 
   String? _validatePasswordConfirm(String? v) {
-    if (v == null || v.isEmpty) return 'Please confirm your password.';
-    if (v != _passwordCtrl.text) return 'Passwords do not match.';
+    if (v == null || v.isEmpty) return 'auth_validate_password_confirm_empty'.tr();
+    if (v != _passwordCtrl.text) return 'auth_validate_password_mismatch'.tr();
     return null;
   }
 
   Future<void> _submit() async {
     if (!_agreeTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please agree to the Terms of Service.')),
+        SnackBar(content: Text('auth_snackbar_agree_terms'.tr())),
       );
       return;
     }
@@ -75,7 +78,7 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Email & Password')),
+      appBar: AppBar(title: Text('auth_email_password_title'.tr())),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -92,11 +95,11 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
                   textInputAction: TextInputAction.next,
                   autocorrect: false,
                   autofillHints: const [AutofillHints.email],
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'example@email.com',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: 'auth_label_email_field'.tr(),
+                    hintText: 'auth_hint_email_example'.tr(),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: _validateEmail,
                 ),
@@ -109,7 +112,7 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
                   autofillHints: const [AutofillHints.newPassword],
                   inputFormatters: [LengthLimitingTextInputFormatter(32)],
                   decoration: InputDecoration(
-                    labelText: 'Password (min $_minPasswordLength chars)',
+                    labelText: 'auth_label_password_min'.tr(namedArgs: {'n': '$_minPasswordLength'}),
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -130,7 +133,7 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
                   autofillHints: const [AutofillHints.newPassword],
                   inputFormatters: [LengthLimitingTextInputFormatter(32)],
                   decoration: InputDecoration(
-                    labelText: 'Confirm password',
+                    labelText: 'auth_label_confirm_password'.tr(),
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -148,7 +151,7 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
                     value: _agreeTerms,
                     onChanged: (v) => setState(() => _agreeTerms = v ?? false),
                     controlAffinity: ListTileControlAffinity.leading,
-                    title: const Text('I agree to the Terms of Service and Privacy Policy'),
+                    title: Text('auth_terms_agree_required'.tr()),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -157,7 +160,7 @@ class _CreateAccountStep3CredentialsPageState extends State<CreateAccountStep3Cr
                   height: _kMinTouchTarget + 8,
                   child: ElevatedButton(
                     onPressed: _submit,
-                    child: const Text('Next'),
+                    child: Text('common_next'.tr()),
                   ),
                 ),
               ],

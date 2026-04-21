@@ -1,28 +1,29 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SensorScanNfcPage extends StatelessWidget {
   const SensorScanNfcPage({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_03 - NFC 스캔')),
+      appBar: AppBar(title: Text('sensor_sc0103_flow_title'.tr())),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('NFC 태그를 센서에 가져다 대세요.'),
+            Text('sensor_flow_nfc_hint'.tr()),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (_) => const SensorWarmupPage()),
               ),
-              child: const Text('스캔 성공 처리'),
+              child: Text('sensor_flow_scan_ok'.tr()),
             ),
             TextButton(
               onPressed: () => Navigator.of(context)
                   .push(MaterialPageRoute(builder: (_) => const SensorSerialInputPage())),
-              child: const Text('스캔 실패 · 일련번호 입력'),
+              child: Text('nfc_scan_failed_enter_sn'.tr()),
             )
           ],
         ),
@@ -36,23 +37,23 @@ class SensorScanQrPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_04 - QR 스캔')),
+      appBar: AppBar(title: Text('sensor_sc0104_flow_title'.tr())),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('QR 코드를 프레임 안에 맞추세요.'),
+            Text('sensor_flow_qr_align'.tr()),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (_) => const SensorWarmupPage()),
               ),
-              child: const Text('스캔 성공 처리'),
+              child: Text('sensor_flow_scan_ok'.tr()),
             ),
             TextButton(
               onPressed: () => Navigator.of(context)
                   .push(MaterialPageRoute(builder: (_) => const SensorSerialInputPage())),
-              child: const Text('스캔 실패 · 일련번호 입력'),
+              child: Text('nfc_scan_failed_enter_sn'.tr()),
             )
           ],
         ),
@@ -72,21 +73,21 @@ class _SensorSerialInputPageState extends State<SensorSerialInputPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_05 - 일련번호 입력')),
+      appBar: AppBar(title: Text('sensor_sc0105_flow_title'.tr())),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: controller,
-              decoration: const InputDecoration(labelText: '센서 일련번호'),
+              decoration: InputDecoration(labelText: 'sensor_flow_serial_label'.tr()),
             ),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (_) => const SensorWarmupPage()),
               ),
-              child: const Text('등록'),
+              child: Text('sensor_flow_register'.tr()),
             )
           ],
         ),
@@ -132,16 +133,16 @@ class _SensorWarmupPageState extends State<SensorWarmupPage> {
     final minutes = (remaining ~/ 60).toString().padLeft(2, '0');
     final seconds = (remaining % 60).toString().padLeft(2, '0');
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_06 - 센서 웜업')),
+      appBar: AppBar(title: Text('sensor_sc0106_flow_title'.tr())),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('센서 웜업 중...'),
+            Text('sensor_flow_warmup_title_line'.tr()),
             const SizedBox(height: 12),
             Text('$minutes:$seconds', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            const Text('완료 시 자동으로 이전 화면으로 돌아갑니다.'),
+            Text('sensor_flow_warmup_done_hint'.tr()),
           ],
         ),
       ),

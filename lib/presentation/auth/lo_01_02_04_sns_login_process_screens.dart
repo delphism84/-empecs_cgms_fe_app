@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/social_auth_service.dart';
 
@@ -181,12 +182,12 @@ class _SnsLoginProcessScaffold extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: loading ? null : onSignIn,
-              child: loading ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Sign in'),
+              child: loading ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text('auth_sign_in'.tr()),
             ),
             const Spacer(),
             TextButton(
               onPressed: onBackToLogin,
-              child: const Text('Back to login'),
+              child: Text('auth_back_to_login'.tr()),
             ),
           ],
         ),

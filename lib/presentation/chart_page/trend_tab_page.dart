@@ -10,6 +10,7 @@ import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
+import 'package:easy_localization/easy_localization.dart';
 // removed
 // removed
 
@@ -116,7 +117,7 @@ class _TrendTabPageState extends State<TrendTabPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Trend (TG_01_01)',
+                    'chart_trend_title'.tr(),
                     style: TextStyle(
                       fontSize: getFontSize(20),
                       fontFamily: 'Gilroy-Medium',
@@ -124,7 +125,7 @@ class _TrendTabPageState extends State<TrendTabPage> {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Landscape Mode',
+                    tooltip: 'chart_landscape_mode'.tr(),
                     icon: const Icon(Icons.screen_rotation_alt),
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -186,7 +187,7 @@ class _TrendTabPageState extends State<TrendTabPage> {
       final String n = v.substring(0, v.length - 1);
       final int? h = int.tryParse(n);
       if (h != null) {
-        final String unit = h == 1 ? 'hour' : 'hours';
+        final String unit = h == 1 ? 'chart_hour'.tr() : 'chart_hours'.tr();
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -354,11 +355,11 @@ class _TrendTabPageState extends State<TrendTabPage> {
         border: Border.all(color: ColorConstant.indigo51, width: 1),
       ),
       child: Row(children: [
-        Expanded(child: _statBadge('Average', avg)),
+        Expanded(child: _statBadge('chart_stat_average'.tr(), avg)),
         HorizontalSpace(width: 8),
-        Expanded(child: _statBadge('Highest', high)),
+        Expanded(child: _statBadge('chart_stat_highest'.tr(), high)),
         HorizontalSpace(width: 8),
-        Expanded(child: _statBadge('Lowest', low)),
+        Expanded(child: _statBadge('chart_stat_lowest'.tr(), low)),
       ]),
     );
   }
@@ -396,7 +397,7 @@ class _TrendTabPageState extends State<TrendTabPage> {
         Column(mainAxisSize: MainAxisSize.min, children: [
           Text('${percent.toStringAsFixed(0)}%', style: TextStyle(fontSize: getFontSize(22), fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text('Time in Range'),
+          Text('chart_time_in_range'.tr()),
         ]),
         // 범례 (동적 % → "15% High" 형식)
         Positioned(
@@ -411,10 +412,10 @@ class _TrendTabPageState extends State<TrendTabPage> {
             final int lo = (safe((t['low'] ?? 0)) * 100).round();
             final int vl = (safe((t['veryLow'] ?? 0)) * 100).round();
             return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              _LegendDot(color: Colors.orange, label: '$vh% High'),
-              _LegendDot(color: Colors.blue, label: '$ir% In Range'),
-              _LegendDot(color: Colors.pink, label: '$lo% Low'),
-              _LegendDot(color: Colors.red, label: '$vl% Very Low'),
+              _LegendDot(color: Colors.orange, label: 'chart_legend_high'.tr(namedArgs: {'p': '$vh'})),
+              _LegendDot(color: Colors.blue, label: 'chart_legend_in_range'.tr(namedArgs: {'p': '$ir'})),
+              _LegendDot(color: Colors.pink, label: 'chart_legend_low'.tr(namedArgs: {'p': '$lo'})),
+              _LegendDot(color: Colors.red, label: 'chart_legend_very_low'.tr(namedArgs: {'p': '$vl'})),
             ]);
           }),
         ),
@@ -462,7 +463,7 @@ class _TrendTabPageState extends State<TrendTabPage> {
             children: [
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(
-                  'Range Distribution',
+                  'chart_range_distribution'.tr(),
                   style: TextStyle(
                     fontSize: getFontSize(16),
                     fontFamily: 'Gilroy-Medium',
@@ -471,7 +472,7 @@ class _TrendTabPageState extends State<TrendTabPage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Percent by range',
+                  'chart_percent_by_range'.tr(),
                   style: TextStyle(
                     color: ColorConstant.bluegray400,
                     fontSize: getFontSize(12),
@@ -533,13 +534,13 @@ class _TrendTabPageState extends State<TrendTabPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _LegendDot(color: Colors.orange, label: '${(vh * 100).toStringAsFixed(0)}% High'),
+                    _LegendDot(color: Colors.orange, label: 'chart_legend_high'.tr(namedArgs: {'p': '${(vh * 100).toStringAsFixed(0)}'})),
                     const SizedBox(height: 6),
-                    _LegendDot(color: Colors.green, label: '${(ir * 100).toStringAsFixed(0)}% In Range'),
+                    _LegendDot(color: Colors.green, label: 'chart_legend_in_range'.tr(namedArgs: {'p': '${(ir * 100).toStringAsFixed(0)}'})),
                     const SizedBox(height: 6),
-                    _LegendDot(color: Colors.pink, label: '${(lo * 100).toStringAsFixed(0)}% Low'),
+                    _LegendDot(color: Colors.pink, label: 'chart_legend_low'.tr(namedArgs: {'p': '${(lo * 100).toStringAsFixed(0)}'})),
                     const SizedBox(height: 6),
-                    _LegendDot(color: Colors.red, label: '${(vl * 100).toStringAsFixed(0)}% Very Low'),
+                    _LegendDot(color: Colors.red, label: 'chart_legend_very_low'.tr(namedArgs: {'p': '${(vl * 100).toStringAsFixed(0)}'})),
                   ],
                 ),
               ),
@@ -704,9 +705,9 @@ class Tg0102ChartLandscapeScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: Theme.of(context).colorScheme.primary, width: 1),
                   ),
-                  child: const Text(
-                    'BACK',
-                    style: TextStyle(color: Colors.black45, fontSize: 13, fontWeight: FontWeight.w700),
+                  child: Text(
+                    'chart_back_upper'.tr(),
+                    style: const TextStyle(color: Colors.black45, fontSize: 13, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),

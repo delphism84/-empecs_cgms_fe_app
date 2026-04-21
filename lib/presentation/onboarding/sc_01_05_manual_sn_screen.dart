@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -95,7 +96,7 @@ class _Sc0105ManualSnScreenState extends State<Sc0105ManualSnScreen> {
       await SettingsStorage.save(st);
       if (!mounted) return;
       setState(() => _lastSaved = v);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SN saved')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sc0105_sn_saved'.tr())));
       Navigator.of(context).pop(true);
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -105,37 +106,39 @@ class _Sc0105ManualSnScreenState extends State<Sc0105ManualSnScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_05 · Enter Serial Number')),
+      appBar: AppBar(title: Text('sc0105_appbar'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text(
-              'If QR scan fails, enter the sensor serial number (SN) manually.',
-              style: TextStyle(fontSize: 13),
+            Text(
+              'sc0105_intro'.tr(),
+              style: const TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _sn,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'SN (5 digits)',
-                hintText: '00033',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'sc0105_sn_label'.tr(),
+                hintText: 'sc0105_sn_hint'.tr(),
+                border: const OutlineInputBorder(),
               ),
               maxLength: 5,
             ),
             if (_lastSaved.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
-                child: Text('Last saved: $_lastSaved', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                child: Text('sc0105_last_saved'.tr(namedArgs: {'v': _lastSaved}), style: const TextStyle(fontSize: 12, color: Colors.black54)),
               ),
             if (_lastScannedQrFullSn.isNotEmpty || _lastScannedQrAt.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text('Last scanned QR', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
+              Text('sensor_last_scanned_qr'.tr(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
               const SizedBox(height: 4),
               Text(
-                _lastScannedQrRegistered ? 'SN: $_lastScannedQrFullSn' : 'Unregistered QR SN',
+                _lastScannedQrRegistered
+                    ? 'sc0105_sn_prefix'.tr(namedArgs: {'sn': _lastScannedQrFullSn})
+                    : 'qr_unregistered_title'.tr(),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -154,7 +157,7 @@ class _Sc0105ManualSnScreenState extends State<Sc0105ManualSnScreen> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _saving ? null : _save,
-              child: Text(_saving ? 'Saving...' : 'Save SN'),
+              child: Text(_saving ? 'sc0105_saving'.tr() : 'sc0105_save_sn'.tr()),
             ),
           ],
         ),

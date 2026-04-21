@@ -118,6 +118,56 @@ class SettingsService {
     return fb;
   }
 
+  /// 저장소/서버 JSON에서 bool이 문자열·숫자로 올 때 알람 sound/vibrate/enabled 파싱.
+  static bool parseAlarmBool(dynamic v, {bool defaultValue = true}) {
+    if (v == null) return defaultValue;
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    if (v is String) {
+      final s = v.trim().toLowerCase();
+      if (s == 'true' || s == '1' || s == 'yes' || s == 'on') return true;
+      if (s == 'false' || s == '0' || s == 'no' || s == 'off') return false;
+    }
+    return defaultValue;
+  }
+
+  /// `method`만 오는 레거시/서버 페이로드를 sound/vibrate로 정규화(둘 다 없을 때만).
+  /// [sensorStartAt]가 비어 있지 않은데 [sensorStartAtEqsn]이 비었거나 현재 [eqsn]과 다르면
+  /// 스티커만 바꾼 동일 MAC 등에서 이전 세션 시작일이 남는 문제가 생긴다. 저장 맵을 직수정하고 변경 여부 반환.
+  static bool stripStaleSensorStart(Map<String, dynamic> st) {
+    final String eqsn = (st['eqsn'] as String? ?? '').trim();
+    if (eqsn.isEmpty) return false;
+    final String start = (st['sensorStartAt'] as String? ?? '').trim();
+    final String owner = (st['sensorStartAtEqsn'] as String? ?? '').trim();
+    if (start.isEmpty) return false;
+    if (owner.isEmpty || owner.toUpperCase() != eqsn.toUpperCase()) {
+      st['sensorStartAt'] = '';
+      st['sensorStartAtEqsn'] = '';
+      return true;
+    }
+    return false;
+  }
+
+  static void normalizeAlarmMethodFields(Map<String, dynamic> m) {
+    if (m.containsKey('sound') || m.containsKey('vibrate')) return;
+    final String raw = (m['method'] ?? m['alertMethod'] ?? '').toString().trim().toLowerCase();
+    if (raw.isEmpty) return;
+    String norm = raw.replaceAll(RegExp(r'[\s\-+]'), '_');
+    if (norm == 'sound_vibration' || norm == 'soundandvibration' || norm == 'both') {
+      m['sound'] = true;
+      m['vibrate'] = true;
+    } else if (norm == 'sound_only' || norm == 'sound') {
+      m['sound'] = true;
+      m['vibrate'] = false;
+    } else if (norm == 'vibration_only' || norm == 'vibrate_only' || norm == 'vibration') {
+      m['sound'] = false;
+      m['vibrate'] = true;
+    } else if (norm == 'silent' || norm == 'none' || norm == 'off') {
+      m['sound'] = false;
+      m['vibrate'] = false;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> listAlarms() async {
     final st = await SettingsStorage.load();
     List<Map<String, dynamic>> list = (st['alarmsCache'] is List)
@@ -128,6 +178,9 @@ class SettingsService {
       st['alarmsCache'] = list;
       st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
       await SettingsStorage.save(st);
+    }
+    for (final row in list) {
+      normalizeAlarmMethodFields(row);
     }
     return list;
   }
@@ -223,6 +276,16 @@ class SettingsService {
   static String normalizeBleMac(String? raw) {
     if (raw == null) return '';
     return raw.toUpperCase().replaceAll(RegExp(r'[^0-9A-F]'), '');
+  }
+
+  /// [resolveEqRegistration]·[getEqBySerial] 응답의 `startAt`·`serial`을 로컬에 반영해도 되는지.
+  /// MAC만 맞고 응답의 시리얼이 앱의 [localEqsn]과 다르면(스티커만 교체) 이전 세션 시작일이 섞이지 않게 한다.
+  static bool shouldApplyResolvedEqStart(Map<String, dynamic> eq, String localEqsn) {
+    final String want = localEqsn.trim().toUpperCase();
+    if (want.isEmpty) return false;
+    final String srv = (eq['serial'] as String? ?? '').trim().toUpperCase();
+    if (srv.isNotEmpty && srv != want) return false;
+    return true;
   }
 
   /// 동일 센서 식별: **serial 또는 bleMac** 중 하나가 서버 등록과 일치하면 해당 행 반환(req 1-7).

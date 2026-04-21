@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
@@ -27,7 +28,7 @@ class _PasscodeResetScreenState extends State<PasscodeResetScreen> {
     final String email = _id.text.trim();
     final String password = _pw.text;
     if (email.isEmpty || password.isEmpty) {
-      setState(() { _error = 'Enter ID / Password'; });
+      setState(() { _error = 'passcode_error_enter'.tr(); });
       return;
     }
     setState(() { _busy = true; _error = null; });
@@ -46,10 +47,10 @@ class _PasscodeResetScreenState extends State<PasscodeResetScreen> {
 
       // 로그인 화면으로 이동
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passcode reset completed')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('passcode_reset_done'.tr())));
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);
     } catch (e) {
-      setState(() { _error = 'Reset failed: $e'; });
+      setState(() { _error = 'passcode_reset_failed'.tr(namedArgs: {'e': '$e'}); });
     } finally {
       if (mounted) setState(() { _busy = false; });
     }
@@ -58,28 +59,28 @@ class _PasscodeResetScreenState extends State<PasscodeResetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Passcode reset (LO_03_01)')),
+      appBar: AppBar(title: Text('passcode_reset_appbar'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text('Enter member information to reset passcode.', style: TextStyle(fontWeight: FontWeight.w700)),
+            Text('passcode_reset_intro'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
             TextField(
               controller: _id,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'User ID',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'passcode_label_user_id'.tr(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _pw,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'passcode_label_password'.tr(),
+                border: const OutlineInputBorder(),
               ),
             ),
             if (_error != null) ...[
@@ -93,7 +94,7 @@ class _PasscodeResetScreenState extends State<PasscodeResetScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Reset will disable the easy passcode.',
+              'passcode_reset_note'.tr(),
               style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
             ),
           ],

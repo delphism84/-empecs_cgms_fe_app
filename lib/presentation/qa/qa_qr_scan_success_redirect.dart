@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/app_nav.dart';
@@ -43,14 +44,14 @@ class _QaQrScanSuccessRedirectState extends State<QaQrScanSuccessRedirect> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('QA: QR 스캔 성공 시뮬레이션 적용 중…'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('qa_qr_scan_redirect_message'.tr()),
           ],
         ),
       ),

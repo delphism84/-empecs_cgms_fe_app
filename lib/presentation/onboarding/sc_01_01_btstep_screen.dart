@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/app_export.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/app_nav.dart';
@@ -26,11 +27,11 @@ class Sc0101BtStepScreen extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BT Connect Guide'),
+        title: Text('bt_guide_appbar'.tr()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => _goBack(context),
-          tooltip: 'Back',
+          tooltip: 'common_back'.tr(),
         ),
       ),
       body: SafeArea(
@@ -50,9 +51,9 @@ class Sc0101BtStepScreen extends StatelessWidget {
                     'docs/btstep.png',
                     fit: BoxFit.fitWidth,
                     width: double.infinity,
-                    errorBuilder: (_, __, ___) => const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Center(child: Text('Guide image not found')),
+                    errorBuilder: (_, __, ___) => Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Center(child: Text('bt_guide_image_missing'.tr())),
                     ),
                   ),
                 ),
@@ -62,7 +63,7 @@ class Sc0101BtStepScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                 child: CustomButton(
                   width: double.infinity,
-                  text: 'Sensor Connect',
+                  text: 'sensor_connect_cta'.tr(),
                   variant: ButtonVariant.FillLoginGreen,
                   onTap: () => _onSensorConnect(context),
                 ),

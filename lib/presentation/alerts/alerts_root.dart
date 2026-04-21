@@ -110,18 +110,29 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
   }
 
   String _subtitleFor(String type, Map<String, dynamic> a) {
-    final enabled = (a['enabled'] == true) ? 'On' : 'Off';
+    final String state = (a['enabled'] == true) ? 'common_on'.tr() : 'common_off'.tr();
     if (type == 'system') {
-      return 'BLE link loss · repeat & quiet hours · $enabled';
+      return 'alerts_subtitle_ble_link'.tr(namedArgs: {'state': state});
     }
-    if (type == 'rate') return 'Rate threshold, direction, notification · $enabled';
-    final th = (a['threshold'] is num) ? (a['threshold'] as num).toInt() : null;
-    final repeatMin = (a['repeatMin'] is num) ? (a['repeatMin'] as num).toInt() : null;
-    final parts = <String>[];
-    if (th != null) parts.add('Threshold $th');
-    if (repeatMin != null) parts.add('repeat ${repeatMin}m');
-    parts.add(enabled);
-    return parts.join(', ');
+    if (type == 'rate') {
+      return 'alerts_subtitle_rapid'.tr(namedArgs: {'state': state});
+    }
+    final int? th = (a['threshold'] is num) ? (a['threshold'] as num).toInt() : null;
+    final int? repeatMin = (a['repeatMin'] is num) ? (a['repeatMin'] as num).toInt() : null;
+    if (th != null && repeatMin != null) {
+      return 'alerts_subtitle_threshold'.tr(namedArgs: {
+        'th': '$th',
+        'repeat': 'alerts_repeat_minutes'.tr(namedArgs: {'m': '$repeatMin'}),
+        'state': state,
+      });
+    }
+    if (th != null) {
+      return 'alerts_subtitle_threshold_no_repeat'.tr(namedArgs: {'th': '$th', 'state': state});
+    }
+    if (repeatMin != null) {
+      return '${'alerts_repeat_minutes'.tr(namedArgs: {'m': '$repeatMin'})} · $state';
+    }
+    return state;
   }
 
   @override
@@ -163,53 +174,53 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
                 _alertItem(
                   context,
                   icon: Icons.priority_high,
-                  title: 'Very Low (AR_01_02)',
+                  title: 'alerts_title_very_low'.tr(),
                   subtitle: _subtitleFor('very_low', _alarmForType('very_low')),
                   reqId: 'AR_01_02',
-                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'very_low', title: 'Very Low (AR_01_02)', reqId: 'AR_01_02'),
+                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'very_low', title: 'alerts_title_very_low'.tr(), reqId: 'AR_01_02'),
                   onReturn: _load,
                 ),
                 _alertItem(
                   context,
                   icon: Icons.trending_up,
-                  title: 'High (AR_01_03)',
+                  title: 'alerts_title_high'.tr(),
                   subtitle: _subtitleFor('high', _alarmForType('high')),
                   reqId: 'AR_01_03',
-                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'high', title: 'High (AR_01_03)', reqId: 'AR_01_03'),
+                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'high', title: 'alerts_title_high'.tr(), reqId: 'AR_01_03'),
                   onReturn: _load,
                 ),
                 _alertItem(
                   context,
                   icon: Icons.trending_down,
-                  title: 'Low (AR_01_04)',
+                  title: 'alerts_title_low'.tr(),
                   subtitle: _subtitleFor('low', _alarmForType('low')),
                   reqId: 'AR_01_04',
-                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'low', title: 'Low (AR_01_04)', reqId: 'AR_01_04'),
+                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'low', title: 'alerts_title_low'.tr(), reqId: 'AR_01_04'),
                   onReturn: _load,
                 ),
                 _alertItem(
                   context,
                   icon: Icons.show_chart,
-                  title: 'Rapid Change (AR_01_05)',
+                  title: 'alerts_title_rapid'.tr(),
                   subtitle: _subtitleFor('rate', _alarmForType('rate')),
                   reqId: 'AR_01_05',
-                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'rate', title: 'Rapid Change (AR_01_05)', reqId: 'AR_01_05'),
+                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'rate', title: 'alerts_title_rapid'.tr(), reqId: 'AR_01_05'),
                   onReturn: _load,
                 ),
                 _alertItem(
                   context,
                   icon: Icons.signal_cellular_off,
-                  title: 'Signal Loss (AR_01_06)',
+                  title: 'alerts_title_signal_loss'.tr(),
                   subtitle: _subtitleFor('system', _alarmForType('system')),
                   reqId: 'AR_01_06',
-                  pageBuilder: (_) => const AlarmTypeDetailPage(type: 'system', title: 'Signal Loss (AR_01_06)', reqId: 'AR_01_06'),
+                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'system', title: 'alerts_title_signal_loss'.tr(), reqId: 'AR_01_06'),
                   onReturn: _load,
                 ),
                 _alertItem(
                   context,
                   icon: Icons.lock,
-                  title: 'Lock Screen (AR_01_08)',
-                  subtitle: 'Visibility level, actions, method',
+                  title: 'alerts_title_lock_screen'.tr(),
+                  subtitle: 'alerts_lock_subtitle'.tr(),
                   reqId: 'AR_01_08',
                   pageBuilder: (_) => const Ar0108LockScreenScreen(),
                   onReturn: _load,
@@ -223,7 +234,7 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
                     border: Border.all(color: ColorConstant.indigo51, width: 1),
                   ),
                   child: Text(
-                    'CGMS alerts include low/high, rapid change, signal loss (link loss), and lock-screen banner.',
+                    'alerts_footer_help'.tr(),
                     style: TextStyle(
                       color: ColorConstant.bluegray400,
                       fontSize: 12,

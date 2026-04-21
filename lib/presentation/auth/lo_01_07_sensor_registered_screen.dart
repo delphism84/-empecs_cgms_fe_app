@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
 /// LO_01_07: 센서 등록 여부 확인
@@ -54,18 +55,18 @@ class _Lo0107SensorRegisteredScreenState extends State<Lo0107SensorRegisteredScr
     final String model = (_last?['model'] ?? '').toString();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('LO_01_07 · Sensor check')),
+      appBar: AppBar(title: Text('lo0107_appbar'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             Text(
-              has ? 'Sensor already registered' : 'No sensor registered',
+              has ? 'lo0107_has_title'.tr() : 'lo0107_no_title'.tr(),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 8),
             Text(
-              has ? 'Please re-scan to continue using your existing sensor.' : 'Please scan and register a sensor to start.',
+              has ? 'lo0107_has_body'.tr() : 'lo0107_no_body'.tr(),
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
@@ -91,10 +92,13 @@ class _Lo0107SensorRegisteredScreenState extends State<Lo0107SensorRegisteredScr
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Registered sensors: $_count', style: const TextStyle(fontWeight: FontWeight.w800)),
+                    Text('sc0102_registered_count'.tr(namedArgs: {'n': '$_count'}), style: const TextStyle(fontWeight: FontWeight.w800)),
                     if (has && (sn.isNotEmpty || model.isNotEmpty)) ...[
                       const SizedBox(height: 8),
-                      Text('Last sensor: ${model.isEmpty ? '-' : model} / ${sn.isEmpty ? '-' : sn}'),
+                      Text('sc0102_last_sensor'.tr(namedArgs: {
+                        'model': model.isEmpty ? '-' : model,
+                        'sn': sn.isEmpty ? '-' : sn,
+                      })),
                     ],
                   ],
                 ),
@@ -104,12 +108,12 @@ class _Lo0107SensorRegisteredScreenState extends State<Lo0107SensorRegisteredScr
             ElevatedButton.icon(
               onPressed: () => Navigator.of(context).pushNamed('/sc/01/04'),
               icon: const Icon(Icons.qr_code_scanner),
-              label: Text(has ? 'Re-scan QR' : 'Scan QR'),
+              label: Text(has ? 'lo0107_rescan_qr'.tr() : 'lo0107_scan_qr'.tr()),
             ),
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: _load,
-              child: const Text('Refresh'),
+              child: Text('common_refresh'.tr()),
             ),
           ],
         ),

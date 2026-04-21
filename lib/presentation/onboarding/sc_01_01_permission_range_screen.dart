@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
@@ -13,7 +14,7 @@ class _Sc0101PermissionRangeScreenState extends State<Sc0101PermissionRangeScree
   bool _consent = false;
   int _low = 70;
   int _high = 180;
-  String _status = '';
+  String? _feedbackKey;
 
   @override
   void initState() {
@@ -34,11 +35,11 @@ class _Sc0101PermissionRangeScreenState extends State<Sc0101PermissionRangeScree
 
   Future<void> _save() async {
     if (!_consent) {
-      setState(() { _status = 'Please agree first'; });
+      setState(() { _feedbackKey = 'perm_agree_first'; });
       return;
     }
     if (_low >= _high) {
-      setState(() { _status = 'Invalid range: low must be less than high'; });
+      setState(() { _feedbackKey = 'perm_invalid_range'; });
       return;
     }
     final st = await SettingsStorage.load();
@@ -78,30 +79,30 @@ class _Sc0101PermissionRangeScreenState extends State<Sc0101PermissionRangeScree
     } catch (_) {}
 
     await SettingsStorage.save(st);
-    setState(() { _status = 'Saved'; });
+    setState(() { _feedbackKey = 'perm_saved'; });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_01 · Permission & Alarm Range')),
+      appBar: AppBar(title: Text('perm_appbar'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('Basic consent for alerts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          Text('perm_alert_consent_title'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           CheckboxListTile(
             value: _consent,
             onChanged: (v) => setState(() { _consent = v == true; }),
-            title: const Text('I agree to receive CGMS alert notifications'),
-            subtitle: const Text('Required to proceed.'),
+            title: Text('perm_alert_receive_title'.tr()),
+            subtitle: Text('perm_required_subtitle'.tr()),
             controlAffinity: ListTileControlAffinity.leading,
           ),
           const SizedBox(height: 16),
-          const Text('Alarm range (mg/dL)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          Text('perm_alarm_range_title'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           ListTile(
-            title: const Text('Low threshold'),
+            title: Text('perm_low_threshold'.tr()),
             trailing: Text('$_low'),
             subtitle: Slider(
               value: _low.toDouble(),
@@ -113,7 +114,7 @@ class _Sc0101PermissionRangeScreenState extends State<Sc0101PermissionRangeScree
             ),
           ),
           ListTile(
-            title: const Text('High threshold'),
+            title: Text('perm_high_threshold'.tr()),
             trailing: Text('$_high'),
             subtitle: Slider(
               value: _high.toDouble(),
@@ -127,11 +128,17 @@ class _Sc0101PermissionRangeScreenState extends State<Sc0101PermissionRangeScree
           const SizedBox(height: 12),
           ElevatedButton(
             onPressed: _save,
-            child: const Text('Save'),
+            child: Text('perm_save'.tr()),
           ),
-          if (_status.isNotEmpty) ...[
+          if (_feedbackKey != null) ...[
             const SizedBox(height: 10),
-            Text(_status, style: TextStyle(color: _status == 'Saved' ? Colors.green.shade700 : Colors.red.shade700, fontWeight: FontWeight.w700)),
+            Text(
+              _feedbackKey!.tr(),
+              style: TextStyle(
+                color: _feedbackKey == 'perm_saved' ? Colors.green.shade700 : Colors.red.shade700,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
@@ -39,18 +40,18 @@ class _Sc0602QrReconnectScreenState extends State<Sc0602QrReconnectScreen> {
 
   String _reasonTitle() {
     final r = _reason.trim().toLowerCase();
-    if (r == 'expired') return 'Sensor expired';
-    if (r == 'error') return 'Sensor error';
-    if (r == 'abnormal') return 'Abnormal sensor signal';
-    return 'Reconnect sensor';
+    if (r == 'expired') return 'sc0602_reason_expired'.tr();
+    if (r == 'error') return 'sc0602_reason_error'.tr();
+    if (r == 'abnormal') return 'sc0602_reason_abnormal'.tr();
+    return 'sc0602_reason_default'.tr();
   }
 
   String _reasonBody() {
     final r = _reason.trim().toLowerCase();
-    if (r == 'expired') return 'The sensor usage period has expired. Please disconnect and reconnect a new sensor.';
-    if (r == 'error') return 'A sensor issue was detected. Please disconnect and reconnect.';
-    if (r == 'abnormal') return 'Sensor signal looks abnormal. Please reconnect.';
-    return 'If the sensor has issues or needs reconnection, follow the steps below.';
+    if (r == 'expired') return 'sc0602_body_expired'.tr();
+    if (r == 'error') return 'sc0602_body_error'.tr();
+    if (r == 'abnormal') return 'sc0602_body_abnormal'.tr();
+    return 'sc0602_body_default'.tr();
   }
 
   Future<void> _disconnect() async {
@@ -61,13 +62,13 @@ class _Sc0602QrReconnectScreenState extends State<Sc0602QrReconnectScreen> {
     } catch (_) {}
     if (!mounted) return;
     setState(() => _disconnecting = false);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Disconnected')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_reconnect_disconnected_snack'.tr())));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_06_02 · QR Reconnect')),
+      appBar: AppBar(title: Text('sensor_sc0602_title'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -81,14 +82,14 @@ class _Sc0602QrReconnectScreenState extends State<Sc0602QrReconnectScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('Steps', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-                    SizedBox(height: 10),
-                    Text('1) Tap Disconnect to release current sensor connection.', style: TextStyle(fontSize: 13)),
-                    SizedBox(height: 6),
-                    Text('2) Tap QR Reconnect and scan the new sensor QR code.', style: TextStyle(fontSize: 13)),
-                    SizedBox(height: 6),
-                    Text('3) After reconnect, warm-up starts automatically.', style: TextStyle(fontSize: 13)),
+                  children: [
+                    Text('sensor_reconnect_steps'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 10),
+                    Text('sc0602_step1'.tr(), style: const TextStyle(fontSize: 13)),
+                    const SizedBox(height: 6),
+                    Text('sc0602_step2'.tr(), style: const TextStyle(fontSize: 13)),
+                    const SizedBox(height: 6),
+                    Text('sc0602_step3'.tr(), style: const TextStyle(fontSize: 13)),
                   ],
                 ),
               ),
@@ -102,7 +103,7 @@ class _Sc0602QrReconnectScreenState extends State<Sc0602QrReconnectScreen> {
                     icon: _disconnecting
                         ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.link_off),
-                    label: Text(_disconnecting ? 'Disconnecting...' : 'Disconnect'),
+                    label: Text(_disconnecting ? 'common_disconnecting'.tr() : 'common_disconnect'.tr()),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -110,7 +111,7 @@ class _Sc0602QrReconnectScreenState extends State<Sc0602QrReconnectScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.of(context).pushNamed('/sc/01/04'),
                     icon: const Icon(Icons.qr_code_scanner),
-                    label: const Text('QR Reconnect'),
+                    label: Text('sensor_qr_reconnect_button'.tr()),
                   ),
                 ),
               ],

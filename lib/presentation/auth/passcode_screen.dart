@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/passcode.dart';
 import 'package:helpcare/presentation/home.dart';
@@ -38,7 +39,7 @@ class _PasscodeScreenState extends State<PasscodeScreen> {
       if (!ok) {
         setState(() {
           _busy = false;
-          _error = 'Invalid passcode';
+          _error = 'invalid';
           _ctrl.text = '';
         });
         return;
@@ -67,7 +68,7 @@ class _PasscodeScreenState extends State<PasscodeScreen> {
   Widget build(BuildContext context) {
     final Color primary = Theme.of(context).colorScheme.primary;
     return Scaffold(
-      appBar: AppBar(title: const Text('Easy Passcode (LO_01_05)')),
+      appBar: AppBar(title: Text('auth_passcode_appbar'.tr())),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -75,9 +76,9 @@ class _PasscodeScreenState extends State<PasscodeScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 18),
-              const Text(
-                'Enter 4-digit passcode',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              Text(
+                'auth_passcode_enter'.tr(),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 textAlign: TextAlign.left,
               ),
               const SizedBox(height: 12),
@@ -111,17 +112,17 @@ class _PasscodeScreenState extends State<PasscodeScreen> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 10),
-                Text(_error!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                Text('auth_passcode_invalid'.tr(), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
               ],
               const Spacer(),
               Text(
-                'Numeric keypad will be shown automatically.',
+                'auth_passcode_keypad_hint'.tr(),
                 style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
               ),
               const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: _busy ? null : () => _onCompleted(_ctrl.text),
-                child: Text(_busy ? 'Checking...' : 'Unlock'),
+                child: Text(_busy ? 'auth_passcode_checking'.tr() : 'auth_passcode_unlock'.tr()),
               ),
               const SizedBox(height: 8),
               TextButton(
@@ -130,7 +131,7 @@ class _PasscodeScreenState extends State<PasscodeScreen> {
                     MaterialPageRoute(builder: (_) => const PasscodeResetScreen()),
                   );
                 },
-                child: const Text('Reset passcode (LO_03_01)'),
+                child: Text('auth_passcode_reset_link'.tr()),
               ),
             ],
           ),

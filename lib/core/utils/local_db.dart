@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite/sqflite.dart';
 import 'package:helpcare/core/utils/debug_toast.dart';
 import 'package:path/path.dart' as p;
@@ -18,8 +19,13 @@ class LocalDb {
   }
 
   Future<Database> _open() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final String path = p.join(dir.path, 'cgms_local.db');
+    final String path;
+    if (kIsWeb) {
+      path = 'cgms_local.db';
+    } else {
+      final dir = await getApplicationDocumentsDirectory();
+      path = p.join(dir.path, 'cgms_local.db');
+    }
     return openDatabase(
       path,
       version: 1,
@@ -110,8 +116,13 @@ class LocalDb {
         try { await _db!.close(); } catch (_) {}
         _db = null;
       }
-      final dir = await getApplicationDocumentsDirectory();
-      final String path = p.join(dir.path, 'cgms_local.db');
+      final String path;
+      if (kIsWeb) {
+        path = 'cgms_local.db';
+      } else {
+        final dir = await getApplicationDocumentsDirectory();
+        path = p.join(dir.path, 'cgms_local.db');
+      }
       await deleteDatabase(path);
     } catch (_) {}
   }

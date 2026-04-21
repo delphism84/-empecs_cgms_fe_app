@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
@@ -92,10 +93,10 @@ class _QrVerifyBeforeConnectScreenState extends State<QrVerifyBeforeConnectScree
     showCupertinoDialog<void>(
       context: context,
       builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('Unregistered QR SN'),
-        content: const Padding(
-          padding: EdgeInsets.only(top: 8),
-          child: Text('등록된 SN이 아닙니다.\nQR을 먼저 스캔해주세요.'),
+        title: Text('qr_unregistered_title'.tr()),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text('qr_sn_not_registered_body'.tr()),
         ),
         actions: [
           CupertinoDialogAction(
@@ -104,7 +105,7 @@ class _QrVerifyBeforeConnectScreenState extends State<QrVerifyBeforeConnectScree
               Navigator.of(ctx).pop();
               _controller.start();
             },
-            child: const Text('다시 스캔'),
+            child: Text('qr_rescan_action'.tr()),
           ),
         ],
       ),
@@ -121,7 +122,7 @@ class _QrVerifyBeforeConnectScreenState extends State<QrVerifyBeforeConnectScree
 
     if (_registeredDevices.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('QR 확인')),
+        appBar: AppBar(title: Text('qr_verify_title'.tr())),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -131,21 +132,21 @@ class _QrVerifyBeforeConnectScreenState extends State<QrVerifyBeforeConnectScree
               children: [
                 Icon(Icons.info_outline, size: 56, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(height: 16),
-                const Text(
-                  '등록된 기기가 없습니다.\nQR을 먼저 스캔해주세요.',
+                Text(
+                  'qr_no_registered_devices'.tr(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.of(context).pushNamed('/sc/01/04').then((_) => Navigator.of(context).pop()),
                   icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('QR 스캔하러 가기'),
+                  label: Text('qr_verify_goto_scan'.tr()),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('취소'),
+                  child: Text('common_cancel'.tr()),
                 ),
               ],
             ),
@@ -157,7 +158,7 @@ class _QrVerifyBeforeConnectScreenState extends State<QrVerifyBeforeConnectScree
     final Size sz = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR 확인 후 연결'),
+        title: Text('qr_connect_after_verify'.tr()),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -169,7 +170,7 @@ class _QrVerifyBeforeConnectScreenState extends State<QrVerifyBeforeConnectScree
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Text(
-                '등록한 센서의 QR을 스캔해주세요.',
+                'qr_scan_registered_sensor'.tr(),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54),
               ),
             ),

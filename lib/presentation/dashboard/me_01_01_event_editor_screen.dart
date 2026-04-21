@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/presentation/dashboard/memo_modal.dart';
 
@@ -43,7 +44,7 @@ class _Me0101EventEditorScreenState extends State<Me0101EventEditorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ME_01_01 · 이벤트 기록 팝업(검수용 화면)')),
+      appBar: AppBar(title: Text('me0101_appbar'.tr())),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -62,7 +63,7 @@ class _Me0101EventEditorScreenState extends State<Me0101EventEditorScreen> {
                   if (!context.mounted) return;
                   Navigator.of(context).pop(_payload);
                 },
-                child: const Text('SAVE (evidence)'),
+                child: Text('me0101_save_evidence'.tr()),
               ),
             ),
           ],

@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:helpcare/presentation/splash_screen/splash_screen.dart';
 import 'package:helpcare/core/utils/csv_lang_loader.dart';
 
@@ -64,6 +67,9 @@ Future<Locale> _appStartLocale() async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+  }
   // QA 자동화 서버는 가장 먼저 시도해서 초기화 병목의 영향을 받지 않도록 한다.
   await BleEmuServer.maybeStart();
   await EasyLocalization.ensureInitialized();

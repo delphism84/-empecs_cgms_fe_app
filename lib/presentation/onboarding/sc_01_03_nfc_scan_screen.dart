@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
 class Sc0103NfcScanScreen extends StatefulWidget {
@@ -26,7 +27,7 @@ class _Sc0103NfcScanScreenState extends State<Sc0103NfcScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SC_01_03 · NFC Sensor Scan')),
+      appBar: AppBar(title: Text('sensor_sc0103_appbar'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -41,16 +42,16 @@ class _Sc0103NfcScanScreenState extends State<Sc0103NfcScanScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('How to scan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-                    SizedBox(height: 8),
-                    Text('1) Turn on NFC on your phone.', style: TextStyle(fontSize: 13)),
-                    SizedBox(height: 6),
-                    Text('2) Place the phone near the sensor NFC tag area.', style: TextStyle(fontSize: 13)),
-                    SizedBox(height: 6),
-                    Text('3) Keep it steady until scan completes.', style: TextStyle(fontSize: 13)),
-                    SizedBox(height: 10),
-                    Text('(NFC 안내 이미지/그림은 추후 실제 리소스로 교체)', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                  children: [
+                    Text('nfc_how_to_scan'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 8),
+                    Text('nfc_step1_turn_on'.tr(), style: const TextStyle(fontSize: 13)),
+                    const SizedBox(height: 6),
+                    Text('nfc_step2_place'.tr(), style: const TextStyle(fontSize: 13)),
+                    const SizedBox(height: 6),
+                    Text('nfc_step3_steady'.tr(), style: const TextStyle(fontSize: 13)),
+                    const SizedBox(height: 10),
+                    Text('nfc_placeholder_note'.tr(), style: const TextStyle(fontSize: 12, color: Colors.black54)),
                   ],
                 ),
               ),
@@ -61,14 +62,14 @@ class _Sc0103NfcScanScreenState extends State<Sc0103NfcScanScreen> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pushNamed('/sc/01/05'),
-                    child: const Text('Scan failed · Enter SN'),
+                    child: Text('nfc_scan_failed_enter_sn'.tr()),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pushNamed('/sc/01/06'),
-                    child: const Text('Scan success'),
+                    child: Text('nfc_scan_success'.tr()),
                   ),
                 ),
               ],

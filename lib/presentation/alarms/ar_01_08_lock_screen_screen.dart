@@ -68,7 +68,7 @@ class _Ar0108LockScreenScreenState extends State<Ar0108LockScreenScreen> {
     final Color sectionBg = isDark ? const Color(0xFF1D1D1D) : Colors.white;
     final Color sectionBorder = isDark ? Colors.white24 : Colors.black12;
     return Scaffold(
-      appBar: AppBar(title: const Text('AR_01_08 · Lock screen')),
+      appBar: AppBar(title: Text('ar0108_title'.tr())),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

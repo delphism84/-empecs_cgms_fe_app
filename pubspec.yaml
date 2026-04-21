@@ -38,6 +38,7 @@ dependencies:
   sign_in_with_apple: ^7.0.1
   kakao_flutter_sdk: ^1.10.0
   kakao_flutter_sdk_user: ^1.10.0
+  sqflite_common_ffi_web: ^1.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

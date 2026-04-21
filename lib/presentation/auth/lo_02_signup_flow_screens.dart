@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/presentation/auth/create_account_step1.dart';
 import 'package:helpcare/presentation/auth/create_account_step4_profile.dart';
@@ -38,22 +39,22 @@ class _Lo0201SignUpIntroScreenState extends State<Lo0201SignUpIntroScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('LO_02_01 · Sign up')),
+      appBar: AppBar(title: Text('lo0201_appbar'.tr())),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            const Text(
-              'Sign up',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            Text(
+              'lo0201_title'.tr(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               textAlign: TextAlign.start,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Would you like to sign up?\n\n- With an account you can sync data, share reports, and backup settings.\n- You can sign up later if you prefer.',
-              style: TextStyle(color: Colors.black87, height: 1.25),
+            Text(
+              'lo0201_body'.tr(),
+              style: const TextStyle(color: Colors.black87, height: 1.25),
               textAlign: TextAlign.start,
             ),
             const Spacer(),
@@ -63,7 +64,7 @@ class _Lo0201SignUpIntroScreenState extends State<Lo0201SignUpIntroScreen> {
                 if (!context.mounted) return;
                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CreateAccountStep1Page()));
               },
-              child: const Text('Sign up'),
+              child: Text('lo0201_signup'.tr()),
             ),
             const SizedBox(height: 12),
             OutlinedButton(
@@ -72,7 +73,7 @@ class _Lo0201SignUpIntroScreenState extends State<Lo0201SignUpIntroScreen> {
                 if (!context.mounted) return;
                 Navigator.of(context).pop();
               },
-              child: const Text('Later (Back to login)'),
+              child: Text('lo0201_later'.tr()),
             ),
           ],
         ),
@@ -138,22 +139,22 @@ class _Lo0203PhoneVerifyScreenState extends State<Lo0203PhoneVerifyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('LO_02_03 · Phone verification')),
+      appBar: AppBar(title: Text('lo0203_appbar'.tr())),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Phone verification', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700), textAlign: TextAlign.start),
+            Text('lo0203_title'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700), textAlign: TextAlign.start),
             const SizedBox(height: 12),
             TextField(
               controller: _phone,
               keyboardType: TextInputType.phone,
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]')), LengthLimitingTextInputFormatter(20)],
-              decoration: const InputDecoration(
-                labelText: 'Phone number',
-                hintText: '010-1234-5678',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'lo0203_phone_label'.tr(),
+                hintText: 'lo0203_phone_hint'.tr(),
+                border: const OutlineInputBorder(),
               ),
               onChanged: (v) => _setPhone(v),
             ),
@@ -162,7 +163,7 @@ class _Lo0203PhoneVerifyScreenState extends State<Lo0203PhoneVerifyScreen> {
               onPressed: () {
                 setState(() => _sent = true);
               },
-              child: Text(_sent ? 'Resend code' : 'Send code'),
+              child: Text(_sent ? 'lo0203_resend_code'.tr() : 'lo0203_send_code'.tr()),
             ),
             const SizedBox(height: 16),
             if (_sent) ...[
@@ -182,7 +183,7 @@ class _Lo0203PhoneVerifyScreenState extends State<Lo0203PhoneVerifyScreen> {
                   setState(() => _verified = true);
                   await _setVerified();
                 },
-                child: const Text('Verify (mock)'),
+                child: Text('lo0203_verify_mock'.tr()),
               ),
             ],
             const Spacer(),
@@ -192,7 +193,7 @@ class _Lo0203PhoneVerifyScreenState extends State<Lo0203PhoneVerifyScreen> {
                   : () {
                       Navigator.of(context).pushReplacementNamed(widget.nextRoute);
                     },
-              child: const Text('Next'),
+              child: Text('common_next'.tr()),
             ),
           ],
         ),
@@ -227,28 +228,28 @@ class _Lo0205SignUpCompleteScreenState extends State<Lo0205SignUpCompleteScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('LO_02_05 · Sign up complete')),
+      appBar: AppBar(title: Text('lo0205_appbar'.tr())),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Sign up complete', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800), textAlign: TextAlign.start),
+            Text('lo0205_title'.tr(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800), textAlign: TextAlign.start),
             const SizedBox(height: 12),
-            const Text(
-              'Your account has been created.\nYou can now log in to use the service.',
-              style: TextStyle(fontSize: 14, height: 1.3),
+            Text(
+              'lo0205_body'.tr(),
+              style: const TextStyle(fontSize: 14, height: 1.3),
               textAlign: TextAlign.start,
             ),
             const Spacer(),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false),
-              child: const Text('Go to login'),
+              child: Text('lo0205_go_login'.tr()),
             ),
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil('/home', (r) => false),
-              child: const Text('Home'),
+              child: Text('nav_home'.tr()),
             ),
           ],
         ),

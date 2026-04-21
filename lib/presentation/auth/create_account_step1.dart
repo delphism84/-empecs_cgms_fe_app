@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'create_account_step2_country.dart';
 
 /// Create Account Step 1: Choose type
@@ -17,7 +18,7 @@ class _CreateAccountStep1PageState extends State<CreateAccountStep1Page> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(title: Text('auth_create_account'.tr())),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -25,8 +26,8 @@ class _CreateAccountStep1PageState extends State<CreateAccountStep1Page> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _OptionCard(
-                title: 'Account',
-                subtitle: 'Of legal age: Create your new account.\n\nUnder legal age: A parent/guardian must create an account first and then add you.',
+                title: 'auth_signup_option_account'.tr(),
+                subtitle: 'auth_signup_option_account_sub'.tr(),
                 value: 'new',
                 groupValue: _selected,
                 onChanged: (v) => setState(() => _selected = v),
@@ -52,7 +53,7 @@ class _CreateAccountStep1PageState extends State<CreateAccountStep1Page> {
                           ),
                         );
                       },
-                  child: const Text('Next'),
+                  child: Text('common_next'.tr()),
                 ),
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'create_account_step3_credentials.dart';
 
 /// Create Account Step 2: Country/Language/Agreement
@@ -24,17 +25,17 @@ class _CreateAccountStep2CountryPageState extends State<CreateAccountStep2Countr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Country & Language')),
+      appBar: AppBar(title: Text('auth_country_language_title'.tr())),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Select Country'),
+            Text('onboarding_select_country'.tr()),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Choose your country'),
+              decoration: InputDecoration(border: const OutlineInputBorder(), hintText: 'auth_choose_country_hint'.tr()),
               value: _countryCode,
               items: _countries
                   .map((e) => DropdownMenuItem(value: e['code'], child: Text(e['name']!)))
@@ -47,7 +48,7 @@ class _CreateAccountStep2CountryPageState extends State<CreateAccountStep2Countr
               },
             ),
             const SizedBox(height: 16),
-            const Text('Select Language (auto by country)'),
+            Text('onboarding_select_language'.tr()),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -64,7 +65,7 @@ class _CreateAccountStep2CountryPageState extends State<CreateAccountStep2Countr
               value: _agreeResidence,
               onChanged: (v) => setState(() => _agreeResidence = v ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('I agree to the country-specific notices and policies.'),
+              title: Text('onboarding_country_notices_agree'.tr()),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -79,7 +80,7 @@ class _CreateAccountStep2CountryPageState extends State<CreateAccountStep2Countr
                       );
                     }
                   : null,
-                child: const Text('Next'),
+                child: Text('common_next'.tr()),
               ),
             ),
           ],
