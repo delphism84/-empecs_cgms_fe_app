@@ -17,6 +17,10 @@ class OnlineMonitor {
   bool _prevOnline = false;
   bool _tickRunning = false;
 
+  static const int _syncStatusUnknown = 0;
+  static const int _syncStatusSuccess = 1;
+  static const int _syncStatusFailed = 2;
+
   void start({Duration interval = const Duration(seconds: 10)}) {
     _timer?.cancel();
     _timer = Timer.periodic(interval, (_) => _tick());
@@ -49,8 +53,7 @@ class OnlineMonitor {
       } catch (_) {}
 
       if (online && !_prevOnline) {
-        unawaited(_pushBacklog());
-        unawaited(_showPostOnlineSyncUi());
+        unawaited(_handlePostOnlineSync());
       }
       _prevOnline = online;
     } finally {
@@ -58,8 +61,16 @@ class OnlineMonitor {
     }
   }
 
-  /// req 2-1: 온라인 전환 직후 로컬→서버 동기화 UX — 애니메이션 후 업로드 동기화 실패 표시(현행 스텁).
-  Future<void> _showPostOnlineSyncUi() async {
+  Future<void> _handlePostOnlineSync() async {
+    final int status = await _pushBacklog();
+    await _showPostOnlineSyncUi(status: status);
+  }
+
+  /// req 2-1: 온라인 전환 직후 로컬→서버 동기화 UX
+  /// - backlog가 없으면 메시지를 띄우지 않음
+  /// - backlog 동기화 성공/실패 결과에 맞는 안내를 표시
+  Future<void> _showPostOnlineSyncUi({required int status}) async {
+    if (status == _syncStatusUnknown) return;
     final BuildContext? ctx = AppNav.navigatorKey.currentContext;
     if (ctx == null || !ctx.mounted) return;
     try {
@@ -81,14 +92,17 @@ class OnlineMonitor {
       if (nav != null && nav.canPop()) nav.pop();
       final BuildContext? ctx2 = AppNav.navigatorKey.currentContext;
       if (ctx2 != null && ctx2.mounted) {
+        final String msg = status == _syncStatusSuccess
+            ? 'Upload sync completed'
+            : 'Upload sync failed';
         ScaffoldMessenger.of(ctx2).showSnackBar(
-          const SnackBar(content: Text('Upload sync failed')),
+          SnackBar(content: Text(msg)),
         );
       }
     } catch (_) {}
   }
 
-  Future<void> _pushBacklog() async {
+  Future<int> _pushBacklog() async {
     try {
       final st = await SettingsStorage.load();
       final String eqsn = (st['eqsn'] as String? ?? '');
@@ -105,11 +119,13 @@ class OnlineMonitor {
       );
       bool glucoseAllOk = true;
       bool eventsAllOk = true;
+      bool hadWork = false;
 
       // push glucose in chunks
       final repoG = GlucoseLocalRepo();
       final List<Map<String, dynamic>> gRows = await repoG.range(from: fromG, to: now, limit: 50000, eqsn: eqsn, userId: userId);
       if (gRows.isNotEmpty) {
+        hadWork = true;
         final ds = DataService();
         int i = 0;
         while (i < gRows.length) {
@@ -145,6 +161,7 @@ class OnlineMonitor {
       final repoE = EventLocalRepo();
       final List<Map<String, dynamic>> eRows = await repoE.range(from: fromE, to: now, limit: 10000, eqsn: eqsn, userId: userId);
       if (eRows.isNotEmpty) {
+        hadWork = true;
         final ds = DataService();
         for (final m in eRows) {
           final String type = (m['type'] as String?) ?? 'memo';
@@ -174,6 +191,7 @@ class OnlineMonitor {
       try {
         final List<dynamic> box = (st['eventDeleteOutbox'] as List<dynamic>? ?? <dynamic>[]);
         if (box.isNotEmpty) {
+          hadWork = true;
           final ds = DataService();
           final List<String> remain = <String>[];
           for (final e in box) {
@@ -197,7 +215,11 @@ class OnlineMonitor {
 
       // broadcast to refresh UI if needed
       try { DataSyncBus().emitGlucoseBulk(count: 0); } catch (_) {}
+      if (!hadWork) return _syncStatusUnknown;
+      final bool ok = glucoseAllOk && eventsAllOk;
+      return ok ? _syncStatusSuccess : _syncStatusFailed;
     } catch (_) {}
+    return _syncStatusFailed;
   }
 
   DateTime _parseIsoOrDefault(String? iso, DateTime dflt) {
