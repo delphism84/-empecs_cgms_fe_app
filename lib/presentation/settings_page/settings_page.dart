@@ -27,12 +27,14 @@ import 'package:helpcare/presentation/widgets/app_heading.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
+import 'package:helpcare/core/utils/alarm_qa_emulator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/presentation/settings_page/local_data_page.dart';
 import 'package:helpcare/presentation/settings_page/user_detail_page.dart';
 import 'package:helpcare/core/config/app_constants.dart';
 import 'package:helpcare/core/utils/profile_sync_service.dart';
+import 'package:helpcare/core/utils/emul_ble_recv_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -52,6 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool accHighContrast = false;
   bool accLargerFont = false;
   bool accColorblind = false;
+  bool emulBleRecvEnabled = false;
   int chartDotSize = 2;
   // support: log transmission
   String _lastLogTxAt = '';
@@ -186,6 +189,7 @@ class _SettingsPageState extends State<SettingsPage> {
         accHighContrast = (prefs['accHighContrast'] ?? accHighContrast) == true;
         accLargerFont = (prefs['accLargerFont'] ?? accLargerFont) == true;
         accColorblind = (prefs['accColorblind'] ?? accColorblind) == true;
+        emulBleRecvEnabled = local['emulBleRecvEnabled'] == true;
         alarms = list;
         final int cds = ((local['chartDotSize'] as num?)?.toInt() ?? 2);
         chartDotSize = cds.clamp(1, 10);
@@ -479,8 +483,10 @@ class _SettingsPageState extends State<SettingsPage> {
       local['accHighContrast'] = accHighContrast;
       local['accLargerFont'] = accLargerFont;
       local['accColorblind'] = accColorblind;
+      local['emulBleRecvEnabled'] = emulBleRecvEnabled;
       local['notificationsEnabled'] = true;
       await SettingsStorage.save(local);
+      await EmulBleRecvService().setEnabled(emulBleRecvEnabled);
       try { NotificationService().setEnabled(true); } catch (_) {}
       // 런타임 언어 변경(지원 로케일만)
       try {
@@ -511,6 +517,27 @@ class _SettingsPageState extends State<SettingsPage> {
         },
       });
     } catch (_) {}
+  }
+
+  Future<void> _runAlarmQa(BuildContext context, Future<String?> Function() fn) async {
+    try {
+      final String? err = await fn();
+      if (!context.mounted) return;
+      final String msg = (err != null && err.isNotEmpty) ? err.tr() : 'settings_alarm_qa_done'.tr();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Widget _alarmQaChip(BuildContext context, String label, Future<void> Function() onTap) {
+    return ActionChip(
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      onPressed: () => unawaited(onTap()),
+    );
   }
 
   @override
@@ -757,6 +784,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       onTap: _sendLogTx,
                     ),
                     const SizedBox(height: 8),
+                    _toggleItem('settings_emul_ble_recv'.tr(), emulBleRecvEnabled, (v) async {
+                      setState(() {
+                        emulBleRecvEnabled = v;
+                      });
+                      await _save();
+                    }),
+                    const SizedBox(height: 8),
                     _notifItem(
                       context,
                       icon: Icons.fingerprint,
@@ -839,6 +873,32 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         );
                       },
+                    ),
+                    // 릴리스 APK에서도 검수 가능하도록 debug 전용 게이트 없음(동일 카드: 개발자 영역)
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'settings_alarm_qa_title'.tr(),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'settings_alarm_qa_sub'.tr(),
+                      style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65)),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _alarmQaChip(context, 'settings_alarm_qa_very_low'.tr(), () => _runAlarmQa(context, AlarmQaEmulator.emitVeryLow)),
+                        _alarmQaChip(context, 'settings_alarm_qa_low'.tr(), () => _runAlarmQa(context, AlarmQaEmulator.emitLow)),
+                        _alarmQaChip(context, 'settings_alarm_qa_high'.tr(), () => _runAlarmQa(context, AlarmQaEmulator.emitHigh)),
+                        _alarmQaChip(context, 'settings_alarm_qa_rate'.tr(), () => _runAlarmQa(context, AlarmQaEmulator.emitRapidChange)),
+                        _alarmQaChip(context, 'settings_alarm_qa_signal_loss'.tr(), () => _runAlarmQa(context, AlarmQaEmulator.emitSignalLoss)),
+                      ],
                     ),
                   ]),
                 ),

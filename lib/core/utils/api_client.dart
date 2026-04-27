@@ -58,51 +58,51 @@ class ApiClient {
     return h;
   }
 
-  Future<http.Response> put(String path, {Map<String, dynamic>? body}) async {
+  Future<http.Response> put(String path, {Map<String, dynamic>? body, bool withGlobalLoading = true}) async {
     await _ensureBaseLoaded();
     final uri = Uri.parse('$base$path');
-    GlobalLoading.begin();
+    if (withGlobalLoading) GlobalLoading.begin();
     try {
       return await http
           .put(uri, headers: _headers(), body: jsonEncode(body ?? {}))
           .timeout(timeout);
     } finally {
-      GlobalLoading.end();
+      if (withGlobalLoading) GlobalLoading.end();
     }
   }
 
-  Future<http.Response> post(String path, {Map<String, dynamic>? body}) async {
+  Future<http.Response> post(String path, {Map<String, dynamic>? body, bool withGlobalLoading = true}) async {
     await _ensureBaseLoaded();
     final uri = Uri.parse('$base$path');
-    GlobalLoading.begin();
+    if (withGlobalLoading) GlobalLoading.begin();
     try {
       return await http
           .post(uri, headers: _headers(), body: jsonEncode(body ?? {}))
           .timeout(timeout);
     } finally {
-      GlobalLoading.end();
+      if (withGlobalLoading) GlobalLoading.end();
     }
   }
 
-  Future<http.Response> get(String path, {Map<String, dynamic>? query}) async {
+  Future<http.Response> get(String path, {Map<String, dynamic>? query, bool withGlobalLoading = true}) async {
     await _ensureBaseLoaded();
     final uri = Uri.parse('$base$path').replace(queryParameters: query?.map((k, v) => MapEntry(k, '$v')));
-    GlobalLoading.begin();
+    if (withGlobalLoading) GlobalLoading.begin();
     try {
       return await http.get(uri, headers: _headers(jsonBody: false)).timeout(timeout);
     } finally {
-      GlobalLoading.end();
+      if (withGlobalLoading) GlobalLoading.end();
     }
   }
 
-  Future<http.Response> delete(String path) async {
+  Future<http.Response> delete(String path, {bool withGlobalLoading = true}) async {
     await _ensureBaseLoaded();
     final uri = Uri.parse('$base$path');
-    GlobalLoading.begin();
+    if (withGlobalLoading) GlobalLoading.begin();
     try {
       return await http.delete(uri, headers: _headers(jsonBody: false)).timeout(timeout);
     } finally {
-      GlobalLoading.end();
+      if (withGlobalLoading) GlobalLoading.end();
     }
   }
 }
@@ -157,7 +157,7 @@ class DataService {
       if (to != null) 'to': to.toUtc().toIso8601String(),
       'limit': limit,
       'compact': 1,
-    });
+    }, withGlobalLoading: false);
     if (resp.statusCode != 200) return [];
     await _markOnline();
     final String body = resp.body.trim();
@@ -232,7 +232,7 @@ class DataService {
         if (to != null) 'to': to.toUtc().toIso8601String(),
         'limit': limit,
         'compact': 1,
-      });
+      }, withGlobalLoading: false);
       if (resp.statusCode != 200) return [];
       await _markOnline();
       final dynamic decoded = jsonDecode(resp.body);
@@ -307,7 +307,7 @@ class DataService {
     final resp = await _api.get('/api/data/glucose', query: {
       'fromTrid': fromTrid,
       'limit': limit,
-    });
+    }, withGlobalLoading: false);
     if (resp.statusCode != 200) return [];
     final list = jsonDecode(resp.body) as List<dynamic>;
     return list.cast<Map<String, dynamic>>();
@@ -324,7 +324,7 @@ class DataService {
         'value': value,
         if (trid != null) 'trid': trid,
         if (eqsn.isNotEmpty) 'eqsn': eqsn,
-      });
+      }, withGlobalLoading: false);
       if (r.statusCode == 200) { await _markOnline(); return true; }
     } catch (_) {}
     // fallback: local cache only
@@ -340,7 +340,7 @@ class DataService {
   Future<bool> postGlucoseBatch({required List<int> t, required List<num> v, required List<int?> tr}) async {
     if (!await _canUpload()) return false;
     await _api.loadToken();
-    // try server first
+    // server upload only: local queue already keeps source data.
     try {
       String eqsn = '';
       try { final s = await SettingsStorage.load(); eqsn = (s['eqsn'] as String? ?? ''); } catch (_) {}
@@ -349,21 +349,10 @@ class DataService {
         'v': v,
         'tr': tr,
         if (eqsn.isNotEmpty) 'eqsn': eqsn,
-      });
+      }, withGlobalLoading: false);
       if (r.statusCode == 200) { await _markOnline(); return true; }
     } catch (_) {}
-    // fallback: write to local cache only
-    try {
-      String eqsn = '';
-      String userId = '';
-      try { final s = await SettingsStorage.load(); eqsn = (s['eqsn'] as String? ?? ''); userId = (s['lastUserId'] as String? ?? ''); } catch (_) {}
-      final int n = math.min(t.length, math.min(v.length, tr.length));
-      for (int i = 0; i < n; i++) {
-        final DateTime time = DateTime.fromMillisecondsSinceEpoch(t[i], isUtc: true).toLocal();
-        await GlucoseLocalRepo().addPoint(time: time, value: v[i].toDouble(), trid: tr[i], eqsn: eqsn, userId: userId);
-      }
-      return true;
-    } catch (_) { return false; }
+    return false;
   }
 
   Future<bool> postEvent({required String type, required DateTime time, String? memo}) async {
@@ -377,7 +366,7 @@ class DataService {
         'time': time.toUtc().toIso8601String(),
         if (memo != null) 'memo': memo,
         if (eqsn.isNotEmpty) 'eqsn': eqsn,
-      });
+      }, withGlobalLoading: false);
       ok = r.statusCode == 200;
       if (ok) { await _markOnline(); }
     } catch (_) {}
@@ -400,7 +389,7 @@ class DataService {
     final bool looksLikeObjectId = RegExp(r'^[a-fA-F0-9]{24}$').hasMatch(trimmed);
     if (trimmed.isNotEmpty && looksLikeObjectId) {
     await _api.loadToken();
-      final resp = await _api.delete('/api/data/events/$trimmed');
+      final resp = await _api.delete('/api/data/events/$trimmed', withGlobalLoading: false);
       ok = resp.statusCode == 200;
     }
     // 항상 로컬에서도 삭제 시도 (오프라인/서버 실패 시에도 정리)
@@ -426,20 +415,20 @@ class DataService {
   // developer helpers under data service
   Future<bool> clearGlucose() async {
     await _api.loadToken();
-    final resp = await _api.delete('/api/data/glucose/clear');
+    final resp = await _api.delete('/api/data/glucose/clear', withGlobalLoading: false);
     return resp.statusCode == 200;
   }
 
   Future<bool> clearEvents() async {
     await _api.loadToken();
-    final resp = await _api.delete('/api/data/events/clear');
+    final resp = await _api.delete('/api/data/events/clear', withGlobalLoading: false);
     return resp.statusCode == 200;
   }
 
   Future<bool> seedGlucoseDay() async {
     await _api.loadToken();
     try {
-      final resp = await _api.post('/api/data/glucose/seed-day');
+      final resp = await _api.post('/api/data/glucose/seed-day', withGlobalLoading: false);
       if (resp.statusCode == 200) return true;
       // 401 등 실패 시 로컬 시드로 폴백
       await _seedLocalDays(1);
@@ -453,7 +442,7 @@ class DataService {
   Future<bool> seedGlucoseDays(int days) async {
     await _api.loadToken();
     try {
-      final resp = await _api.post('/api/data/glucose/seed-days', body: { 'days': days });
+      final resp = await _api.post('/api/data/glucose/seed-days', body: { 'days': days }, withGlobalLoading: false);
       if (resp.statusCode == 200) return true;
       // 401 등 실패 시 로컬 시드로 폴백
       await _seedLocalDays(days);

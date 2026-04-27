@@ -5,16 +5,35 @@ class DebugConfig {
   static bool debugNavVisible = false;
 
   /// API 베이스 URL
-  /// - **Web (예: https://empecsuser.lunarsystem.co.kr)**: 현재 오리진 → nginx가 `/api` 를 BE로 프록시 (동일 스택 Docker)
-  /// - **모바일(안드로이드/iOS)**: 운영 API 호스트 고정 — BLE·실기기는 여기서 검증
+  /// - **Web 배포**(동일 도메인에서 nginx가 `/api` 프록시): [Uri.base] 오리진 사용
+  /// - **Web 로컬**(flutter run / file:// / localhost): 오리진에는 API가 없으므로 운영 호스트와 동일하게 고정
+  /// - **모바일**: 운영 API 호스트 고정
   /// docs/social_login_fe.guide.md · BE: empecs.lunarsystem.co.kr
+  static const String _productionApiOrigin = 'https://empecs.lunarsystem.co.kr';
+
   static String get apiBase {
     if (kIsWeb) {
       try {
-        return Uri.base.removeFragment().origin;
+        final Uri u = Uri.base.removeFragment();
+        final String host = u.host.toLowerCase();
+        final bool noApiOnThisOrigin = host.isEmpty ||
+            host == 'localhost' ||
+            host == '127.0.0.1' ||
+            host == '0.0.0.0' ||
+            host.startsWith('192.168.') ||
+            host.endsWith('.local');
+        if (noApiOnThisOrigin) {
+          return _productionApiOrigin;
+        }
+        final bool sameStackDeployed =
+            host.contains('lunarsystem.co.kr') || host.contains('empecs');
+        if (sameStackDeployed) {
+          return u.origin;
+        }
+        return _productionApiOrigin;
       } catch (_) {}
     }
-    return 'https://empecs.lunarsystem.co.kr';
+    return _productionApiOrigin;
   }
 
   // 모든 API 기본 타임아웃(ms)

@@ -251,7 +251,11 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
         eqsn = q.isEmpty ? null : q;
       } catch (_) {}
       // 오프라인 우선: 로컬 DB에서 24h 범위 조회 (현재 SN·계정 범위)
-      final rows = await GlucoseLocalRepo().range(from: from, to: to, limit: 2000, eqsn: eqsn);
+      List<Map<String, dynamic>> rows = await GlucoseLocalRepo().range(from: from, to: to, limit: 2000, eqsn: eqsn);
+      if (rows.isEmpty && (eqsn != null && eqsn.isNotEmpty)) {
+        final loose = await GlucoseLocalRepo().range(from: from, to: to, limit: 2000, eqsn: null);
+        if (loose.isNotEmpty) rows = loose;
+      }
       _series.clear();
       for (final r in rows) {
         final int ms = (r['time_ms'] as int?) ?? 0;
@@ -329,6 +333,17 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   }
 
   void _onDataSync(DataSyncEvent ev) {
+    try {
+      _onDataSyncImpl(ev);
+    } catch (e) {
+      assert(() {
+        debugPrint('_onDataSync error: $e');
+        return true;
+      }());
+    }
+  }
+
+  void _onDataSyncImpl(DataSyncEvent ev) {
     if (ev.kind == DataSyncKind.glucoseBulk) {
       // count==0 (예: SN 변경/DB clear) 시 즉시 대시(–) 표시를 위해 시리즈 초기화
       final int? c = ev.payload['count'] as int?;
@@ -355,7 +370,8 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     }
     if (ev.kind != DataSyncKind.glucosePoint) return;
     final DateTime t = (ev.payload['time'] as DateTime);
-    final double v = (ev.payload['value'] as double);
+    final double v = ((ev.payload['value'] as num?) ?? double.nan).toDouble();
+    if (v.isNaN) return;
     _series.add({'time': t, 'value': v});
     final DateTime cutoff = DateTime.now().subtract(const Duration(hours: 24));
     _series.removeWhere((e) => (e['time'] as DateTime).isBefore(cutoff));

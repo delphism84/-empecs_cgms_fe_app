@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 // ignore_for_file: unused_element
@@ -154,6 +155,15 @@ class _SensorPageState extends State<SensorPage> {
               _notifItem(context, isDark, Icons.bluetooth_searching, 'sensor_menu_scan_connect'.tr(), 'sensor_menu_scan_connect_sub'.tr(), const SensorBleScanPage(), 'SC_01_01'),
               _notifItem(context, isDark, Icons.confirmation_number, 'sensor_menu_serial'.tr(), 'sensor_menu_serial_sub'.tr(), const SensorSerialPage(), 'SC_04_01'),
               _notifItem(context, isDark, Icons.schedule, 'sensor_menu_start_time'.tr(), 'sensor_menu_start_time_sub'.tr(), const SensorStartTimePage(), 'SC_05_01'),
+              _notifItem(
+                context,
+                isDark,
+                Icons.download_for_offline,
+                'sensor_menu_download_server'.tr(),
+                'sensor_menu_download_server_sub'.tr(),
+                const SensorDownloadFromServerPage(),
+                'SC_02_02',
+              ),
               // removed old reconnect items; replaced with QR & Connect under Scan & Connect
               _notifItemRoute(context, isDark, Icons.share, 'sensor_menu_share_data'.tr(), 'sensor_menu_share_data_sub'.tr(), '/sc/07/01', 'SC_07_01'),
               const SizedBox(height: 16),
@@ -174,6 +184,261 @@ class _SensorPageState extends State<SensorPage> {
   }
 }
 
+class SensorDownloadFromServerPage extends StatefulWidget {
+  const SensorDownloadFromServerPage({super.key});
+
+  @override
+  State<SensorDownloadFromServerPage> createState() => _SensorDownloadFromServerPageState();
+}
+
+class _SensorDownloadFromServerPageState extends State<SensorDownloadFromServerPage> {
+  bool _busy = false;
+  String _eqsn = '';
+  String _userId = '';
+  int _localCount = 0;
+  int? _localFromMs;
+  int? _localToMs;
+  int _serverCount = 0;
+  int? _serverFromMs;
+  int? _serverToMs;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshRanges();
+  }
+
+  String _fmtMs(int? ms) {
+    if (ms == null || ms <= 0) return '—';
+    final d = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal();
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} '
+        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchServerRows() async {
+    final api = ApiClient();
+    await api.loadToken();
+    final now = DateTime.now().toUtc();
+    final from = now.subtract(const Duration(days: 3650));
+    final r = await api.get('/api/data/glucose', query: {
+      'from': from.toIso8601String(),
+      'to': now.toIso8601String(),
+      'limit': 200000,
+      'compact': 1,
+    }, withGlobalLoading: false);
+    if (r.statusCode != 200) return <Map<String, dynamic>>[];
+    final decoded = jsonDecode(r.body);
+    final out = <Map<String, dynamic>>[];
+    if (decoded is Map && decoded.containsKey('t') && decoded.containsKey('v')) {
+      final List t = decoded['t'] as List? ?? const [];
+      final List v = decoded['v'] as List? ?? const [];
+      final List tr = decoded['tr'] as List? ?? const [];
+      for (int i = 0; i < t.length; i++) {
+        final int ms = (t[i] as num).toInt();
+        final double val = (i < v.length ? (v[i] as num).toDouble() : 0.0);
+        final int? trid = (i < tr.length && tr[i] != null) ? (tr[i] as num).toInt() : null;
+        out.add({'timeMs': ms, 'value': val, 'trid': trid});
+      }
+      return out;
+    }
+    if (decoded is List) {
+      for (final raw in decoded) {
+        if (raw is! Map) continue;
+        try {
+          final m = Map<String, dynamic>.from(raw);
+          final String t = (m['time'] as String? ?? '').trim();
+          if (t.isEmpty) continue;
+          final int ms = DateTime.parse(t).toUtc().millisecondsSinceEpoch;
+          out.add({
+            'timeMs': ms,
+            'value': ((m['value'] as num?) ?? 0).toDouble(),
+            'trid': (m['trid'] as num?)?.toInt(),
+          });
+        } catch (_) {}
+      }
+    }
+    return out;
+  }
+
+  Future<void> _refreshRanges() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final st = await SettingsStorage.load();
+      final String eqsn = (st['eqsn'] as String? ?? '').trim();
+      final String uid = (st['lastUserId'] as String? ?? '').trim();
+      final local = await GlucoseLocalRepo().rangeBounds(
+        eqsn: eqsn.isEmpty ? null : eqsn,
+        userId: uid,
+      );
+      final rows = await _fetchServerRows();
+      int? srvMin;
+      int? srvMax;
+      for (final m in rows) {
+        final int ms = (m['timeMs'] as num?)?.toInt() ?? 0;
+        if (ms <= 0) continue;
+        srvMin = (srvMin == null || ms < srvMin) ? ms : srvMin;
+        srvMax = (srvMax == null || ms > srvMax) ? ms : srvMax;
+      }
+      if (!mounted) return;
+      setState(() {
+        _eqsn = eqsn;
+        _userId = uid;
+        _localCount = (local['count'] as int?) ?? 0;
+        _localFromMs = local['fromMs'] as int?;
+        _localToMs = local['toMs'] as int?;
+        _serverCount = rows.length;
+        _serverFromMs = srvMin;
+        _serverToMs = srvMax;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download check failed: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _download() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final rows = await _fetchServerRows();
+      if (rows.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_download_server_empty'.tr())));
+        return;
+      }
+      final local = await GlucoseLocalRepo().rangeBounds(
+        eqsn: _eqsn.isEmpty ? null : _eqsn,
+        userId: _userId,
+      );
+      final int? localFrom = local['fromMs'] as int?;
+      final int? localTo = local['toMs'] as int?;
+      final List<Map<String, dynamic>> filtered = rows.where((m) {
+        final int ms = (m['timeMs'] as num?)?.toInt() ?? 0;
+        if (ms <= 0) return false;
+        if (localFrom == null || localTo == null) return true;
+        // 기간이 겹치는 구간은 유지(덮어쓰기/대체 없음), 비겹침 구간만 다운로드
+        return ms < localFrom || ms > localTo;
+      }).toList();
+      if (filtered.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('sensor_download_server_overlap_only'.tr())),
+        );
+        return;
+      }
+      filtered.sort((a, b) => ((a['timeMs'] as num?) ?? 0).compareTo((b['timeMs'] as num?) ?? 0));
+      final times = <DateTime>[];
+      final values = <double>[];
+      final trids = <int?>[];
+      for (final m in filtered) {
+        final int ms = (m['timeMs'] as num).toInt();
+        times.add(DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal());
+        values.add(((m['value'] as num?) ?? 0).toDouble());
+        trids.add((m['trid'] as num?)?.toInt());
+      }
+      await GlucoseLocalRepo().addPointsBatch(
+        times: times,
+        values: values,
+        trids: trids,
+        eqsn: _eqsn.isEmpty ? null : _eqsn,
+        userId: _userId.isEmpty ? null : _userId,
+      );
+      try {
+        DataSyncBus().emitGlucoseBulk(count: filtered.length);
+      } catch (_) {}
+      if (!mounted) return;
+      final int skipped = rows.length - filtered.length;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'sensor_download_server_done'.tr(
+              namedArgs: {'added': '${filtered.length}', 'skipped': '$skipped'},
+            ),
+          ),
+        ),
+      );
+      await _refreshRanges();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download failed: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('sensor_download_server_title'.tr())),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _group(context, title: 'sensor_download_server_scope'.tr(), children: [
+            ListTile(
+              dense: true,
+              title: Text('sensor_download_server_eqsn'.tr()),
+              subtitle: Text(_eqsn.isEmpty ? '—' : _eqsn),
+            ),
+            ListTile(
+              dense: true,
+              title: Text('sensor_download_server_user'.tr()),
+              subtitle: Text(_userId.isEmpty ? '—' : _userId),
+            ),
+          ]),
+          _group(context, title: 'sensor_download_server_ranges'.tr(), children: [
+            ListTile(
+              dense: true,
+              title: Text('sensor_download_server_local'.tr()),
+              subtitle: Text('${_fmtMs(_localFromMs)}  ~  ${_fmtMs(_localToMs)}'),
+              trailing: Text('$_localCount'),
+            ),
+            ListTile(
+              dense: true,
+              title: Text('sensor_download_server_remote'.tr()),
+              subtitle: Text('${_fmtMs(_serverFromMs)}  ~  ${_fmtMs(_serverToMs)}'),
+              trailing: Text('$_serverCount'),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'sensor_download_server_rule'.tr(),
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _busy ? null : _refreshRanges,
+                  child: Text('common_refresh'.tr()),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _busy ? null : _download,
+                  icon: _busy
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.download),
+                  label: Text('sensor_download_server_btn'.tr()),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class SensorStatusPage extends StatefulWidget {
   const SensorStatusPage({super.key});

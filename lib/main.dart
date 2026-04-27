@@ -48,6 +48,7 @@ import 'core/utils/local_db.dart';
 import 'core/utils/settings_storage.dart';
 import 'core/utils/ble_service.dart';
 import 'core/utils/ble_emu_server.dart';
+import 'core/utils/emul_ble_recv_service.dart';
 import 'core/utils/alert_engine.dart';
 import 'core/utils/focus_bus.dart';
 import 'core/utils/app_nav.dart';
@@ -83,6 +84,8 @@ Future<void> main() async {
   try { LocalSyncService().stop(); } catch (_) {}
   // 10초마다 온라인 상태 모니터링 및 자동 push
   OnlineMonitor().start();
+  // Dev gate: emulate BLE receive every 10 seconds when enabled.
+  await EmulBleRecvService().start();
   // Kakao SDK 초기화 (키가 설정된 경우에만)
   if (SocialAuthConfig.hasKakaoKey) {
     kakao.KakaoSdk.init(nativeAppKey: SocialAuthConfig.kakaoNativeAppKey);

@@ -75,6 +75,7 @@ class AlertEngine {
 
   /// 디버그/봇 검수용: 시스템(신호 손실 등) 알람 강제 트리거
   Future<void> debugTriggerSystemAlarm({String reason = 'signal_loss'}) async {
+    if (await _isWarmupActive()) return;
     invalidateAlarmsCache();
     await _ensureAlarmsLoaded();
     final String r = reason.trim().isEmpty ? 'signal_loss' : reason.trim();
@@ -139,7 +140,8 @@ class AlertEngine {
       if (r != 'signal_loss') {
         body = '$body ($r)';
       }
-      final int nid = 1010 + (r.hashCode.abs() % 50);
+      // 고정 id는 일부 기기에서 반복 알람이 "갱신만" 되고 소리/헤드업이 재생되지 않을 수 있음
+      final int nid = 101000 + (DateTime.now().millisecondsSinceEpoch % 899000);
       final String payload = 'alarm:system:signal_loss';
       await NotificationService().showAlert(
         id: nid,
@@ -225,6 +227,7 @@ class AlertEngine {
   }
 
   Future<void> _evaluate(double value, {DateTime? t}) async {
+    if (await _isWarmupActive()) return;
     String unit = 'mg/dL';
     double factor = 1.0;
     try {
@@ -346,6 +349,19 @@ class AlertEngine {
         await SettingsStorage.save(s);
       } catch (_) {}
     }
+  }
+
+  /// QA/BLE 에뮬: 알람 테스트 전 스로틀·급변동 이전 포인트 초기화.
+  void debugResetAlarmEvaluationState() {
+    _lastFired.clear();
+    _lastPointAt = null;
+    _lastPointValue = null;
+  }
+
+  /// QA: 알람 목록을 즉시 다시 읽음(캐시 TTL 무시).
+  Future<void> debugReloadAlarmsNow() async {
+    invalidateAlarmsCache();
+    await _ensureAlarmsLoaded();
   }
 }
 

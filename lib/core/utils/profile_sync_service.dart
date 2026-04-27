@@ -141,7 +141,7 @@ class ProfileSyncService {
 
       final api = ApiClient();
       await api.loadToken();
-      final resp = await api.get('/api/auth/me');
+      final resp = await api.get('/api/auth/me', withGlobalLoading: false);
       if (resp.statusCode != 200) {
         await ensureLocalUserFromJwt();
         return;

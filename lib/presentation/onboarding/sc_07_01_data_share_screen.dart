@@ -382,13 +382,21 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
             buf.writeln('# sensor_share_no_glucose_in_range');
           }
         }
-        await file.writeAsString(buf.toString());
+        await file.writeAsString('\ufeff${buf.toString()}');
       }
       final Map<String, dynamic> st = await SettingsStorage.load();
       st['sc0701LastFilePath'] = file.path;
       await SettingsStorage.save(st);
+      final String shareBase = 'cgms-share-$ts.$ext';
+      final bool isPdf = exportFormat.toUpperCase() == 'PDF';
       await Share.shareXFiles(
-        <XFile>[XFile(file.path)],
+        <XFile>[
+          XFile(
+            file.path,
+            mimeType: isPdf ? 'application/pdf' : 'text/csv',
+            name: shareBase,
+          ),
+        ],
         text: '${'sensor_share_pdf_title'.tr()} - ${_rangeLabel(r)}',
       );
       if (mounted) {

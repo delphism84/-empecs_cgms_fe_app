@@ -26,7 +26,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
    List<Widget> screens=[
-    const MainDashboardPage(),   // MAIN_DASHBOARD
+    // IndexedStack 비가시 탭은 기본 TickerMode off — 대시보드는 혈당 스트림·토스트 애니 항상 동작
+    const TickerMode(enabled: true, child: MainDashboardPage()),
     const TrendTabPage(),  // Trend tab
     const CgmsReportScreen(),    // RP_01_01 리포트 별도 페이지
     const SensorPage(),          // SC_02_01
@@ -93,7 +94,10 @@ class _HomeState extends State<Home> {
             SystemNavigator.pop();
           }
         },
-        child: screens[selectedNavBarIndex],
+        child: IndexedStack(
+          index: selectedNavBarIndex,
+          children: screens,
+        ),
       ),
      bottomNavigationBar: BottomNavigationBar(
       type: BottomNavigationBarType.fixed,

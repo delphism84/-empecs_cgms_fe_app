@@ -15,6 +15,7 @@ class OnlineMonitor {
 
   Timer? _timer;
   bool _prevOnline = false;
+  bool _tickRunning = false;
 
   void start({Duration interval = const Duration(seconds: 10)}) {
     _timer?.cancel();
@@ -28,27 +29,33 @@ class OnlineMonitor {
   }
 
   Future<void> _tick() async {
-    bool online = false;
+    if (_tickRunning) return;
+    _tickRunning = true;
     try {
-      final api = ApiClient();
-      await api.loadToken();
-      final r = await api.get('/api/settings/app');
-      online = (r.statusCode == 200);
-    } catch (_) {
-      online = false;
-    }
-    try {
-      final s = await SettingsStorage.load();
-      s['offlineMode'] = !online;
-      // keep eventsSync off by default; only SN change will perform pulls
-      await SettingsStorage.save(s);
-    } catch (_) {}
+      bool online = false;
+      try {
+        final api = ApiClient();
+        await api.loadToken();
+        final r = await api.get('/api/settings/app', withGlobalLoading: false);
+        online = (r.statusCode == 200);
+      } catch (_) {
+        online = false;
+      }
+      try {
+        final s = await SettingsStorage.load();
+        s['offlineMode'] = !online;
+        // keep eventsSync off by default; only SN change will perform pulls
+        await SettingsStorage.save(s);
+      } catch (_) {}
 
-    if (online && !_prevOnline) {
-      unawaited(_pushBacklog());
-      unawaited(_showPostOnlineSyncUi());
+      if (online && !_prevOnline) {
+        unawaited(_pushBacklog());
+        unawaited(_showPostOnlineSyncUi());
+      }
+      _prevOnline = online;
+    } finally {
+      _tickRunning = false;
     }
-    _prevOnline = online;
   }
 
   /// req 2-1: 온라인 전환 직후 로컬→서버 동기화 UX — 애니메이션 후 업로드 동기화 실패 표시(현행 스텁).
@@ -87,8 +94,17 @@ class OnlineMonitor {
       final String eqsn = (st['eqsn'] as String? ?? '');
       final String userId = (st['lastUserId'] as String? ?? '');
       final DateTime now = DateTime.now();
-      DateTime fromG = _parseIsoOrDefault(st['lastPushAtGlucose'] as String?, now.subtract(const Duration(hours: 2)));
-      DateTime fromE = _parseIsoOrDefault(st['lastPushAtEvents'] as String?, now.subtract(const Duration(hours: 2)));
+      final bool pending = st['offlineUploadPending'] == true;
+      DateTime fromG = _parseIsoOrDefault(
+        pending ? (st['offlineUploadFromGlucose'] as String?) : (st['lastPushAtGlucose'] as String?),
+        now.subtract(const Duration(hours: 2)),
+      );
+      DateTime fromE = _parseIsoOrDefault(
+        pending ? (st['offlineUploadFromEvents'] as String?) : (st['lastPushAtEvents'] as String?),
+        now.subtract(const Duration(hours: 2)),
+      );
+      bool glucoseAllOk = true;
+      bool eventsAllOk = true;
 
       // push glucose in chunks
       final repoG = GlucoseLocalRepo();
@@ -106,11 +122,23 @@ class OnlineMonitor {
             v.add(((gRows[j]['value'] as num?) ?? 0));
             tr.add((gRows[j]['trid'] as num?)?.toInt());
           }
-          await ds.postGlucoseBatch(t: t, v: v, tr: tr);
+          final bool ok = await ds.postGlucoseBatch(t: t, v: v, tr: tr);
+          if (!ok) {
+            glucoseAllOk = false;
+            break;
+          }
+          final int lastMs = t.isNotEmpty ? t.last : 0;
+          if (lastMs > 0) {
+            st['offlineUploadFromGlucose'] = DateTime.fromMillisecondsSinceEpoch(lastMs, isUtc: true).toIso8601String();
+            await SettingsStorage.save(st);
+          }
           i = end;
         }
-        st['lastPushAtGlucose'] = now.toUtc().toIso8601String();
-        await SettingsStorage.save(st);
+        if (glucoseAllOk) {
+          st['lastPushAtGlucose'] = now.toUtc().toIso8601String();
+          st['offlineUploadFromGlucose'] = now.toUtc().toIso8601String();
+          await SettingsStorage.save(st);
+        }
       }
 
       // push events individually
@@ -122,10 +150,24 @@ class OnlineMonitor {
           final String type = (m['type'] as String?) ?? 'memo';
           final DateTime tm = DateTime.fromMillisecondsSinceEpoch((m['time_ms'] as num).toInt()).toLocal();
           final String? memo = (m['memo'] as String?);
-          try { await ds.postEvent(type: type, time: tm, memo: memo); } catch (_) {}
+          try {
+            final bool ok = await ds.postEvent(type: type, time: tm, memo: memo);
+            if (!ok) {
+              eventsAllOk = false;
+              break;
+            }
+            st['offlineUploadFromEvents'] = tm.toUtc().toIso8601String();
+            await SettingsStorage.save(st);
+          } catch (_) {
+            eventsAllOk = false;
+            break;
+          }
         }
-        st['lastPushAtEvents'] = now.toUtc().toIso8601String();
-        await SettingsStorage.save(st);
+        if (eventsAllOk) {
+          st['lastPushAtEvents'] = now.toUtc().toIso8601String();
+          st['offlineUploadFromEvents'] = now.toUtc().toIso8601String();
+          await SettingsStorage.save(st);
+        }
       }
 
       // process queued deletions
@@ -144,6 +186,14 @@ class OnlineMonitor {
           await SettingsStorage.save(st);
         }
       } catch (_) {}
+
+      if (pending && glucoseAllOk && eventsAllOk) {
+        final List<dynamic> remain = (st['eventDeleteOutbox'] as List<dynamic>? ?? <dynamic>[]);
+        if (remain.isEmpty) {
+          st['offlineUploadPending'] = false;
+          await SettingsStorage.save(st);
+        }
+      }
 
       // broadcast to refresh UI if needed
       try { DataSyncBus().emitGlucoseBulk(count: 0); } catch (_) {}

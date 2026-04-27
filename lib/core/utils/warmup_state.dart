@@ -6,6 +6,9 @@ import 'package:helpcare/core/utils/settings_storage.dart';
 class WarmupState {
   WarmupState._();
 
+  /// [start]가 저장소에 쓰이기 전 await 구간 — 이 사이에 혈당/링크 알림이 새지 않도록 한다.
+  static bool _persistingWarmup = false;
+
   static const String _kStartAt = 'sc0106WarmupStartAt';
   static const String _kEndsAt = 'sc0106WarmupEndsAt';
   static const String _kActive = 'sc0106WarmupActive';
@@ -13,6 +16,7 @@ class WarmupState {
   static const String _kEqsn = 'sc0106WarmupEqsn';
 
   static Future<bool> isActive() async {
+    if (_persistingWarmup) return true;
     final DateTime now = DateTime.now();
     try {
       final st = await SettingsStorage.load();
@@ -37,15 +41,20 @@ class WarmupState {
     required int seconds,
     String eqsn = '',
   }) async {
-    final DateTime now = DateTime.now().toUtc();
-    final DateTime ends = now.add(Duration(seconds: seconds));
-    final st = await SettingsStorage.load();
-    st[_kEqsn] = eqsn.trim();
-    st[_kStartAt] = now.toIso8601String();
-    st[_kEndsAt] = ends.toIso8601String();
-    st[_kActive] = true;
-    st[_kDoneAt] = '';
-    await SettingsStorage.save(st);
+    _persistingWarmup = true;
+    try {
+      final DateTime now = DateTime.now().toUtc();
+      final DateTime ends = now.add(Duration(seconds: seconds));
+      final st = await SettingsStorage.load();
+      st[_kEqsn] = eqsn.trim();
+      st[_kStartAt] = now.toIso8601String();
+      st[_kEndsAt] = ends.toIso8601String();
+      st[_kActive] = true;
+      st[_kDoneAt] = '';
+      await SettingsStorage.save(st);
+    } finally {
+      _persistingWarmup = false;
+    }
   }
 
   static Future<void> completeNow() async {

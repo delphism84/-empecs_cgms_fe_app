@@ -39,10 +39,14 @@ class SettingsStorage {
     'offlineMode': true,
     'lastPushAtGlucose': '',
     'lastPushAtEvents': '',
+    'offlineUploadPending': false,
+    'offlineUploadFromGlucose': '',
+    'offlineUploadFromEvents': '',
     // queued ids for event deletions when offline
     'eventDeleteOutbox': <String>[],
     // API base override (dev)
     'apiBaseUrl': '',
+    'emulBleRecvEnabled': false,
     // last alert debug snapshot (for bot verification)
     'lastAlert': <String, dynamic>{},
     // log data transmission (support)

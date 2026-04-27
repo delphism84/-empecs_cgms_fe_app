@@ -190,7 +190,8 @@ class BleService {
 
   Future<void> connectToDevice(String deviceId) async {
     await ensurePermissions();
-    _cancelSignalLossRepeatTimer();
+    // Signal-loss repeat chain must survive reconnect attempts; cancel only on
+    // successful CGM notify subscribe or explicit [disconnect].
     // keep only a single connection:
     // 1) if already connected/connecting to the same device, ignore
     if (_currentDeviceId != null && _currentDeviceId == deviceId && phase.value != BleConnPhase.off) {
@@ -212,7 +213,6 @@ class BleService {
     _connSub?.cancel();
     _connSub = _nativeBle.connectToDevice(id: deviceId, connectionTimeout: const Duration(seconds: 8)).listen((update) async {
       if (update.connectionState == DeviceConnectionState.connected) {
-        _cancelSignalLossRepeatTimer();
         _stopAutoReconnectPoller();
         phase.value = BleConnPhase.connected;
         DebugToastBus().show('BLE: connected');
@@ -347,17 +347,34 @@ class BleService {
   /// 원샷 타이머를 연쇄하고 매번 [listAlarms]에서 간격을 다시 읽는다.
   /// 앱이 백그라운드일 때는 OS가 Dart 타이머를 지연시킬 수 있음(배터리 정책).
   Future<void> _runSignalLossRepeatChain() async {
-    if (phase.value != BleConnPhase.off) {
-      // 재연결 스캔/연결 중에는 분 타이머만으로는 알 수 없으므로 짧게 재시도한다.
-      // (connecting만 처리하고 scanning 등에서 return 하면 반복 체인이 영구 정지할 수 있음)
-      if (phase.value == BleConnPhase.connecting || phase.value == BleConnPhase.scanning) {
+    BleConnPhase ph = phase.value;
+    if (ph == BleConnPhase.notifySubscribed) {
+      _cancelSignalLossRepeatTimer();
+      return;
+    }
+    if (ph != BleConnPhase.off) {
+      // GATT 연결·OPS·타임싱크 등 중간 단계: 체인을 끊지 않고 짧게 재확인
+      if (ph == BleConnPhase.scanning ||
+          ph == BleConnPhase.connecting ||
+          ph == BleConnPhase.connected ||
+          ph == BleConnPhase.opsStarted ||
+          ph == BleConnPhase.timeSynced) {
         _armSignalLossChainRetry(const Duration(seconds: 3));
       }
       return;
     }
     final int mins = await _systemSignalLossRepeatMinutes();
-    if (phase.value != BleConnPhase.off) {
-      if (phase.value == BleConnPhase.connecting || phase.value == BleConnPhase.scanning) {
+    ph = phase.value;
+    if (ph == BleConnPhase.notifySubscribed) {
+      _cancelSignalLossRepeatTimer();
+      return;
+    }
+    if (ph != BleConnPhase.off) {
+      if (ph == BleConnPhase.scanning ||
+          ph == BleConnPhase.connecting ||
+          ph == BleConnPhase.connected ||
+          ph == BleConnPhase.opsStarted ||
+          ph == BleConnPhase.timeSynced) {
         _armSignalLossChainRetry(const Duration(seconds: 3));
       }
       return;
@@ -366,23 +383,31 @@ class BleService {
     _signalLossRepeatTimer?.cancel();
     _signalLossRepeatTimer = Timer(Duration(minutes: safeMins), () {
       unawaited(() async {
-        final BleConnPhase ph = phase.value;
+        BleConnPhase ph = phase.value;
         if (ph == BleConnPhase.scanning || ph == BleConnPhase.connecting) {
           _armSignalLossChainRetry(const Duration(seconds: 3));
           return;
         }
-        if (ph != BleConnPhase.off) {
+        if (ph == BleConnPhase.notifySubscribed) {
           _cancelSignalLossRepeatTimer();
           return;
         }
-        await AlertEngine().notifyBleLinkLost(fromScheduledRepeat: true);
-        final BleConnPhase ph2 = phase.value;
-        if (ph2 == BleConnPhase.scanning || ph2 == BleConnPhase.connecting) {
+        if (ph != BleConnPhase.off) {
           _armSignalLossChainRetry(const Duration(seconds: 3));
           return;
         }
-        if (ph2 != BleConnPhase.off) {
+        await AlertEngine().notifyBleLinkLost(fromScheduledRepeat: true);
+        ph = phase.value;
+        if (ph == BleConnPhase.scanning || ph == BleConnPhase.connecting) {
+          _armSignalLossChainRetry(const Duration(seconds: 3));
+          return;
+        }
+        if (ph == BleConnPhase.notifySubscribed) {
           _cancelSignalLossRepeatTimer();
+          return;
+        }
+        if (ph != BleConnPhase.off) {
+          _armSignalLossChainRetry(const Duration(seconds: 3));
           return;
         }
         await _runSignalLossRepeatChain();
@@ -572,6 +597,7 @@ class BleService {
     }
     phase.value = BleConnPhase.notifySubscribed;
     _ar0106SessionReady = true;
+    _cancelSignalLossRepeatTimer();
   }
 
   /// 테스트/에뮬레이션용: 실제 BLE notify 수신 경로와 동일한 파서를 호출한다.

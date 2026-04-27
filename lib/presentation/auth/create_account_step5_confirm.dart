@@ -46,6 +46,25 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
       st['displayName'] = displayName.isEmpty ? email : displayName;
       st['authToken'] = 'local-${DateTime.now().millisecondsSinceEpoch}';
       st['guestMode'] = false;
+      // 로컬 계정 레지스트리 저장: 오프라인 로그인 가능하도록 유지
+      final List<Map<String, dynamic>> localAccounts = (st['localAccounts'] is List)
+          ? (st['localAccounts'] as List).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
+          : <Map<String, dynamic>>[];
+      final int idx = localAccounts.indexWhere((e) => (e['email'] as String? ?? '').trim().toLowerCase() == email.toLowerCase());
+      final Map<String, dynamic> row = {
+        'email': email,
+        'password': password,
+        'displayName': displayName.isEmpty ? email : displayName,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      };
+      if (idx >= 0) {
+        localAccounts[idx] = {...localAccounts[idx], ...row};
+      } else {
+        localAccounts.add({...row, 'createdAt': DateTime.now().toUtc().toIso8601String()});
+      }
+      st['localAccounts'] = localAccounts;
+      st['savedLoginEmail'] = email;
+      st['savedLoginPassword'] = password;
       for (final k in [
         'signupDraftEmail',
         'signupDraftFirstName',

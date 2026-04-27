@@ -37,13 +37,28 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
 
   Future<void> _load() async {
     try {
-      final st = await SettingsStorage.load();
-      final String s0 = (st['sc0106WarmupStartAt'] as String? ?? '').trim();
-      final String s1 = (st['sc0106WarmupEndsAt'] as String? ?? '').trim();
-      final bool active = st['sc0106WarmupActive'] == true;
-      final String doneAt = (st['sc0106WarmupDoneAt'] as String? ?? '').trim();
-      final DateTime? startAt = s0.isEmpty ? null : DateTime.tryParse(s0);
-      final DateTime? endsAt = s1.isEmpty ? null : DateTime.tryParse(s1);
+      Map<String, dynamic> st = await SettingsStorage.load();
+      String s0 = (st['sc0106WarmupStartAt'] as String? ?? '').trim();
+      String s1 = (st['sc0106WarmupEndsAt'] as String? ?? '').trim();
+      bool active = st['sc0106WarmupActive'] == true;
+      String doneAt = (st['sc0106WarmupDoneAt'] as String? ?? '').trim();
+      DateTime? startAt = s0.isEmpty ? null : DateTime.tryParse(s0);
+      DateTime? endsAt = s1.isEmpty ? null : DateTime.tryParse(s1);
+
+      // NFC 등에서 웜업 화면만 열리고 WarmupState.start가 호출되지 않은 경우 알람 억제가 빠짐
+      if (doneAt.isEmpty && !active) {
+        final String eqsn = (st['eqsn'] as String? ?? '').trim();
+        await WarmupState.start(seconds: 30 * 60, eqsn: eqsn);
+        AlertEngine().invalidateWarmupCache();
+        st = await SettingsStorage.load();
+        s0 = (st['sc0106WarmupStartAt'] as String? ?? '').trim();
+        s1 = (st['sc0106WarmupEndsAt'] as String? ?? '').trim();
+        active = st['sc0106WarmupActive'] == true;
+        doneAt = (st['sc0106WarmupDoneAt'] as String? ?? '').trim();
+        startAt = s0.isEmpty ? null : DateTime.tryParse(s0);
+        endsAt = s1.isEmpty ? null : DateTime.tryParse(s1);
+      }
+
       if (!mounted) return;
       setState(() {
         _startAt = startAt;
@@ -57,7 +72,12 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   Future<void> _startWarmup({int seconds = 30 * 60}) async {
     final DateTime now = DateTime.now().toUtc();
     final DateTime ends = now.add(Duration(seconds: seconds));
-    await WarmupState.start(seconds: seconds);
+    String eqsn = '';
+    try {
+      final st = await SettingsStorage.load();
+      eqsn = (st['eqsn'] as String? ?? '').trim();
+    } catch (_) {}
+    await WarmupState.start(seconds: seconds, eqsn: eqsn);
     AlertEngine().invalidateWarmupCache();
     if (!mounted) return;
     setState(() {

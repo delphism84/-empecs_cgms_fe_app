@@ -144,6 +144,34 @@ class GlucoseLocalRepo {
     return 0;
   }
 
+  /// 현재 사용자/센서 기준 로컬 데이터 기간 요약.
+  /// - fromMs/toMs는 UTC epoch milliseconds.
+  Future<Map<String, dynamic>> rangeBounds({String? eqsn, String? userId}) async {
+    final db = await LocalDb().db;
+    userId ??= await _inferUserId();
+    final String uid = userId ?? '';
+    final bool strict = _strictUserScope(uid);
+    final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
+    final List<Map<String, Object?>> res = (eqsn != null && eqsn.isNotEmpty)
+        ? await db.rawQuery(
+            'SELECT COUNT(*) AS c, MIN(time_ms) AS min_ms, MAX(time_ms) AS max_ms FROM glucose_points WHERE eqsn = ? AND $userClause',
+            [eqsn, uid],
+          )
+        : await db.rawQuery(
+            'SELECT COUNT(*) AS c, MIN(time_ms) AS min_ms, MAX(time_ms) AS max_ms FROM glucose_points WHERE $userClause',
+            [uid],
+          );
+    final row = res.isNotEmpty ? res.first : const <String, Object?>{};
+    final int count = (row['c'] as num?)?.toInt() ?? 0;
+    final int? minMs = (row['min_ms'] as num?)?.toInt();
+    final int? maxMs = (row['max_ms'] as num?)?.toInt();
+    return {
+      'count': count,
+      'fromMs': minMs,
+      'toMs': maxMs,
+    };
+  }
+
   Future<void> clearForEqsn(String eqsn, {String? userId}) async {
     final db = await LocalDb().db;
     userId ??= await _inferUserId();

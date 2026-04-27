@@ -77,18 +77,51 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
     } catch (_) {}
   }
 
-  bool _loggingIn = false;
+  Future<void> _upsertLocalAccount({required String email, required String password, String? displayName}) async {
+    try {
+      final st = await SettingsStorage.load();
+      final List<Map<String, dynamic>> localAccounts = (st['localAccounts'] is List)
+          ? (st['localAccounts'] as List).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
+          : <Map<String, dynamic>>[];
+      final int idx = localAccounts.indexWhere((e) => (e['email'] as String? ?? '').trim().toLowerCase() == email.toLowerCase());
+      final Map<String, dynamic> row = {
+        'email': email,
+        'password': password,
+        'displayName': (displayName ?? email).trim().isEmpty ? email : (displayName ?? email).trim(),
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      };
+      if (idx >= 0) {
+        localAccounts[idx] = {...localAccounts[idx], ...row};
+      } else {
+        localAccounts.add({...row, 'createdAt': DateTime.now().toUtc().toIso8601String()});
+      }
+      st['localAccounts'] = localAccounts;
+      await SettingsStorage.save(st);
+    } catch (_) {}
+  }
 
-  Future<void> _enterLocalLogin(ApiClient api, String email) async {
+  Future<void> _enterOfflineMode(ApiClient api, {required String userId}) async {
     try {
       final s = await SettingsStorage.load();
-      s['authToken'] = 'LOCAL_USER_TOKEN';
-      s['guestMode'] = false;
-      s['lastUserId'] = email;
-      s['displayName'] = email;
+      final DateTime now = DateTime.now().toUtc();
+      s['authToken'] = 'OFFLINE_USER_TOKEN';
+      s['guestMode'] = true; // UI 상 Local mode badge 표시
+      s['lastUserId'] = userId;
+      if ((s['displayName'] as String? ?? '').trim().isEmpty) {
+        s['displayName'] = userId;
+      }
+      s['offlineUploadPending'] = true;
+      s['offlineUploadFromGlucose'] = (s['offlineUploadFromGlucose'] as String? ?? '').trim().isEmpty
+          ? now.toIso8601String()
+          : (s['offlineUploadFromGlucose'] as String?);
+      s['offlineUploadFromEvents'] = (s['offlineUploadFromEvents'] as String? ?? '').trim().isEmpty
+          ? now.toIso8601String()
+          : (s['offlineUploadFromEvents'] as String?);
       await SettingsStorage.save(s);
       await api.loadToken();
-      try { AppSettingsBus.notify(); } catch (_) {}
+      try {
+        AppSettingsBus.notify();
+      } catch (_) {}
     } catch (_) {}
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -98,28 +131,24 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
     CommonToast.showSuccess(context, 'auth_local_login_toast'.tr());
   }
 
-  Future<void> _enterOfflineMode(ApiClient api, {String? userId}) async {
+  Future<bool> _tryOfflineLocalLogin(ApiClient api, String email, String password) async {
     try {
-      final s = await SettingsStorage.load();
-      s['authToken'] = 'OFFLINE_USER_TOKEN';
-      s['guestMode'] = true; // 임시 로그인 모드
-      if (userId != null && userId.isNotEmpty) {
-        s['lastUserId'] = userId;
-        s['displayName'] = userId;
-      } else {
-        s['displayName'] = 'Guest';
-      }
-      await SettingsStorage.save(s);
-      await api.loadToken();
-      try { AppSettingsBus.notify(); } catch (_) {}
-    } catch (_) {}
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const Home()),
-      (Route<dynamic> route) => false,
-    );
-    CommonToast.showSuccess(context, 'auth_guest_login_toast'.tr());
+      final st = await SettingsStorage.load();
+      final List<Map<String, dynamic>> localAccounts = (st['localAccounts'] is List)
+          ? (st['localAccounts'] as List).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
+          : <Map<String, dynamic>>[];
+      final int idx = localAccounts.indexWhere((e) => (e['email'] as String? ?? '').trim().toLowerCase() == email.toLowerCase());
+      if (idx < 0) return false;
+      final String savedPw = (localAccounts[idx]['password'] as String? ?? '');
+      if (savedPw != password) return false;
+      await _enterOfflineMode(api, userId: email);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
+
+  bool _loggingIn = false;
 
   @override
   Widget build(BuildContext context) {
@@ -416,39 +445,38 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                               try {
                                 resp = await doLogin(api, email, password);
                               } on TimeoutException catch (_) {
-                                if (!isValidLoginEmailId(email)) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('auth_login_offline_email'.tr())),
-                                  );
-                                  return;
-                                }
+                                final bool ok = await _tryOfflineLocalLogin(api, email, password);
+                                if (ok) return;
                                 if (!context.mounted) return;
-                                await _enterLocalLogin(api, email);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('auth_login_network_required'.tr())),
+                                );
                                 return;
                               } on SocketException catch (_) {
-                                if (!isValidLoginEmailId(email)) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('auth_login_offline_email'.tr())),
-                                  );
-                                  return;
-                                }
+                                final bool ok = await _tryOfflineLocalLogin(api, email, password);
+                                if (ok) return;
                                 if (!context.mounted) return;
-                                await _enterLocalLogin(api, email);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('auth_login_network_required'.tr())),
+                                );
+                                return;
+                              } on http.ClientException catch (_) {
+                                final bool ok = await _tryOfflineLocalLogin(api, email, password);
+                                if (ok) return;
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('auth_login_network_required'.tr())),
+                                );
                                 return;
                               } catch (e) {
                                 final msg = e.toString().toLowerCase();
                                 if (msg.contains('socket') || msg.contains('network') || msg.contains('connection') || msg.contains('failed host lookup')) {
-                                  if (!isValidLoginEmailId(email)) {
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('auth_login_offline_email'.tr())),
-                                    );
-                                    return;
-                                  }
+                                  final bool ok = await _tryOfflineLocalLogin(api, email, password);
+                                  if (ok) return;
                                   if (!context.mounted) return;
-                                  await _enterLocalLogin(api, email);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('auth_login_network_required'.tr())),
+                                  );
                                   return;
                                 }
                                 if (!mounted) return;
@@ -469,10 +497,16 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                                   await api.saveToken(token);
                                 try {
                                   await _persistLoginCredentials(prof.email, password);
+                                  await _upsertLocalAccount(
+                                    email: prof.email,
+                                    password: password,
+                                    displayName: prof.displayName.isNotEmpty ? prof.displayName : prof.email,
+                                  );
                                   final st = await SettingsStorage.load();
                                   st['lastUserId'] = prof.email;
                                   st['displayName'] = prof.displayName.isNotEmpty ? prof.displayName : prof.email;
                                   st['guestMode'] = false;
+                                  st['offlineUploadPending'] = false;
                                   await SettingsStorage.save(st);
                                 } catch (_) {}
                                   try { AppSettingsBus.notify(); } catch (_) {}
@@ -493,46 +527,6 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                             }
                           },
                             ),
-                        const SizedBox(height: 10),
-                        // Guest Login button (offline mode)
-                        CustomButton(
-                          width: double.infinity,
-                          text: 'auth_guest_login_upper'.tr(),
-                          variant: ButtonVariant.OutlinePrimaryWhite,
-                          fontStyle: ButtonFontStyle.GilroyMedium16Primary,
-                          onTap: () async {
-                            if (_loggingIn) return;
-                            setState(() => _loggingIn = true);
-                            try {
-                              final api = ApiClient();
-                              await api.loadToken();
-                              String userId = '';
-                              try {
-                                final st = await SettingsStorage.load();
-                                userId = (st['lastUserId'] as String? ?? '').trim();
-                              } catch (_) {}
-                              final String typedId = _idCtrl.text.trim();
-                              if (typedId.isNotEmpty) {
-                                if (!isValidLoginEmailId(typedId)) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('auth_guest_email_required'.tr())),
-                                  );
-                                  return;
-                                }
-                                userId = typedId;
-                                try {
-                                  final st2 = await SettingsStorage.load();
-                                  st2['savedLoginEmail'] = typedId;
-                                  await SettingsStorage.save(st2);
-                                } catch (_) {}
-                              }
-                              await _enterOfflineMode(api, userId: userId);
-                            } finally {
-                              if (mounted) setState(() => _loggingIn = false);
-                            }
-                          },
-                        ),
                         // removed sign-up and create-account entry (existing login only)
                       ],
                     ),

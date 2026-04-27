@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:helpcare/core/app_export.dart';
 import 'package:helpcare/presentation/sign_in_one_screen/sign_in_one_screen.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
-import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/presentation/auth/lo_01_02_04_sns_login_process_screens.dart';
 import 'package:helpcare/presentation/auth/lo_02_signup_flow_screens.dart';
 import 'package:helpcare/widgets/custom_button.dart';
@@ -100,34 +99,11 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
                 );
               },
             ),
-            const SizedBox(height: 12),
-            CustomButton(
-              width: double.infinity,
-              text: 'auth_continue_guest_upper'.tr(),
-              variant: ButtonVariant.OutlinePrimaryWhite,
-              fontStyle: ButtonFontStyle.GilroyMedium16Primary,
-              onTap: () => _enterGuestMode(context),
-            ),
           ],
         ),
       ),
     ),
     );
-  }
-
-  Future<void> _enterGuestMode(BuildContext context) async {
-    try {
-      final s = await SettingsStorage.load();
-      s['guestMode'] = true;
-      s['authToken'] = '';
-      s['lastUserId'] = '';
-      s['displayName'] = 'Guest';
-      s['lo0108EnteredAt'] = DateTime.now().toUtc().toIso8601String();
-      await SettingsStorage.save(s);
-      try { AppSettingsBus.notify(); } catch (_) {}
-    } catch (_) {}
-    if (!context.mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/home', (r) => false);
   }
 
   Future<void> _markSheetOpened() async {
