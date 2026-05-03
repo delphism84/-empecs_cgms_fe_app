@@ -185,6 +185,8 @@ class AlertEngine {
     // SC_01_06: Warm-Up 중에는 알람이 발생하면 안됨
     if (await _isWarmupActive()) return;
     await _ensureAlarmsLoaded();
+    // load 알람 목록(await) 사이에 웜업이 시작될 수 있음 — 평가 직전 재확인
+    if (await _isWarmupActive()) return;
     await _evaluate(v, t: t);
   }
 
@@ -303,6 +305,8 @@ class AlertEngine {
       }
 
       if (!hit) continue;
+      // 발화 직전 한 번 더 웜업(연결 직후 포인트가 먼저 올라오고 start가 늦는 레이스 대비)
+      if (await _isWarmupActive()) continue;
 
       final int repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
       final last = _lastFired[type];

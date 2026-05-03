@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/app_nav.dart';
@@ -16,10 +17,6 @@ class OnlineMonitor {
   Timer? _timer;
   bool _prevOnline = false;
   bool _tickRunning = false;
-
-  static const int _syncStatusUnknown = 0;
-  static const int _syncStatusSuccess = 1;
-  static const int _syncStatusFailed = 2;
 
   void start({Duration interval = const Duration(seconds: 10)}) {
     _timer?.cancel();
@@ -48,12 +45,11 @@ class OnlineMonitor {
       try {
         final s = await SettingsStorage.load();
         s['offlineMode'] = !online;
-        // keep eventsSync off by default; only SN change will perform pulls
         await SettingsStorage.save(s);
       } catch (_) {}
 
       if (online && !_prevOnline) {
-        unawaited(_handlePostOnlineSync());
+        unawaited(_onBecameOnline());
       }
       _prevOnline = online;
     } finally {
@@ -61,71 +57,71 @@ class OnlineMonitor {
     }
   }
 
-  Future<void> _handlePostOnlineSync() async {
-    final int status = await _pushBacklog();
-    await _showPostOnlineSyncUi(status: status);
-  }
-
-  /// req 2-1: 온라인 전환 직후 로컬→서버 동기화 UX
-  /// - backlog가 없으면 메시지를 띄우지 않음
-  /// - backlog 동기화 성공/실패 결과에 맞는 안내를 표시
-  Future<void> _showPostOnlineSyncUi({required int status}) async {
-    if (status == _syncStatusUnknown) return;
-    final BuildContext? ctx = AppNav.navigatorKey.currentContext;
-    if (ctx == null || !ctx.mounted) return;
-    try {
-      showDialog<void>(
-        context: ctx,
-        barrierDismissible: false,
-        builder: (dCtx) => const AlertDialog(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              Expanded(child: Text('Syncing with server...')),
-            ],
+  /// 오프라인→온라인 직후: 업로드 백로그를 끝낼 때까지 동기 표시(닫기는 finally에서 보장) 후, 실패 시에만 스낵바.
+  Future<void> _onBecameOnline() async {
+    final BuildContext? ctx0 = AppNav.navigatorKey.currentContext;
+    var shown = false;
+    if (ctx0 != null && ctx0.mounted) {
+      try {
+        showDialog<void>(
+          context: ctx0,
+          barrierDismissible: false,
+          useRootNavigator: true,
+          builder: (_) => AlertDialog(
+            content: Row(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 16),
+                Expanded(child: Text('online_sync_title'.tr())),
+              ],
+            ),
           ),
-        ),
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 2600));
-      final NavigatorState? nav = AppNav.navigatorKey.currentState;
-      if (nav != null && nav.canPop()) nav.pop();
-      final BuildContext? ctx2 = AppNav.navigatorKey.currentContext;
-      if (ctx2 != null && ctx2.mounted) {
-        final String msg = status == _syncStatusSuccess
-            ? 'Upload sync completed'
-            : 'Upload sync failed';
-        ScaffoldMessenger.of(ctx2).showSnackBar(
-          SnackBar(content: Text(msg)),
         );
+        shown = true;
+      } catch (_) {}
+    }
+    var ok = false;
+    try {
+      ok = await _pushBacklog();
+    } catch (_) {
+      ok = false;
+    } finally {
+      if (shown) {
+        final NavigatorState? nav = AppNav.navigatorKey.currentState;
+        if (nav != null && nav.canPop()) {
+          nav.pop();
+        }
       }
-    } catch (_) {}
+    }
+    final BuildContext? ctx2 = AppNav.navigatorKey.currentContext;
+    if (ctx2 != null && ctx2.mounted && !ok) {
+      ScaffoldMessenger.of(ctx2).showSnackBar(SnackBar(content: Text('online_sync_failed'.tr())));
+    }
   }
 
-  Future<int> _pushBacklog() async {
+  /// Returns true if glucose/events pushes and delete outbox had no failures (or nothing to do).
+  Future<bool> _pushBacklog() async {
     try {
       final st = await SettingsStorage.load();
       final String eqsn = (st['eqsn'] as String? ?? '');
       final String userId = (st['lastUserId'] as String? ?? '');
       final DateTime now = DateTime.now();
       final bool pending = st['offlineUploadPending'] == true;
-      DateTime fromG = _parseIsoOrDefault(
+      final DateTime fromG = _parseIsoOrDefault(
         pending ? (st['offlineUploadFromGlucose'] as String?) : (st['lastPushAtGlucose'] as String?),
         now.subtract(const Duration(hours: 2)),
       );
-      DateTime fromE = _parseIsoOrDefault(
+      final DateTime fromE = _parseIsoOrDefault(
         pending ? (st['offlineUploadFromEvents'] as String?) : (st['lastPushAtEvents'] as String?),
         now.subtract(const Duration(hours: 2)),
       );
-      bool glucoseAllOk = true;
-      bool eventsAllOk = true;
-      bool hadWork = false;
+      var glucoseAllOk = true;
+      var eventsAllOk = true;
+      var deletesOk = true;
 
-      // push glucose in chunks
       final repoG = GlucoseLocalRepo();
       final List<Map<String, dynamic>> gRows = await repoG.range(from: fromG, to: now, limit: 50000, eqsn: eqsn, userId: userId);
       if (gRows.isNotEmpty) {
-        hadWork = true;
         final ds = DataService();
         int i = 0;
         while (i < gRows.length) {
@@ -138,8 +134,8 @@ class OnlineMonitor {
             v.add(((gRows[j]['value'] as num?) ?? 0));
             tr.add((gRows[j]['trid'] as num?)?.toInt());
           }
-          final bool ok = await ds.postGlucoseBatch(t: t, v: v, tr: tr);
-          if (!ok) {
+          final bool batchOk = await ds.postGlucoseBatch(t: t, v: v, tr: tr);
+          if (!batchOk) {
             glucoseAllOk = false;
             break;
           }
@@ -157,19 +153,17 @@ class OnlineMonitor {
         }
       }
 
-      // push events individually
       final repoE = EventLocalRepo();
       final List<Map<String, dynamic>> eRows = await repoE.range(from: fromE, to: now, limit: 10000, eqsn: eqsn, userId: userId);
       if (eRows.isNotEmpty) {
-        hadWork = true;
         final ds = DataService();
         for (final m in eRows) {
           final String type = (m['type'] as String?) ?? 'memo';
           final DateTime tm = DateTime.fromMillisecondsSinceEpoch((m['time_ms'] as num).toInt()).toLocal();
           final String? memo = (m['memo'] as String?);
           try {
-            final bool ok = await ds.postEvent(type: type, time: tm, memo: memo);
-            if (!ok) {
+            final bool postOk = await ds.postEvent(type: type, time: tm, memo: memo);
+            if (!postOk) {
               eventsAllOk = false;
               break;
             }
@@ -187,43 +181,60 @@ class OnlineMonitor {
         }
       }
 
-      // process queued deletions
       try {
         final List<dynamic> box = (st['eventDeleteOutbox'] as List<dynamic>? ?? <dynamic>[]);
         if (box.isNotEmpty) {
-          hadWork = true;
           final ds = DataService();
           final List<String> remain = <String>[];
           for (final e in box) {
             final String id = e.toString();
-            bool delOk = false;
-            try { delOk = await ds.deleteEvent(id); } catch (_) { delOk = false; }
-            if (!delOk) remain.add(id);
+            var delOk = false;
+            try {
+              delOk = await ds.deleteEvent(id);
+            } catch (_) {
+              delOk = false;
+            }
+            if (!delOk) {
+              remain.add(id);
+            }
           }
           st['eventDeleteOutbox'] = remain;
           await SettingsStorage.save(st);
+          if (remain.isNotEmpty) {
+            deletesOk = false;
+          }
         }
-      } catch (_) {}
+      } catch (_) {
+        deletesOk = false;
+      }
 
       if (pending && glucoseAllOk && eventsAllOk) {
         final List<dynamic> remain = (st['eventDeleteOutbox'] as List<dynamic>? ?? <dynamic>[]);
         if (remain.isEmpty) {
           st['offlineUploadPending'] = false;
           await SettingsStorage.save(st);
+        } else {
+          deletesOk = false;
         }
       }
 
-      // broadcast to refresh UI if needed
-      try { DataSyncBus().emitGlucoseBulk(count: 0); } catch (_) {}
-      if (!hadWork) return _syncStatusUnknown;
-      final bool ok = glucoseAllOk && eventsAllOk;
-      return ok ? _syncStatusSuccess : _syncStatusFailed;
-    } catch (_) {}
-    return _syncStatusFailed;
+      try {
+        DataSyncBus().emitGlucoseBulk(count: 0);
+      } catch (_) {}
+      return glucoseAllOk && eventsAllOk && deletesOk;
+    } catch (_) {
+      return false;
+    }
   }
 
   DateTime _parseIsoOrDefault(String? iso, DateTime dflt) {
-    if (iso == null || iso.isEmpty) return dflt;
-    try { return DateTime.parse(iso).toLocal(); } catch (_) { return dflt; }
+    if (iso == null || iso.isEmpty) {
+      return dflt;
+    }
+    try {
+      return DateTime.parse(iso).toLocal();
+    } catch (_) {
+      return dflt;
+    }
   }
 }

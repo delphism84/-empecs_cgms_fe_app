@@ -208,7 +208,14 @@ class DataService {
     return [];
   }
 
-  Future<List<Map<String, dynamic>>> fetchGlucose({DateTime? from, DateTime? to, int limit = 2000, bool skipLocalCache = false}) async {
+  Future<List<Map<String, dynamic>>> fetchGlucose({
+    DateTime? from,
+    DateTime? to,
+    int limit = 2000,
+    bool skipLocalCache = false,
+    void Function(int httpStatusCode)? onServerNon200,
+    void Function()? onServerNetworkError,
+  }) async {
     await _api.loadToken();
     // 1) 로컬 캐시 최우선 (오프라인/비행기모드에서도 즉시 응답) — skipLocalCache 시 서버 재다운로드(PD 새로고침 등)
     if (!skipLocalCache && from != null && to != null) {
@@ -226,14 +233,19 @@ class DataService {
     }
 
     // 2) 로컬에 없을 때만 서버 조회 → 성공 시 로컬에 캐시 후 반환
+    bool serverFetchAttempted = false;
     try {
+      serverFetchAttempted = true;
       final resp = await _api.get('/api/data/glucose', query: {
         if (from != null) 'from': from.toUtc().toIso8601String(),
         if (to != null) 'to': to.toUtc().toIso8601String(),
         'limit': limit,
         'compact': 1,
       }, withGlobalLoading: false);
-      if (resp.statusCode != 200) return [];
+      if (resp.statusCode != 200) {
+        onServerNon200?.call(resp.statusCode);
+        return [];
+      }
       await _markOnline();
       final dynamic decoded = jsonDecode(resp.body);
       List<Map<String, dynamic>> listOut = [];
@@ -284,6 +296,9 @@ class DataService {
       }
       return [];
     } catch (_) {
+      if (serverFetchAttempted) {
+        onServerNetworkError?.call();
+      }
       // 오프라인/타임아웃 등 → 로컬 재조회로 폴백
       if (from != null && to != null) {
         String eqsn = '';

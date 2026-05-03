@@ -19,6 +19,7 @@ import 'package:http/http.dart' as http;
 import 'package:helpcare/widgets/common_toast.dart';
 import 'package:helpcare/core/config/default_dev_account.dart';
 import 'package:helpcare/core/utils/auth_input_validation.dart';
+import 'package:helpcare/core/utils/local_offline_auth_store.dart';
 import 'package:easy_localization/easy_localization.dart';
 // removed sign up and create account navigations in existing login screen
 
@@ -77,29 +78,6 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
     } catch (_) {}
   }
 
-  Future<void> _upsertLocalAccount({required String email, required String password, String? displayName}) async {
-    try {
-      final st = await SettingsStorage.load();
-      final List<Map<String, dynamic>> localAccounts = (st['localAccounts'] is List)
-          ? (st['localAccounts'] as List).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
-          : <Map<String, dynamic>>[];
-      final int idx = localAccounts.indexWhere((e) => (e['email'] as String? ?? '').trim().toLowerCase() == email.toLowerCase());
-      final Map<String, dynamic> row = {
-        'email': email,
-        'password': password,
-        'displayName': (displayName ?? email).trim().isEmpty ? email : (displayName ?? email).trim(),
-        'updatedAt': DateTime.now().toUtc().toIso8601String(),
-      };
-      if (idx >= 0) {
-        localAccounts[idx] = {...localAccounts[idx], ...row};
-      } else {
-        localAccounts.add({...row, 'createdAt': DateTime.now().toUtc().toIso8601String()});
-      }
-      st['localAccounts'] = localAccounts;
-      await SettingsStorage.save(st);
-    } catch (_) {}
-  }
-
   Future<void> _enterOfflineMode(ApiClient api, {required String userId}) async {
     try {
       final s = await SettingsStorage.load();
@@ -134,13 +112,10 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
   Future<bool> _tryOfflineLocalLogin(ApiClient api, String email, String password) async {
     try {
       final st = await SettingsStorage.load();
-      final List<Map<String, dynamic>> localAccounts = (st['localAccounts'] is List)
-          ? (st['localAccounts'] as List).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
-          : <Map<String, dynamic>>[];
-      final int idx = localAccounts.indexWhere((e) => (e['email'] as String? ?? '').trim().toLowerCase() == email.toLowerCase());
-      if (idx < 0) return false;
-      final String savedPw = (localAccounts[idx]['password'] as String? ?? '');
-      if (savedPw != password) return false;
+      if (LocalOfflineAuthStore.migrateLegacyIfNeeded(st)) {
+        await SettingsStorage.save(st);
+      }
+      if (!LocalOfflineAuthStore.verify(st, email, password)) return false;
       await _enterOfflineMode(api, userId: email);
       return true;
     } catch (_) {
@@ -497,19 +472,18 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                                   await api.saveToken(token);
                                 try {
                                   await _persistLoginCredentials(prof.email, password);
-                                  await _upsertLocalAccount(
-                                    email: prof.email,
-                                    password: password,
-                                    displayName: prof.displayName.isNotEmpty ? prof.displayName : prof.email,
-                                  );
                                   final st = await SettingsStorage.load();
+                                  LocalOfflineAuthStore.writeCredentials(st, prof.email, password);
                                   st['lastUserId'] = prof.email;
                                   st['displayName'] = prof.displayName.isNotEmpty ? prof.displayName : prof.email;
                                   st['guestMode'] = false;
                                   st['offlineUploadPending'] = false;
                                   await SettingsStorage.save(st);
                                 } catch (_) {}
-                                  try { AppSettingsBus.notify(); } catch (_) {}
+                                  try {
+                                    AppSettingsBus.notify();
+                                  } catch (_) {}
+                                  // 서버 로그인 직후 프로필 동기화는 비동기 — UI·로그인 완료 경로를 블로킹하지 않음
                                   unawaited(ProfileSyncService.refreshFromServer());
                                   if (!mounted) return;
                                   Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const Home()), (Route<dynamic> route) => false);

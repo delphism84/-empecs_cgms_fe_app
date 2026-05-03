@@ -22,9 +22,12 @@ class SettingsStorage {
     'accColorblind': false,
     'authToken': '',
     'lastUserId': '',
-    // 로그인 화면 필드 유지(평문 저장 — 요구사항상 보안 비고려)
+    // 로그인 화면 Remember Me용(평문). 오프라인 검증은 offlineLastLoginEmail + offlinePw* 해시.
     'savedLoginEmail': '',
     'savedLoginPassword': '',
+    'offlineLastLoginEmail': '',
+    'offlinePwSaltHex': '',
+    'offlinePwHashHex': '',
     'displayName': '', // local user display (from signup or login)
     'eqsn': '',
     'notificationsEnabled': true,

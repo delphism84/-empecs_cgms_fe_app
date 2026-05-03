@@ -12,6 +12,7 @@ import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
+import 'package:helpcare/core/utils/local_offline_auth_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Create Account Step 5: Confirmation & Permissions (local-first signup, server sync when online)
@@ -46,23 +47,8 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
       st['displayName'] = displayName.isEmpty ? email : displayName;
       st['authToken'] = 'local-${DateTime.now().millisecondsSinceEpoch}';
       st['guestMode'] = false;
-      // 로컬 계정 레지스트리 저장: 오프라인 로그인 가능하도록 유지
-      final List<Map<String, dynamic>> localAccounts = (st['localAccounts'] is List)
-          ? (st['localAccounts'] as List).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
-          : <Map<String, dynamic>>[];
-      final int idx = localAccounts.indexWhere((e) => (e['email'] as String? ?? '').trim().toLowerCase() == email.toLowerCase());
-      final Map<String, dynamic> row = {
-        'email': email,
-        'password': password,
-        'displayName': displayName.isEmpty ? email : displayName,
-        'updatedAt': DateTime.now().toUtc().toIso8601String(),
-      };
-      if (idx >= 0) {
-        localAccounts[idx] = {...localAccounts[idx], ...row};
-      } else {
-        localAccounts.add({...row, 'createdAt': DateTime.now().toUtc().toIso8601String()});
-      }
-      st['localAccounts'] = localAccounts;
+      // 마지막 성공 계정만 오프라인 로그인 가능(비밀번호는 솔트+SHA-256 검증자만 저장)
+      LocalOfflineAuthStore.writeCredentials(st, email, password);
       st['savedLoginEmail'] = email;
       st['savedLoginPassword'] = password;
       for (final k in [

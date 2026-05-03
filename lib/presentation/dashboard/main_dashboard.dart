@@ -61,6 +61,9 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   StreamSubscription<String>? _toastSub;
   // removed: external memo FAB open state (moved to ChartPage overlay)
   final ValueNotifier<int> _chartRefresh = ValueNotifier<int>(0);
+  /// IndexedStack 비가시 탭에서도 didChangeDependencies가 도므로, 홈(0번)일 때만 무거운 갱신.
+  Timer? _guEvidenceDebounce;
+  bool _seedInFlight = false;
 
   @override
   void initState() {
@@ -71,6 +74,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     _loadSensorInfo();
     _loadUnit();
     AppSettingsBus.changed.addListener(_onSettingsChanged);
+    HomeTab.index.addListener(_onHomeTabIndex);
     BleService().phase.addListener(_onBlePhase);
     _seedPoints();
     _syncSub = DataSyncBus().stream.listen(_onDataSync);
@@ -85,13 +89,25 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // 화면 재진입 시 시작일 재조회 → days-left 즉시 반영
-    _loadSensorInfo();
+    // IndexedStack: 다른 탭 선택 시에도 호출됨 → 홈 탭일 때만 서버/저장소 재조회
+    if (HomeTab.index.value == 0) {
+      _loadSensorInfo();
+    }
+  }
+
+  void _onHomeTabIndex() {
+    if (!mounted) return;
+    if (HomeTab.index.value == 0) {
+      unawaited(_loadSensorInfo());
+      unawaited(_seedPoints());
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _guEvidenceDebounce?.cancel();
+    HomeTab.index.removeListener(_onHomeTabIndex);
     _nextToastTimer?.cancel();
     _toastController.dispose();
     _syncSub?.cancel();
@@ -104,8 +120,10 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // 스크린세이버/백그라운드 복귀 직후 로컬 DB에서 즉시 재로드 → 표시 공백 구간 최소화
-      unawaited(_seedPoints());
+      // 홈 탭이 아닐 때는 비가시 위젯 — DB·setState 생략으로 복귀 시 부하 감소
+      if (HomeTab.index.value == 0) {
+        unawaited(_seedPoints());
+      }
     }
   }
 
@@ -240,6 +258,8 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   }
 
   Future<void> _seedPoints() async {
+    if (_seedInFlight) return;
+    _seedInFlight = true;
     try {
       final now = DateTime.now();
       final from = now.subtract(const Duration(hours: 24));
@@ -267,6 +287,9 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
       _recompute();
       if (mounted) setState(() {});
     } catch (_) {}
+    finally {
+      _seedInFlight = false;
+    }
   }
 
   Future<void> _loadSensorInfo() async {
@@ -358,13 +381,17 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
       }
       // RACP 등 silent 배치는 DB에만 쌓일 수 있음 → 로컬에서 시리즈 재로드
       unawaited(_seedPoints());
-      try { _loadSensorInfo(); } catch (_) {}
+      if (HomeTab.index.value == 0) {
+        try { _loadSensorInfo(); } catch (_) {}
+      }
       if (mounted) setState(() {});
       return;
     }
     // 기타 동기화 이벤트(이벤트 생성/삭제 등)에도 시작일을 재조회해 days-left 반영
     if (ev.kind == DataSyncKind.eventBulk || ev.kind == DataSyncKind.eventItem) {
-      _loadSensorInfo();
+      if (HomeTab.index.value == 0) {
+        _loadSensorInfo();
+      }
       if (mounted) setState(() {});
       return;
     }
@@ -436,18 +463,25 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     } catch (_) {}
   }
 
+  /// QA용 gu01* 마커 — _recompute가 혈당마다 호출되므로 저장소 쓰기를 디바운스(디스크·메인 스레드 부담 감소).
   void _markGuEvidence() {
-    () async {
-      try {
-        final st = await SettingsStorage.load();
-        st['gu0101RenderedAt'] = DateTime.now().toUtc().toIso8601String();
-        st['gu0101Value'] = _series.isEmpty ? null : _currentGlucose.round();
-        st['gu0102Trend'] = _trend5.toString().split('.').last;
-        st['gu0103Color'] = _series.isEmpty ? '' : _guBand(_currentGlucose);
-        st['gu0101Unit'] = _unit;
-        await SettingsStorage.save(st);
-      } catch (_) {}
-    }();
+    _guEvidenceDebounce?.cancel();
+    _guEvidenceDebounce = Timer(const Duration(milliseconds: 700), () {
+      unawaited(_persistGuEvidence());
+    });
+  }
+
+  Future<void> _persistGuEvidence() async {
+    if (!mounted) return;
+    try {
+      final st = await SettingsStorage.load();
+      st['gu0101RenderedAt'] = DateTime.now().toUtc().toIso8601String();
+      st['gu0101Value'] = _series.isEmpty ? null : _currentGlucose.round();
+      st['gu0102Trend'] = _trend5.toString().split('.').last;
+      st['gu0103Color'] = _series.isEmpty ? '' : _guBand(_currentGlucose);
+      st['gu0101Unit'] = _unit;
+      await SettingsStorage.save(st);
+    } catch (_) {}
   }
   String _glucoseDisplay() {
     if (_series.isEmpty) return '--';

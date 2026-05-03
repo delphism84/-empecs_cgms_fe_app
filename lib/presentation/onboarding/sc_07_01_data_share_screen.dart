@@ -11,6 +11,10 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:easy_localization/easy_localization.dart';
 
+class _ShareFlowCancelled implements Exception {
+  const _ShareFlowCancelled();
+}
+
 class Sc0701DataShareScreen extends StatefulWidget {
   const Sc0701DataShareScreen({super.key});
 
@@ -30,6 +34,9 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
 
   String exportFormat = 'PDF'; // CSV/PDF
   bool revokeAnytime = true;
+
+  /// 연속 Share 탭으로 fetch/share가 겹치지 않게 함.
+  bool _shareInFlight = false;
 
   @override
   void initState() {
@@ -222,18 +229,109 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
   }
 
   Future<void> _share() async {
+    if (_shareInFlight) return;
     if (!enable) return;
     if (customRange == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_share_select_range_snack'.tr())));
       return;
     }
     if (!shareGlucoseSummary && !shareGlucoseDistribution && !shareGlucoseGraph && !shareUserProfile) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_share_select_item_snack'.tr())));
       return;
     }
-    await _saveEvidence(shared: true);
 
+    final ValueNotifier<int> shareStep = ValueNotifier<int>(0);
+    final ValueNotifier<bool> shareCancelled = ValueNotifier<bool>(false);
+    var progressPopped = false;
+
+    void closeProgressIfOpen() {
+      if (!mounted || progressPopped) {
+        return;
+      }
+      progressPopped = true;
+      try {
+        Navigator.of(context, rootNavigator: true).pop();
+      } catch (_) {}
+    }
+
+    void throwIfCancelled() {
+      if (shareCancelled.value) {
+        throw const _ShareFlowCancelled();
+      }
+    }
+
+    setState(() => _shareInFlight = true);
+    if (!mounted) {
+      shareStep.dispose();
+      shareCancelled.dispose();
+      _shareInFlight = false;
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogContext) {
+        return PopScope(
+          canPop: false,
+          child: ValueListenableBuilder<int>(
+            valueListenable: shareStep,
+            builder: (context, step, _) {
+              final List<String> titles = <String>[
+                'sensor_share_step_save'.tr(),
+                'sensor_share_step_glucose'.tr(),
+                'sensor_share_step_build'.tr(),
+                'sensor_share_step_sheet'.tr(),
+              ];
+              final int i = step.clamp(0, titles.length - 1);
+              return AlertDialog(
+                title: Text('sensor_share_progress_title'.tr()),
+                content: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 280, maxWidth: 400),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const LinearProgressIndicator(),
+                      const SizedBox(height: 14),
+                      Text(
+                        titles[i],
+                        style: Theme.of(dialogContext).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'sensor_share_progress_hint'.tr(),
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade700, height: 1.35),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      shareCancelled.value = true;
+                      closeProgressIfOpen();
+                    },
+                    child: Text('common_cancel'.tr()),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    bool presentedShare = false;
     try {
+      shareStep.value = 0;
+      await _saveEvidence(shared: true);
+      throwIfCancelled();
+      shareStep.value = 1;
+
       final Directory dir = await getApplicationDocumentsDirectory();
       final String ext = exportFormat.toLowerCase();
       final String ts = DateTime.now().toUtc().toIso8601String().replaceAll(':', '').replaceAll('.', '');
@@ -241,12 +339,40 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
       final DateTimeRange r = customRange ?? _default7d();
       final bool wantGlucose = shareGlucoseSummary || shareGlucoseDistribution || shareGlucoseGraph;
       final (DateTime gFrom, DateTime gTo) = _rangeToLocalBounds(r);
+      List<Map<String, dynamic>> glucoseRows = <Map<String, dynamic>>[];
       if (wantGlucose) {
-        try {
-          await DataService().fetchGlucose(from: gFrom, to: gTo, limit: 200000, skipLocalCache: true);
-        } catch (_) {}
+        List<Map<String, dynamic>> rows = await _loadGlucoseRowsForRange(r);
+        throwIfCancelled();
+        if (rows.isEmpty) {
+          int? serverHttp;
+          var serverNetFail = false;
+          await DataService().fetchGlucose(
+            from: gFrom,
+            to: gTo,
+            limit: 200000,
+            skipLocalCache: false,
+            onServerNon200: (int c) => serverHttp = c,
+            onServerNetworkError: () => serverNetFail = true,
+          );
+          throwIfCancelled();
+          rows = await _loadGlucoseRowsForRange(r);
+          if (mounted && !shareCancelled.value && rows.isEmpty) {
+            if (serverHttp != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('sensor_share_server_glucose'.tr(namedArgs: {'code': '$serverHttp'}))),
+              );
+            } else if (serverNetFail) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('sensor_share_network_glucose'.tr())),
+              );
+            }
+          }
+        }
+        glucoseRows = rows;
       }
-      final List<Map<String, dynamic>> glucoseRows = wantGlucose ? await _loadGlucoseRowsForRange(r) : <Map<String, dynamic>>[];
+
+      shareStep.value = 2;
+      throwIfCancelled();
 
       if (exportFormat.toUpperCase() == 'PDF') {
         final Map<String, dynamic> st0 = await SettingsStorage.load();
@@ -389,6 +515,8 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
       await SettingsStorage.save(st);
       final String shareBase = 'cgms-share-$ts.$ext';
       final bool isPdf = exportFormat.toUpperCase() == 'PDF';
+      shareStep.value = 3;
+      throwIfCancelled();
       await Share.shareXFiles(
         <XFile>[
           XFile(
@@ -399,18 +527,33 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
         ],
         text: '${'sensor_share_pdf_title'.tr()} - ${_rangeLabel(r)}',
       );
+      presentedShare = true;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('sensor_share_done_snack'.tr(namedArgs: {'format': exportFormat}))),
         );
       }
-      return;
-    } catch (_) {}
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('sensor_share_prepared_snack'.tr(namedArgs: {'format': exportFormat}))),
-      );
+    } on _ShareFlowCancelled catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_share_cancelled'.tr())));
+      }
+    } catch (_) {
+      if (mounted && !presentedShare && !shareCancelled.value) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('sensor_share_prepared_snack'.tr(namedArgs: {'format': exportFormat}))),
+        );
+      }
+    } finally {
+      try {
+        closeProgressIfOpen();
+      } catch (_) {}
+      shareStep.dispose();
+      shareCancelled.dispose();
+      if (mounted) {
+        setState(() => _shareInFlight = false);
+      } else {
+        _shareInFlight = false;
+      }
     }
   }
 
@@ -507,7 +650,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: enable ? _share : null,
+                      onPressed: (enable && !_shareInFlight) ? _share : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorConstant.loginGreen,
                         foregroundColor: Colors.white,

@@ -288,6 +288,32 @@ class SettingsService {
     return true;
   }
 
+  /// BLE 재연결 등: 서버 `startAt`이 있으면 UTC ISO로 반환하고 [fromServer] true.
+  /// 통신 실패·빈 응답·파싱 실패·[shouldApplyResolvedEqStart] 불만족 시 [fallbackUtc] 사용, [fromServer] false.
+  Future<({String isoUtc, bool fromServer})> resolveSensorStartUtcOrReconnectFallback({
+    required String eqsn,
+    String? bleMac,
+    required DateTime fallbackUtc,
+  }) async {
+    final String want = eqsn.trim();
+    if (want.isEmpty) {
+      return (isoUtc: fallbackUtc.toUtc().toIso8601String(), fromServer: false);
+    }
+    try {
+      final Map<String, dynamic> eq = await resolveEqRegistration(serial: want, bleMac: bleMac);
+      if (shouldApplyResolvedEqStart(eq, want)) {
+        final String st = (eq['startAt'] as String? ?? '').trim();
+        if (st.isNotEmpty) {
+          final DateTime? parsed = DateTime.tryParse(st);
+          if (parsed != null) {
+            return (isoUtc: parsed.toUtc().toIso8601String(), fromServer: true);
+          }
+        }
+      }
+    } catch (_) {}
+    return (isoUtc: fallbackUtc.toUtc().toIso8601String(), fromServer: false);
+  }
+
   /// 동일 센서 식별: **serial 또는 bleMac** 중 하나가 서버 등록과 일치하면 해당 행 반환(req 1-7).
   /// BE에 `/api/settings/eq-list/resolve`가 없으면 [getEqBySerial]로 폴백.
   Future<Map<String, dynamic>> resolveEqRegistration({String? serial, String? bleMac}) async {

@@ -17,17 +17,24 @@ class WarmupState {
 
   static Future<bool> isActive() async {
     if (_persistingWarmup) return true;
-    final DateTime now = DateTime.now();
+    // 종료 시각 비교는 UTC 단일 기준(로컬/파싱 혼선·DST 경계로 웜업이 일찍 끝나 알람이 새는 문제 방지).
+    final DateTime nowUtc = DateTime.now().toUtc();
     try {
       final st = await SettingsStorage.load();
       final bool active = st[_kActive] == true;
       if (!active) return false;
 
       final String endsRaw = (st[_kEndsAt] as String? ?? '').trim();
-      final DateTime? endsAt = endsRaw.isEmpty ? null : DateTime.tryParse(endsRaw)?.toLocal();
-      if (endsAt != null && now.isAfter(endsAt)) {
+      if (endsRaw.isEmpty) {
+        // active인데 ends 없음: 억제 유지(보수), 로그만 남기고 싶으면 추후 추가
+        return true;
+      }
+      final DateTime? parsed = DateTime.tryParse(endsRaw);
+      if (parsed == null) return true;
+      final DateTime endsUtc = parsed.isUtc ? parsed : parsed.toUtc();
+      if (nowUtc.isAfter(endsUtc)) {
         st[_kActive] = false;
-        st[_kDoneAt] = now.toUtc().toIso8601String();
+        st[_kDoneAt] = nowUtc.toIso8601String();
         await SettingsStorage.save(st);
         return false;
       }

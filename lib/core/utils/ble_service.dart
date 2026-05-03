@@ -227,25 +227,40 @@ class BleService {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('cgms.last_mac', deviceId);
           } catch (_) {}
-          // 센서 시작 시각: 재연결마다 무조건 덮어쓰지 않음. eqsn·sensorStartAtEqsn 불일치·고아 시작일은 제거 후 비어 있을 때만 설정.
+          // 센서 시작 시각: eqsn 있으면 재연결마다 서버 startAt 우선, 실패 시 접속 시각(검수 Start Time 표시).
           try {
             final st = await SettingsStorage.load();
             final String eqsn = (st['eqsn'] as String? ?? '').trim();
             final DateTime now = DateTime.now().toUtc();
             bool dirty = SettingsService.stripStaleSensorStart(st);
-            final String existingStart = (st['sensorStartAt'] as String? ?? '').trim();
-            if (existingStart.isEmpty) {
-              st['sensorStartAt'] = now.toIso8601String();
-              st['sensorStartAtEqsn'] = eqsn.isNotEmpty ? eqsn : '';
+            final SettingsService ss = SettingsService();
+            if (eqsn.isNotEmpty) {
+              final ({String isoUtc, bool fromServer}) r = await ss.resolveSensorStartUtcOrReconnectFallback(
+                eqsn: eqsn,
+                bleMac: deviceId,
+                fallbackUtc: now,
+              );
+              st['sensorStartAt'] = r.isoUtc;
+              st['sensorStartAtEqsn'] = eqsn;
               dirty = true;
-              if (eqsn.isNotEmpty) {
+              if (!r.fromServer) {
                 try {
-                  await SettingsService().upsertEqStart(serial: eqsn, startAt: now);
+                  await ss.upsertEqStart(serial: eqsn, startAt: now);
                 } catch (_) {}
+              }
+            } else {
+              final String existingStart = (st['sensorStartAt'] as String? ?? '').trim();
+              if (existingStart.isEmpty) {
+                st['sensorStartAt'] = now.toIso8601String();
+                st['sensorStartAtEqsn'] = '';
+                dirty = true;
               }
             }
             if (dirty) {
               await SettingsStorage.save(st);
+              try {
+                DataSyncBus().emitGlucoseBulk(count: 1);
+              } catch (_) {}
             }
           } catch (_) {}
           // NRF Toolbox 스타일: CCCD 먼저 on (RACP indicate, Measurement notify)
@@ -433,12 +448,17 @@ class BleService {
       if (eqsn.isNotEmpty && lastEqsn.isNotEmpty && eqsn != lastEqsn) {
         st['sc0106WarmupDoneAt'] = '';
         st['sc0106WarmupActive'] = false;
+        await SettingsStorage.save(st);
       }
 
-      final bool alreadyDone = (st['sc0106WarmupDoneAt'] as String? ?? '').trim().isNotEmpty;
-      final bool alreadyActive = st['sc0106WarmupActive'] == true;
-      if (alreadyDone || alreadyActive) {
-        // If already active/done, just show the warm-up screen.
+      final bool doneFlag = (st['sc0106WarmupDoneAt'] as String? ?? '').trim().isNotEmpty;
+      // 저장 플래그만 보지 않음: isActive()가 만료·정리까지 반영(플래그 불일치 시 알람 새는 케이스 방지)
+      final bool liveWarmup = await WarmupState.isActive();
+      if (doneFlag && !liveWarmup) {
+        if (AppNav.route != '/sc/01/06') await AppNav.goNamed('/sc/01/06');
+        return;
+      }
+      if (liveWarmup) {
         if (AppNav.route != '/sc/01/06') await AppNav.goNamed('/sc/01/06');
         return;
       }
