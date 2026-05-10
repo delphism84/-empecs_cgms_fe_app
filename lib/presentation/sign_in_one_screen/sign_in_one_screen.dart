@@ -478,6 +478,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                                   st['displayName'] = prof.displayName.isNotEmpty ? prof.displayName : prof.email;
                                   st['guestMode'] = false;
                                   st['offlineUploadPending'] = false;
+                                  st['resetSensorStartOnNextBleAttach'] = true;
                                   await SettingsStorage.save(st);
                                 } catch (_) {}
                                   try {

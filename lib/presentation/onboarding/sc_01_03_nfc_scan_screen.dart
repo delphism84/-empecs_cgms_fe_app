@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
 class Sc0103NfcScanScreen extends StatefulWidget {
@@ -68,7 +69,9 @@ class _Sc0103NfcScanScreenState extends State<Sc0103NfcScanScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pushNamed('/sc/01/06'),
+                    onPressed: () async {
+                      await BleService().startWarmupAndNavigate();
+                    },
                     child: Text('nfc_scan_success'.tr()),
                   ),
                 ),

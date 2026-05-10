@@ -207,7 +207,22 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
     }
 
     unawaited(BleLogService().add('QR', 'pair ok mac=$expectedMac id=${matched.id}'));
+    _feedbackTimer?.cancel();
+    _cancelled = true;
+    if (!mounted) return;
 
+    // Warm-up 차단을 최우선으로 시작한다. (후속 저장/표시는 비동기 후행)
+    await BleService().startWarmupAndNavigate();
+    unawaited(_persistConnectedSensorInfo(
+      matched: matched,
+      expectedSerial: expectedSerial,
+    ));
+  }
+
+  Future<void> _persistConnectedSensorInfo({
+    required DiscoveredDevice matched,
+    required String expectedSerial,
+  }) async {
     if (mounted) {
       setState(() {
         for (var j = 0; j < _statuses.length; j++) {
@@ -225,7 +240,6 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
         _connecting = false;
       });
     }
-
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('cgms.last_mac', matched.id);
@@ -239,12 +253,6 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
         await SettingsStorage.save(st);
       }
     } catch (_) {}
-
-    _feedbackTimer?.cancel();
-    _cancelled = true;
-
-    if (!mounted) return;
-    await BleService().startWarmupAndNavigate();
   }
 
   void _showFailureDialog({required String title, required String message}) {

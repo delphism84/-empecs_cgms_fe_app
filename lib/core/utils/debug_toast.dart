@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:helpcare/core/utils/warmup_state.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 
 class DebugToastBus {
   DebugToastBus._internal();
@@ -16,7 +16,7 @@ class DebugToastBus {
   Future<void> _showInternal(String message) async {
     final String msg = message.trim();
     if (msg.isEmpty) return;
-    if (await WarmupState.isActive() && !_isAllowedDuringWarmup(msg)) {
+    if (!SensorWarmupService.isWarmupFinished && !_isAllowedDuringWarmup(msg)) {
       return;
     }
     _controller.add(msg);

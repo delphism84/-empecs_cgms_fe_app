@@ -8,6 +8,7 @@ import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/qr_sn_parser.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/app_export.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/presentation/sensor_page/start_monitor_page.dart';
@@ -140,6 +141,9 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
       s['lastScannedQrRaw'] = _raw.trim();
       s['lastScannedQrAt'] = DateTime.now().toUtc().toIso8601String();
       await SettingsStorage.save(s);
+      try {
+        await SensorWarmupService.beginWarmup(fullSn, durationSec: 30 * 60);
+      } catch (_) {}
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('qr_saved_synced'.tr())));
       // stack 정리를 위해 기존 QR 화면을 교체(pushReplacement)한다.

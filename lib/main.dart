@@ -50,6 +50,7 @@ import 'core/utils/ble_service.dart';
 import 'core/utils/ble_emu_server.dart';
 import 'core/utils/emul_ble_recv_service.dart';
 import 'core/utils/alert_engine.dart';
+import 'core/utils/sensor_warmup_service.dart';
 import 'core/utils/focus_bus.dart';
 import 'core/utils/app_nav.dart';
 import 'core/config/social_auth_config.dart';
@@ -78,6 +79,7 @@ Future<void> main() async {
   final Locale startLocale = await _appStartLocale();
   await NotificationService().initialize();
   await AlertEngine().start();
+  await SensorWarmupService.init();
   // 로컬 DB 초기화
   await LocalDb().db;
   // 서버 pull 동기화는 비활성 (SN 변경 시에만 수동 fetch)

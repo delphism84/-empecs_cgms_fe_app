@@ -14,6 +14,7 @@ import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/app_nav.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/warmup_state.dart';
 class _CgmsSample {
   _CgmsSample({required this.time, required this.value, required this.trid});
@@ -227,14 +228,25 @@ class BleService {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('cgms.last_mac', deviceId);
           } catch (_) {}
-          // 센서 시작 시각: eqsn 있으면 재연결마다 서버 startAt 우선, 실패 시 접속 시각(검수 Start Time 표시).
+          // 센서 시작 시각: 서버 로그인 직후 첫 연결은 접속 시각(재연결 검수). 그 외 eqsn 있으면 서버 startAt 우선.
           try {
             final st = await SettingsStorage.load();
             final String eqsn = (st['eqsn'] as String? ?? '').trim();
             final DateTime now = DateTime.now().toUtc();
             bool dirty = SettingsService.stripStaleSensorStart(st);
             final SettingsService ss = SettingsService();
-            if (eqsn.isNotEmpty) {
+            final bool resetStartAfterLogin = st['resetSensorStartOnNextBleAttach'] == true;
+            if (resetStartAfterLogin) {
+              st['resetSensorStartOnNextBleAttach'] = false;
+              dirty = true;
+              if (eqsn.isNotEmpty) {
+                st['sensorStartAt'] = now.toIso8601String();
+                st['sensorStartAtEqsn'] = eqsn;
+                try {
+                  await ss.upsertEqStart(serial: eqsn, startAt: now);
+                } catch (_) {}
+              }
+            } else if (eqsn.isNotEmpty) {
               final ({String isoUtc, bool fromServer}) r = await ss.resolveSensorStartUtcOrReconnectFallback(
                 eqsn: eqsn,
                 bleMac: deviceId,
@@ -262,6 +274,7 @@ class BleService {
                 DataSyncBus().emitGlucoseBulk(count: 1);
               } catch (_) {}
             }
+            unawaited(SensorWarmupService.ensureWarmupWindowForCurrentSnIfMissing());
           } catch (_) {}
           // NRF Toolbox 스타일: CCCD 먼저 on (RACP indicate, Measurement notify)
           try { await _subscribeRacp(deviceId); } catch (_) {}
@@ -465,6 +478,7 @@ class BleService {
 
       // Start warm-up
       await WarmupState.start(seconds: seconds, eqsn: eqsn);
+      await SensorWarmupService.beginWarmup(eqsn, durationSec: seconds);
       AlertEngine().invalidateWarmupCache();
 
       unawaited(BleLogService().add('CGMS', 'warmup start ${seconds}s (eqsn=${eqsn.isEmpty ? '—' : eqsn})'));

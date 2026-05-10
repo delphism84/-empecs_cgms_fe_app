@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -78,6 +79,7 @@ class UserDetailPage extends StatelessWidget {
                     s['eqsn'] = '';
                     s['sensorStartAt'] = '';
                     s['sensorStartAtEqsn'] = '';
+                    s['resetSensorStartOnNextBleAttach'] = false;
                     s['lastTrid'] = 0;
                     s['sc0106WarmupDoneAt'] = '';
                     s['sc0106WarmupActive'] = false;
@@ -90,6 +92,7 @@ class UserDetailPage extends StatelessWidget {
                     s['lastScannedQrRegistered'] = false;
                     s['lastScannedQrMac'] = '';
                     await SettingsStorage.save(s);
+                    await SensorWarmupService.resetAll();
                   } catch (_) {}
                   if (!context.mounted) return;
                   Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);

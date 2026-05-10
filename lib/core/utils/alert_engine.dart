@@ -4,8 +4,8 @@ import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/signal_loss_monitor_log.dart';
-import 'package:helpcare/core/utils/warmup_state.dart';
 
 /// 간단 알람 엔진(봇 검수용 포함)
 /// - DataSyncBus의 glucosePoint를 감시
@@ -26,13 +26,9 @@ class AlertEngine {
   DateTime? _lastPointAt;
   double? _lastPointValue;
 
-  // Warm-up 중에는 알람이 발생하면 안됨(SC_01_06). 매 이벤트마다 저장소를 읽어 웜업 직후에도 억제가 누락되지 않게 한다.
-
-  /// 호환용: 웜업 플래그 저장 직후 [invalidateWarmupCache] 호출 유지 권장.
-  void invalidateWarmupCache() {}
-
-  Future<bool> _isWarmupActive() async {
-    return WarmupState.isActive();
+  /// 호환용: 저장소 웜업 상태를 곧바로 반영한다.
+  void invalidateWarmupCache() {
+    unawaited(SensorWarmupService.refreshFromStorage());
   }
 
   Future<void> start() async {
@@ -56,7 +52,7 @@ class AlertEngine {
   /// 동일 간격 스로틀을 다시 적용하지 않는다(타이머·스로틀 이중 필터로 재알림이 막히는 것 방지).
   Future<void> notifyBleLinkLost({bool fromScheduledRepeat = false}) async {
     try {
-      if (await _isWarmupActive()) return;
+      if (!SensorWarmupService.isWarmupFinished) return;
       invalidateAlarmsCache();
       await _ensureAlarmsLoaded();
       for (final raw in _alarms) {
@@ -75,7 +71,7 @@ class AlertEngine {
 
   /// 디버그/봇 검수용: 시스템(신호 손실 등) 알람 강제 트리거
   Future<void> debugTriggerSystemAlarm({String reason = 'signal_loss'}) async {
-    if (await _isWarmupActive()) return;
+    if (!SensorWarmupService.isWarmupFinished) return;
     invalidateAlarmsCache();
     await _ensureAlarmsLoaded();
     final String r = reason.trim().isEmpty ? 'signal_loss' : reason.trim();
@@ -102,7 +98,7 @@ class AlertEngine {
     bool bypassRepeatThrottle = false,
   }) async {
     try {
-      if (await _isWarmupActive()) return;
+      if (!SensorWarmupService.isWarmupFinished) return;
       if (!SettingsService.parseAlarmBool(a['enabled'], defaultValue: true)) return;
       if (_inQuietHours(a['quietFrom'] as String?, a['quietTo'] as String?)) {
         SignalLossMonitorLog.append('alarm skipped (quiet hours)');
@@ -182,11 +178,9 @@ class AlertEngine {
     final double v = (e.payload['value'] as num?)?.toDouble() ?? double.nan;
     if (v.isNaN) return;
     final DateTime? t = (e.payload['time'] is DateTime) ? (e.payload['time'] as DateTime) : null;
-    // SC_01_06: Warm-Up 중에는 알람이 발생하면 안됨
-    if (await _isWarmupActive()) return;
+    if (!SensorWarmupService.isWarmupFinished) return;
     await _ensureAlarmsLoaded();
-    // load 알람 목록(await) 사이에 웜업이 시작될 수 있음 — 평가 직전 재확인
-    if (await _isWarmupActive()) return;
+    if (!SensorWarmupService.isWarmupFinished) return;
     await _evaluate(v, t: t);
   }
 
@@ -229,7 +223,7 @@ class AlertEngine {
   }
 
   Future<void> _evaluate(double value, {DateTime? t}) async {
-    if (await _isWarmupActive()) return;
+    if (!SensorWarmupService.isWarmupFinished) return;
     String unit = 'mg/dL';
     double factor = 1.0;
     try {
@@ -305,8 +299,7 @@ class AlertEngine {
       }
 
       if (!hit) continue;
-      // 발화 직전 한 번 더 웜업(연결 직후 포인트가 먼저 올라오고 start가 늦는 레이스 대비)
-      if (await _isWarmupActive()) continue;
+      if (!SensorWarmupService.isWarmupFinished) continue;
 
       final int repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
       final last = _lastFired[type];

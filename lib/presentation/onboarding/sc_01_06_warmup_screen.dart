@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/warmup_state.dart';
 
@@ -38,6 +39,14 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   Future<void> _load() async {
     try {
       Map<String, dynamic> st = await SettingsStorage.load();
+      final String eqsn = (st['eqsn'] as String? ?? '').trim();
+      final String lastEqsn = (st['sc0106WarmupEqsn'] as String? ?? '').trim();
+      if (eqsn.isNotEmpty && lastEqsn.isNotEmpty && eqsn != lastEqsn) {
+        st['sc0106WarmupDoneAt'] = '';
+        st['sc0106WarmupActive'] = false;
+        await SettingsStorage.save(st);
+      }
+
       String s0 = (st['sc0106WarmupStartAt'] as String? ?? '').trim();
       String s1 = (st['sc0106WarmupEndsAt'] as String? ?? '').trim();
       bool active = st['sc0106WarmupActive'] == true;
@@ -45,10 +54,10 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
       DateTime? startAt = s0.isEmpty ? null : DateTime.tryParse(s0);
       DateTime? endsAt = s1.isEmpty ? null : DateTime.tryParse(s1);
 
-      // NFC 등에서 웜업 화면만 열리고 WarmupState.start가 호출되지 않은 경우 알람 억제가 빠짐
+      // Warm-up 화면 직접 진입 등으로 start가 누락되면 여기서 보정 시작한다.
       if (doneAt.isEmpty && !active) {
-        final String eqsn = (st['eqsn'] as String? ?? '').trim();
         await WarmupState.start(seconds: 30 * 60, eqsn: eqsn);
+        await SensorWarmupService.beginWarmup(eqsn, durationSec: 30 * 60);
         AlertEngine().invalidateWarmupCache();
         st = await SettingsStorage.load();
         s0 = (st['sc0106WarmupStartAt'] as String? ?? '').trim();
@@ -78,6 +87,7 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
       eqsn = (st['eqsn'] as String? ?? '').trim();
     } catch (_) {}
     await WarmupState.start(seconds: seconds, eqsn: eqsn);
+    await SensorWarmupService.beginWarmup(eqsn, durationSec: seconds);
     AlertEngine().invalidateWarmupCache();
     if (!mounted) return;
     setState(() {
@@ -90,6 +100,12 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
 
   Future<void> _markDone() async {
     try {
+      String eqsn = '';
+      try {
+        final st = await SettingsStorage.load();
+        eqsn = (st['eqsn'] as String? ?? '').trim();
+      } catch (_) {}
+      await SensorWarmupService.applyUiWarmupSkipped(eqsn);
       await WarmupState.completeNow();
       AlertEngine().invalidateWarmupCache();
     } catch (_) {}

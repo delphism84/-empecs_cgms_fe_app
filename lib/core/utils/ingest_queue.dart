@@ -7,6 +7,7 @@ import 'package:helpcare/core/utils/settings_storage.dart';
 // removed: settings storage import; notification gating moved to NotificationService
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 
 class IngestQueueService {
   IngestQueueService._internal();
@@ -71,6 +72,7 @@ class IngestQueueService {
   }
 
   Future<void> _pushLockScreenBanner(DateTime time, double value) async {
+    if (!SensorWarmupService.isWarmupFinished) return;
     try {
       final st = await SettingsStorage.load();
       final String u = (st['glucoseUnit'] as String? ?? 'mgdl') == 'mmol' ? 'mmol/L' : 'mg/dL';

@@ -14,6 +14,7 @@ import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/qr_sn_parser.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/debug_toast.dart';
 import 'package:helpcare/presentation/sensor_page/before_qr_scan_page.dart';
@@ -864,6 +865,9 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
         await ss.upsertEqStart(serial: resolvedEqsn, startAt: startLocal);
       } catch (_) {}
       try { DataSyncBus().emitGlucoseBulk(count: 1); } catch (_) {}
+    } catch (_) {}
+    try {
+      await SensorWarmupService.beginWarmup(resolvedEqsn, durationSec: 30 * 60);
     } catch (_) {}
     try {
       final ds = DataService();

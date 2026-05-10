@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
-import 'package:helpcare/core/utils/warmup_state.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 
 class NotificationService {
   NotificationService._internal();
@@ -165,7 +165,7 @@ class NotificationService {
   }) async {
     if (!_enabled) return;
     final String p = (payload ?? '').trim();
-    if (p.startsWith('alarm:') && await WarmupState.isActive()) {
+    if (p.startsWith('alarm:') && !SensorWarmupService.isWarmupFinished) {
       return;
     }
     if (p.startsWith('alarm:')) {
@@ -237,7 +237,7 @@ class NotificationService {
     DateTime? measuredAt,
   }) async {
     if (!_enabled) return;
-    if (await WarmupState.isActive()) return;
+    if (!SensorWarmupService.isWarmupFinished) return;
     // AR_01_08: lock screen banner per-feature toggle
     try {
       final s = await SettingsStorage.load();

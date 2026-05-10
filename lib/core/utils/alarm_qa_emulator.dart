@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/ingest_queue.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
+import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/warmup_state.dart';
 
 /// 설정 > 개발자: BLE 없이 [IngestQueueService] → 로컬 DB + [DataSyncBus]로
@@ -11,7 +13,13 @@ class AlarmQaEmulator {
   AlarmQaEmulator._();
 
   static Future<void> _armTestSession() async {
+    String eq = '';
+    try {
+      final st = await SettingsStorage.load();
+      eq = (st['eqsn'] as String? ?? '').trim();
+    } catch (_) {}
     await WarmupState.completeNow();
+    await SensorWarmupService.applyUiWarmupSkipped(eq);
     final AlertEngine eng = AlertEngine();
     eng.invalidateAlarmsCache();
     eng.debugResetAlarmEvaluationState();

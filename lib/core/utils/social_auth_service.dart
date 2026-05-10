@@ -144,6 +144,7 @@ class SocialAuthService {
       s['lastUserId'] = email.isNotEmpty ? email : '${provider}_${DateTime.now().millisecondsSinceEpoch}';
       s['displayName'] = displayName.isNotEmpty ? displayName : (data?['displayName'] ?? data?['name'] ?? '${provider}_user').toString();
       s['lo0101SnsDoneAt'] = DateTime.now().toUtc().toIso8601String();
+      s['resetSensorStartOnNextBleAttach'] = true;
       await SettingsStorage.save(s);
       await api.saveToken(jwt);
       try {
