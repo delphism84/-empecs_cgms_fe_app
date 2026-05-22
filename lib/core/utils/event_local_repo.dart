@@ -27,7 +27,8 @@ class EventLocalRepo {
     String? userId,
   }) async {
     final Database db = await LocalDb().db;
-    userId ??= await _inferUserId();
+    final String? eq = (eqsn != null && eqsn.trim().isNotEmpty) ? eqsn.trim() : null;
+    final String? resolvedUserId = eq == null ? (userId ?? await _inferUserId()) : null;
     final Map<String, Object?> row = {
       'time_ms': time.toUtc().millisecondsSinceEpoch,
       'type': type,
@@ -45,24 +46,25 @@ class EventLocalRepo {
       }
     }
     row['evid'] = evid ?? await _nextEvid();
-    if (eqsn != null && eqsn.isNotEmpty) row['eqsn'] = eqsn;
-    if (userId != null && userId.isNotEmpty) row['user_id'] = userId;
+    if (eq != null) row['eqsn'] = eq;
+    if (eq == null && resolvedUserId != null && resolvedUserId.isNotEmpty) row['user_id'] = resolvedUserId;
 
     await db.insert('events', row, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   Future<List<Map<String, dynamic>>> range({required DateTime from, required DateTime to, int limit = 1000, String? eqsn, String? userId}) async {
     final Database db = await LocalDb().db;
-    userId ??= await _inferUserId();
+    final String? eq = (eqsn != null && eqsn.trim().isNotEmpty) ? eqsn.trim() : null;
+    final String resolvedUserId = eq != null ? '' : (userId ?? await _inferUserId()) ?? '';
     final List<Map<String, Object?>> rows = await db.query(
       'events',
       columns: ['time_ms', 'type', 'memo', 'evid', 'sid'],
-      where: (eqsn != null && eqsn.isNotEmpty)
-          ? 'time_ms BETWEEN ? AND ? AND eqsn = ? AND (user_id = ? OR user_id IS NULL)'
+      where: eq != null
+          ? 'time_ms BETWEEN ? AND ? AND eqsn = ?'
           : 'time_ms BETWEEN ? AND ? AND (user_id = ? OR user_id IS NULL)',
-      whereArgs: (eqsn != null && eqsn.isNotEmpty)
-          ? [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch, eqsn, userId ?? '']
-          : [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch, userId ?? ''],
+      whereArgs: eq != null
+          ? [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch, eq]
+          : [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch, resolvedUserId],
       orderBy: 'time_ms ASC',
       limit: limit,
     );
@@ -71,10 +73,11 @@ class EventLocalRepo {
 
   Future<int> maxEvid({String? eqsn, String? userId}) async {
     final Database db = await LocalDb().db;
-    userId ??= await _inferUserId();
-    final List<Map<String, Object?>> res = (eqsn != null && eqsn.isNotEmpty)
-        ? await db.rawQuery('SELECT MAX(evid) AS max_evid FROM events WHERE eqsn = ? AND (user_id = ? OR user_id IS NULL)', [eqsn, userId])
-        : await db.rawQuery('SELECT MAX(evid) AS max_evid FROM events WHERE (user_id = ? OR user_id IS NULL)', [userId]);
+    final String? eq = (eqsn != null && eqsn.trim().isNotEmpty) ? eqsn.trim() : null;
+    final String resolvedUserId = eq != null ? '' : (userId ?? await _inferUserId()) ?? '';
+    final List<Map<String, Object?>> res = eq != null
+        ? await db.rawQuery('SELECT MAX(evid) AS max_evid FROM events WHERE eqsn = ?', [eq])
+        : await db.rawQuery('SELECT MAX(evid) AS max_evid FROM events WHERE (user_id = ? OR user_id IS NULL)', [resolvedUserId]);
     final Object? v = res.isNotEmpty ? res.first['max_evid'] : null;
     if (v == null) return 0;
     if (v is int) return v;
@@ -126,9 +129,9 @@ class EventLocalRepo {
 
   Future<void> clearForEqsn(String eqsn, {String? userId}) async {
     final Database db = await LocalDb().db;
-    userId ??= await _inferUserId();
+    final String e = eqsn.trim();
     await db.transaction((txn) async {
-      await txn.delete('events', where: '(eqsn = ? OR (eqsn IS NULL AND ? = \'\')) AND (user_id = ? OR user_id IS NULL)', whereArgs: [eqsn, eqsn, userId ?? '']);
+      await txn.delete('events', where: 'eqsn = ?', whereArgs: [e]);
     });
   }
 

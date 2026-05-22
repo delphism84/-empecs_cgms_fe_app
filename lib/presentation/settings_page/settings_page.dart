@@ -34,6 +34,7 @@ import 'package:helpcare/presentation/settings_page/local_data_page.dart';
 import 'package:helpcare/presentation/settings_page/user_detail_page.dart';
 import 'package:helpcare/core/config/app_constants.dart';
 import 'package:helpcare/core/utils/profile_sync_service.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/emul_ble_recv_service.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -349,43 +350,21 @@ class _SettingsPageState extends State<SettingsPage> {
     st['lastScannedQrSerial'] = up;
     st['lastScannedQrAt'] = nowIso;
     st['lastScannedQrRegistered'] = true;
+    st['sensorStartAt'] = '';
+    st['sensorStartAtEqsn'] = '';
+    SensorUsage.recordLocalStartUtc(st, newEqsn);
     await SettingsStorage.save(st);
     // 2) SN 변경 시 로컬 데이터 전부 초기화 (혼섞임 방지)
     try {
         await GlucoseLocalRepo().clear();
         await EventLocalRepo().clear();
     } catch (_) {}
-    // 3) 시작일은 로컬 우선: 온라인이고 서버에 SN/MAC이 있으면 서버값 사용(req 1-7)
     String resolvedEqsn = newEqsn;
     try {
-      final ss = SettingsService();
-      DateTime? startLocal;
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final String? mac = prefs.getString('cgms.last_mac');
-        final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: newEqsn, bleMac: mac);
-        if (SettingsService.shouldApplyResolvedEqStart(eq, newEqsn)) {
-          final String? stRemote = (eq['startAt'] as String?);
-          if (stRemote != null && stRemote.trim().isNotEmpty) {
-            startLocal = DateTime.tryParse(stRemote)?.toLocal();
-          }
-          final String? srvSn = (eq['serial'] as String?)?.trim();
-          if (srvSn != null && srvSn.isNotEmpty) resolvedEqsn = srvSn;
-        }
-      } catch (_) {}
-      startLocal ??= DateTime.now();
-      try {
-        final m = await SettingsStorage.load();
-        m['sensorStartAt'] = startLocal.toUtc().toIso8601String();
-        m['sensorStartAtEqsn'] = resolvedEqsn;
-        if (resolvedEqsn != newEqsn) {
-          m['eqsn'] = resolvedEqsn;
-          st['eqsn'] = resolvedEqsn;
-        }
-        await SettingsStorage.save(m);
-      } catch (_) {}
-      try { await ss.upsertEqStart(serial: resolvedEqsn, startAt: startLocal); } catch (_) {}
-      try { DataSyncBus().emitGlucoseBulk(count: 1); } catch (_) {}
+      await SensorUsage.syncStartAtWithServer();
+      final Map<String, dynamic> m = await SettingsStorage.load();
+      resolvedEqsn = (m['eqsn'] as String? ?? newEqsn).trim();
+      st['eqsn'] = resolvedEqsn;
     } catch (_) {}
     if (mounted) {
       setState(() {
@@ -411,10 +390,10 @@ class _SettingsPageState extends State<SettingsPage> {
   /// 상단 사용자 카드 — [findAncestorStateOfType]은 자기 State를 찾지 못하므로 State 필드를 직접 사용
   Widget _buildUserCard(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final DateTime start = sensorStart;
+    final SensorUsageSnapshot? snap =
+        SensorUsage.snapshotFromStartLocal(sensorStart, validity: Duration(days: lifeDays));
     final int total = lifeDays;
-    final Duration used = DateTime.now().difference(start);
-    final int remain = (total - used.inDays).clamp(0, total);
+    final int remain = snap?.remainDays ?? 0;
     final String nameRaw = displayName.trim().isEmpty ? 'Guest' : displayName.trim();
     final String name = nameRaw == 'Guest' ? 'common_guest'.tr() : nameRaw;
     final String e = email.trim();

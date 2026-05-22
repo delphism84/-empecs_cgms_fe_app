@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
-import 'package:helpcare/core/utils/sensor_warmup_service.dart';
+import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 /// User detail page: shows user info and Logout button
 class UserDetailPage extends StatelessWidget {
@@ -62,12 +61,7 @@ class UserDetailPage extends StatelessWidget {
                   );
                   if (ok != true || !context.mounted) return;
                   try {
-                    await BleService().disconnect();
-                  } catch (_) {}
-                  try {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.remove('cgms.last_mac');
-                    await prefs.remove('cgms.last_name');
+                    await BleService().disconnect(clearPersistentPairing: false);
                   } catch (_) {}
                   try {
                     final s = await SettingsStorage.load();
@@ -76,23 +70,8 @@ class UserDetailPage extends StatelessWidget {
                     s['displayName'] = 'Guest';
                     s['guestMode'] = false;
                     s['biometricEnabled'] = false;
-                    s['eqsn'] = '';
-                    s['sensorStartAt'] = '';
-                    s['sensorStartAtEqsn'] = '';
-                    s['resetSensorStartOnNextBleAttach'] = false;
-                    s['lastTrid'] = 0;
-                    s['sc0106WarmupDoneAt'] = '';
-                    s['sc0106WarmupActive'] = false;
-                    s['sc0106WarmupEqsn'] = '';
-                    s['registeredDevices'] = <Map<String, dynamic>>[];
-                    s['lastScannedQrRaw'] = '';
-                    s['lastScannedQrFullSn'] = '';
-                    s['lastScannedQrSerial'] = '';
-                    s['lastScannedQrAt'] = '';
-                    s['lastScannedQrRegistered'] = false;
-                    s['lastScannedQrMac'] = '';
                     await SettingsStorage.save(s);
-                    await SensorWarmupService.resetAll();
+                    await ApiClient().loadToken();
                   } catch (_) {}
                   if (!context.mounted) return;
                   Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);

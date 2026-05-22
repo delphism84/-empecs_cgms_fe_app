@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 /// - BleEmuServer가 이 키를 통해 라우팅을 강제로 전환할 수 있다.
 class AppNav {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  /// [OnlineMonitor] 등 오버레이 밖에서도 SnackBar(동기화 실패 등)를 띄우기 위한 전역 메신저.
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
   static final ValueNotifier<String> currentRoute = ValueNotifier<String>('/');
 
   static final NavigatorObserver observer = _AppNavObserver();

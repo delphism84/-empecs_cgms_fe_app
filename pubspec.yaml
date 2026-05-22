@@ -32,7 +32,6 @@ dependencies:
   mobile_scanner: ^7.1.2
   local_auth: ^2.3.0
   pdf: ^3.10.7
-  printing: ^5.12.0
   share_plus: ^10.1.3
   qr_flutter: ^4.1.0
   google_sign_in: ^7.2.0
@@ -40,6 +39,7 @@ dependencies:
   kakao_flutter_sdk: ^1.10.0
   kakao_flutter_sdk_user: ^1.10.0
   sqflite_common_ffi_web: ^1.0.2
+  excel: ^4.0.6
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -54,7 +54,7 @@ flutter:
   assets:
     - assets/
     - assets/images/
-    - assets/lang/lang.csv
+    - assets/lang/lang.xlsx
     - docs/btstep.png
   fonts:
     - family: Gilroy-Medium

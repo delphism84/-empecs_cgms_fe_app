@@ -6,10 +6,26 @@ import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/local_db.dart';
 import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/qr_sn_parser.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/local_sync_service.dart';
 import 'package:helpcare/core/config/default_dev_account.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// SN별 `startAt` 서버 동기화 결과. 서버 등록 행이 있으면 서버가 항상 우선(삭제·비움 포함).
+class SensorStartSyncResult {
+  const SensorStartSyncResult({
+    required this.changed,
+    this.serverAuthoritative = false,
+    this.uploaded = false,
+    this.cleared = false,
+  });
+
+  final bool changed;
+  final bool serverAuthoritative;
+  final bool uploaded;
+  final bool cleared;
+}
 
 /// 설정 저장 정책: 모든 설정 기본 로컬 저장. BE는 로컬 성공 후 업로드용. BE 실패 시 폴백 없음.
 class SettingsService {
@@ -132,22 +148,6 @@ class SettingsService {
   }
 
   /// `method`만 오는 레거시/서버 페이로드를 sound/vibrate로 정규화(둘 다 없을 때만).
-  /// [sensorStartAt]가 비어 있지 않은데 [sensorStartAtEqsn]이 비었거나 현재 [eqsn]과 다르면
-  /// 스티커만 바꾼 동일 MAC 등에서 이전 세션 시작일이 남는 문제가 생긴다. 저장 맵을 직수정하고 변경 여부 반환.
-  static bool stripStaleSensorStart(Map<String, dynamic> st) {
-    final String eqsn = (st['eqsn'] as String? ?? '').trim();
-    if (eqsn.isEmpty) return false;
-    final String start = (st['sensorStartAt'] as String? ?? '').trim();
-    final String owner = (st['sensorStartAtEqsn'] as String? ?? '').trim();
-    if (start.isEmpty) return false;
-    if (owner.isEmpty || owner.toUpperCase() != eqsn.toUpperCase()) {
-      st['sensorStartAt'] = '';
-      st['sensorStartAtEqsn'] = '';
-      return true;
-    }
-    return false;
-  }
-
   static void normalizeAlarmMethodFields(Map<String, dynamic> m) {
     if (m.containsKey('sound') || m.containsKey('vibrate')) return;
     final String raw = (m['method'] ?? m['alertMethod'] ?? '').toString().trim().toLowerCase();
@@ -166,6 +166,42 @@ class SettingsService {
       m['sound'] = false;
       m['vibrate'] = false;
     }
+  }
+
+  /// 로컬 [eqsn]과 [sensorStartAtEqsn]이 같은 센서인지(풀 SN / 5자리 등) 판별.
+  /// [resolveEqRegistration]·[stripStaleSensorStart]·[shouldApplyResolvedEqStart]에서 공통 사용.
+  static bool serialsMatchForEq(String a, String b) {
+    final String la = a.trim().toUpperCase();
+    final String lb = b.trim().toUpperCase();
+    if (la.isEmpty || lb.isEmpty) return false;
+    if (la == lb) return true;
+    final String? fa = QrSnParser.fullSn(la);
+    final String? fb = QrSnParser.fullSn(lb);
+    final String ka = (fa ?? la);
+    final String kb = (fb ?? lb);
+    if (ka == kb) return true;
+    if (ka.endsWith(lb) || lb.endsWith(la) || ka.endsWith(kb) || kb.endsWith(ka)) return true;
+    return false;
+  }
+
+  /// [sensorStartAt]가 비어 있지 않은데 [sensorStartAtEqsn]이 비었으면 현재 [eqsn]을 소유자로 보정(로그아웃·재로그인·구버전 누락).
+  /// 소유자가 있고 현재 [eqsn]과 다른 센서면 시작일 제거(스티커만 교체 등).
+  static bool stripStaleSensorStart(Map<String, dynamic> st) {
+    final String eqsn = (st['eqsn'] as String? ?? '').trim();
+    final String start = (st['sensorStartAt'] as String? ?? '').trim();
+    final String owner = (st['sensorStartAtEqsn'] as String? ?? '').trim();
+    if (start.isEmpty) return false;
+    if (eqsn.isEmpty) return false;
+    if (owner.isEmpty) {
+      st['sensorStartAtEqsn'] = eqsn;
+      return true;
+    }
+    if (!serialsMatchForEq(owner, eqsn)) {
+      st['sensorStartAt'] = '';
+      st['sensorStartAtEqsn'] = '';
+      return true;
+    }
+    return false;
   }
 
   Future<List<Map<String, dynamic>>> listAlarms() async {
@@ -281,37 +317,83 @@ class SettingsService {
   /// [resolveEqRegistration]·[getEqBySerial] 응답의 `startAt`·`serial`을 로컬에 반영해도 되는지.
   /// MAC만 맞고 응답의 시리얼이 앱의 [localEqsn]과 다르면(스티커만 교체) 이전 세션 시작일이 섞이지 않게 한다.
   static bool shouldApplyResolvedEqStart(Map<String, dynamic> eq, String localEqsn) {
-    final String want = localEqsn.trim().toUpperCase();
+    final String want = localEqsn.trim();
     if (want.isEmpty) return false;
-    final String srv = (eq['serial'] as String? ?? '').trim().toUpperCase();
-    if (srv.isNotEmpty && srv != want) return false;
+    final String srv = (eq['serial'] as String? ?? '').trim();
+    if (srv.isNotEmpty && !serialsMatchForEq(want, srv)) return false;
     return true;
   }
 
-  /// BLE 재연결 등: 서버 `startAt`이 있으면 UTC ISO로 반환하고 [fromServer] true.
-  /// 통신 실패·빈 응답·파싱 실패·[shouldApplyResolvedEqStart] 불만족 시 [fallbackUtc] 사용, [fromServer] false.
-  Future<({String isoUtc, bool fromServer})> resolveSensorStartUtcOrReconnectFallback({
+  /// 온라인 시 SN별 시작일 단일 동기화: 서버 행이 있으면 서버 우선(비어 있으면 로컬 삭제),
+  /// 행이 없으면 동일 SN 로컬만 서버로 업서트.
+  Future<SensorStartSyncResult> syncEqStartAuthoritative({
     required String eqsn,
     String? bleMac,
-    required DateTime fallbackUtc,
   }) async {
     final String want = eqsn.trim();
-    if (want.isEmpty) {
-      return (isoUtc: fallbackUtc.toUtc().toIso8601String(), fromServer: false);
-    }
+    if (want.isEmpty) return const SensorStartSyncResult(changed: false);
+
+    final Map<String, dynamic> st = await SettingsStorage.load();
+    stripStaleSensorStart(st);
+    final String localStart = (st['sensorStartAt'] as String? ?? '').trim();
+    final String owner = (st['sensorStartAtEqsn'] as String? ?? '').trim();
+    final bool localOwned = localStart.isNotEmpty &&
+        owner.isNotEmpty &&
+        serialsMatchForEq(owner, want);
+
+    Map<String, dynamic> eq = <String, dynamic>{};
     try {
-      final Map<String, dynamic> eq = await resolveEqRegistration(serial: want, bleMac: bleMac);
-      if (shouldApplyResolvedEqStart(eq, want)) {
-        final String st = (eq['startAt'] as String? ?? '').trim();
-        if (st.isNotEmpty) {
-          final DateTime? parsed = DateTime.tryParse(st);
-          if (parsed != null) {
-            return (isoUtc: parsed.toUtc().toIso8601String(), fromServer: true);
-          }
+      await _api.loadToken();
+      eq = await resolveEqRegistration(serial: want, bleMac: bleMac);
+    } catch (_) {}
+
+    final bool matched = eq.isNotEmpty && shouldApplyResolvedEqStart(eq, want);
+
+    if (matched) {
+      final String srvSn = (eq['serial'] as String? ?? '').trim();
+      if (srvSn.isNotEmpty && serialsMatchForEq(want, srvSn)) {
+        st['eqsn'] = srvSn;
+      }
+
+      final String srvStart = (eq['startAt'] as String? ?? '').trim();
+      if (srvStart.isNotEmpty) {
+        final DateTime? parsed = DateTime.tryParse(srvStart);
+        if (parsed != null) {
+          final String iso = parsed.toUtc().toIso8601String();
+          final bool changed = localStart != iso || !serialsMatchForEq(owner, want);
+          st['sensorStartAt'] = iso;
+          st['sensorStartAtEqsn'] = want;
+          await SettingsStorage.save(st);
+          return SensorStartSyncResult(
+            changed: changed,
+            serverAuthoritative: true,
+          );
         }
       }
-    } catch (_) {}
-    return (isoUtc: fallbackUtc.toUtc().toIso8601String(), fromServer: false);
+
+      final bool changed = localStart.isNotEmpty;
+      st['sensorStartAt'] = '';
+      st['sensorStartAtEqsn'] = want;
+      await SettingsStorage.save(st);
+      return SensorStartSyncResult(
+        changed: changed,
+        serverAuthoritative: true,
+        cleared: true,
+      );
+    }
+
+    if (localOwned && localStart.isNotEmpty) {
+      final DateTime? parsed = DateTime.tryParse(localStart)?.toUtc();
+      if (parsed != null) {
+        final bool uploaded = await upsertEqStart(serial: want, startAt: parsed);
+        return SensorStartSyncResult(
+          changed: false,
+          uploaded: uploaded,
+        );
+      }
+    }
+
+    return const SensorStartSyncResult(changed: false);
   }
 
   /// 동일 센서 식별: **serial 또는 bleMac** 중 하나가 서버 등록과 일치하면 해당 행 반환(req 1-7).

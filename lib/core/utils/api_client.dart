@@ -15,6 +15,10 @@ class ApiClient {
   factory ApiClient() => _instance;
   ApiClient._internal();
 
+  /// BE가 200 대신 201 등 2xx를 줄 수 있음(insertMany 등).
+  static bool isHttpSuccess(int statusCode) =>
+      statusCode >= 200 && statusCode < 300;
+
   static String? _baseOverride;
   static bool _baseLoaded = false;
 
@@ -340,7 +344,7 @@ class DataService {
         if (trid != null) 'trid': trid,
         if (eqsn.isNotEmpty) 'eqsn': eqsn,
       }, withGlobalLoading: false);
-      if (r.statusCode == 200) { await _markOnline(); return true; }
+      if (ApiClient.isHttpSuccess(r.statusCode)) { await _markOnline(); return true; }
     } catch (_) {}
     // fallback: local cache only
     try {
@@ -365,7 +369,7 @@ class DataService {
         'tr': tr,
         if (eqsn.isNotEmpty) 'eqsn': eqsn,
       }, withGlobalLoading: false);
-      if (r.statusCode == 200) { await _markOnline(); return true; }
+      if (ApiClient.isHttpSuccess(r.statusCode)) { await _markOnline(); return true; }
     } catch (_) {}
     return false;
   }
@@ -382,7 +386,7 @@ class DataService {
         if (memo != null) 'memo': memo,
         if (eqsn.isNotEmpty) 'eqsn': eqsn,
       }, withGlobalLoading: false);
-      ok = r.statusCode == 200;
+      ok = ApiClient.isHttpSuccess(r.statusCode);
       if (ok) { await _markOnline(); }
     } catch (_) {}
     // always write to local for immediate UX
@@ -394,6 +398,39 @@ class DataService {
     } catch (_) {}
     DataSyncBus().emitEventItem({'_op': 'create', 'type': type, 'time': time.toLocal().toIso8601String(), if (memo != null) 'memo': memo});
     return ok;
+  }
+
+  /// 서버 `POST /api/data/events/batch` (최대 200건). 백로그 동기화 전용 — 로컬 DB는 이미 갖고 있음.
+  /// 404 등 비지원 시 false (호출부에서 단건 [postEvent] 폴백).
+  Future<bool> postEventsBatch({required List<Map<String, dynamic>> events}) async {
+    if (events.isEmpty) return true;
+    await _api.loadToken();
+    try {
+      String eqsn = '';
+      try {
+        final s = await SettingsStorage.load();
+        eqsn = (s['eqsn'] as String? ?? '').trim();
+      } catch (_) {}
+      Future<http.Response> postBody(Map<String, dynamic> body) =>
+          _api.post('/api/data/events/batch', body: body, withGlobalLoading: false);
+
+      http.Response r = await postBody(<String, dynamic>{
+        'events': events,
+        if (eqsn.isNotEmpty) 'eqsn': eqsn,
+      });
+      // 일부 BE는 본문 키로 `items`만 허용 → 400이면 한 번 재시도
+      if (r.statusCode == 400) {
+        r = await postBody(<String, dynamic>{
+          'items': events,
+          if (eqsn.isNotEmpty) 'eqsn': eqsn,
+        });
+      }
+      if (ApiClient.isHttpSuccess(r.statusCode)) {
+        await _markOnline();
+        return true;
+      }
+    } catch (_) {}
+    return false;
   }
 
   Future<bool> deleteEvent(String id) async {

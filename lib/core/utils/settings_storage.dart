@@ -33,8 +33,6 @@ class SettingsStorage {
     // SN별 웜업 시작(UTC ISO). 알람은 [sensorWarmupDurationSec] 동안 막는다.
     'sensorWarmupStartBySn': <String, dynamic>{},
     'sensorWarmupDurationSec': 30 * 60,
-    // 서버 로그인 직후 첫 BLE 연결에서만 sensorStartAt을 접속 시각으로 맞춤(로그아웃·재연결 검수).
-    'resetSensorStartOnNextBleAttach': false,
     'notificationsEnabled': true,
     // AR_01_01: mute all alarms
     'alarmsMuteAll': false,

@@ -179,7 +179,7 @@ class _ChartPageState extends State<ChartPage> {
       setState(() {
         points = local
             .map((e) => GlucosePoint(
-                  time: DateTime.fromMillisecondsSinceEpoch(e['time_ms'] as int).toLocal(),
+                  time: DateTime.fromMillisecondsSinceEpoch(e['time_ms'] as int, isUtc: true).toLocal(),
                   value: ((e['value'] as num?) ?? 0).toDouble(),
                 ))
             .toList()
@@ -202,7 +202,7 @@ class _ChartPageState extends State<ChartPage> {
       setState(() {
         points = local
             .map((e) => GlucosePoint(
-                  time: DateTime.fromMillisecondsSinceEpoch(e['time_ms'] as int).toLocal(),
+                  time: DateTime.fromMillisecondsSinceEpoch(e['time_ms'] as int, isUtc: true).toLocal(),
                   value: ((e['value'] as num?) ?? 0).toDouble(),
                 ))
             .toList()

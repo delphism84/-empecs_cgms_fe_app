@@ -36,8 +36,8 @@ class DebugConfig {
     return _productionApiOrigin;
   }
 
-  // 모든 API 기본 타임아웃(ms)
-  static const int apiTimeoutMs = 3000;
+  // 모든 API 기본 타임아웃(ms) — 온라인 동기화·헬스 등에서 5초 초과 시 끊김
+  static const int apiTimeoutMs = 5000;
 }
 
 

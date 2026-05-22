@@ -16,7 +16,8 @@ class DebugToastBus {
   Future<void> _showInternal(String message) async {
     final String msg = message.trim();
     if (msg.isEmpty) return;
-    if (!SensorWarmupService.isWarmupFinished && !_isAllowedDuringWarmup(msg)) {
+    if (SensorWarmupService.shouldSuppressAlarmPipeline &&
+        !_isAllowedDuringWarmup(msg)) {
       return;
     }
     _controller.add(msg);

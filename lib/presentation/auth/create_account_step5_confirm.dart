@@ -114,7 +114,6 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
               await api.saveToken(token);
               final s2 = await SettingsStorage.load();
               s2['authToken'] = token;
-              s2['resetSensorStartOnNextBleAttach'] = true;
               await SettingsStorage.save(s2);
               await ProfileSyncService.refreshFromServer();
               try {

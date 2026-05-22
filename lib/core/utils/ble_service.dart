@@ -14,8 +14,10 @@ import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/app_nav.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/warmup_state.dart';
+import 'package:helpcare/core/utils/cgms_notify_debug.dart';
 class _CgmsSample {
   _CgmsSample({required this.time, required this.value, required this.trid});
   final DateTime time;
@@ -228,7 +230,7 @@ class BleService {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('cgms.last_mac', deviceId);
           } catch (_) {}
-          // 센서 시작 시각: 서버 로그인 직후 첫 연결은 접속 시각(재연결 검수). 그 외 eqsn 있으면 서버 startAt 우선.
+          // 센서 시작 시각: 서버 로그인 직후 및 재연결 시각(재연결 검증). 동일 eqsn 있으면 서버 startAt 우선.
           try {
             final st = await SettingsStorage.load();
             final String eqsn = (st['eqsn'] as String? ?? '').trim();
@@ -247,19 +249,9 @@ class BleService {
                 } catch (_) {}
               }
             } else if (eqsn.isNotEmpty) {
-              final ({String isoUtc, bool fromServer}) r = await ss.resolveSensorStartUtcOrReconnectFallback(
-                eqsn: eqsn,
-                bleMac: deviceId,
-                fallbackUtc: now,
-              );
-              st['sensorStartAt'] = r.isoUtc;
-              st['sensorStartAtEqsn'] = eqsn;
+              if (SettingsService.stripStaleSensorStart(st)) dirty = true;
+              await SensorUsage.syncStartAtWithServer(bleMac: deviceId);
               dirty = true;
-              if (!r.fromServer) {
-                try {
-                  await ss.upsertEqStart(serial: eqsn, startAt: now);
-                } catch (_) {}
-              }
             } else {
               final String existingStart = (st['sensorStartAt'] as String? ?? '').trim();
               if (existingStart.isEmpty) {
@@ -464,15 +456,16 @@ class BleService {
         await SettingsStorage.save(st);
       }
 
-      final bool doneFlag = (st['sc0106WarmupDoneAt'] as String? ?? '').trim().isNotEmpty;
       // 저장 플래그만 보지 않음: isActive()가 만료·정리까지 반영(플래그 불일치 시 알람 새는 케이스 방지)
       final bool liveWarmup = await WarmupState.isActive();
-      if (doneFlag && !liveWarmup) {
+      if (liveWarmup) {
         if (AppNav.route != '/sc/01/06') await AppNav.goNamed('/sc/01/06');
         return;
       }
-      if (liveWarmup) {
-        if (AppNav.route != '/sc/01/06') await AppNav.goNamed('/sc/01/06');
+
+      final bool doneFlag = (st['sc0106WarmupDoneAt'] as String? ?? '').trim().isNotEmpty;
+      if (doneFlag) {
+        // 이미 SC_01_06 웜업이 끝난 세션 — 재연결·QR 후에 웜업 화면으로 되돌리지 않음
         return;
       }
 
@@ -642,6 +635,9 @@ class BleService {
   }
 
   Future<void> _handleCgmsNotifyPacket(List<int> data, {required String source, required bool silent}) async {
+    cgmsNotifyLog(
+      'notify IN source=$source silent=$silent history=$_historyInProgress len=${data.length} phase=${phase.value.name}',
+    );
     // increment buffer count per notify packet
     rxCount.value = rxCount.value + 1;
     // raw debug log (length + hex)
@@ -652,7 +648,13 @@ class BleService {
 
     final List<_CgmsSample> records = _parseCgmsMeasurements(data);
     if (records.isEmpty) {
-      unawaited(BleLogService().add('CGMS', '$source notify parse skipped (len=${data.length})'));
+      final String hex = data.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ');
+      final int b0 = data.isNotEmpty ? (data[0] & 0xFF) : -1;
+      final int b1 = data.length > 1 ? (data[1] & 0xFF) : -1;
+      cgmsNotifyLog(
+        'notify PARSE_EMPTY source=$source len=${data.length} hex=[$hex] b0(size?)=$b0 b1(flags?)=$b1',
+      );
+      unawaited(BleLogService().add('CGMS', '$source notify parse skipped (len=${data.length}) [$hex]'));
       return;
     }
 
@@ -672,18 +674,25 @@ class BleService {
         // 캐시/브로드캐스트/업로드는 큐 서비스 단일 경로로 처리 (중복 제거)
         String userId = '';
         try { final st2 = await SettingsStorage.load(); userId = (st2['lastUserId'] as String? ?? ''); } catch (_) {}
+        cgmsNotifyLog(
+          'notify ENQUEUE source=$source silent=$silent v=${r.value.toStringAsFixed(0)} trid=$usedTrid eqsn=$eqsn',
+        );
         IngestQueueService().enqueueGlucose(r.time, r.value, trid: usedTrid, eqsn: eqsn, userId: userId, silent: silent);
         if (silent) {
           bulkCount++;
           _historyDebounce?.cancel();
           _historyDebounce = Timer(const Duration(milliseconds: 800), () {
+            cgmsNotifyLog('notify BULK_EMIT count=$bulkCount');
             try { DataSyncBus().emitGlucoseBulk(count: bulkCount); } catch (_) {}
           });
         }
       }
       st['lastTrid'] = last;
       await SettingsStorage.save(st);
-    } catch (_) {}
+      cgmsNotifyLog('notify DONE source=$source n=${records.length} silent=$silent bulkPending=$bulkCount');
+    } catch (e) {
+      cgmsNotifyLog('notify ERROR source=$source $e');
+    }
   }
 
   Future<bool> _subscribeOpsAndStart(String deviceId) async {
@@ -848,8 +857,12 @@ class BleService {
       final int localMax = await GlucoseLocalRepo().maxTrid();
       final int from = (localMax <= 0) ? 1 : (localMax + 1);
       _historyInProgress = true;
+      cgmsNotifyLog('racp historyMode ON fromTrid=$from');
       // safety timeout to end history mode if no data arrives
-      Timer(const Duration(seconds: 10), () { _historyInProgress = false; });
+      Timer(const Duration(seconds: 10), () {
+        _historyInProgress = false;
+        cgmsNotifyLog('racp historyMode OFF (10s timeout)');
+      });
       await requestRacpFromTrid(from);
     } catch (_) {}
   }

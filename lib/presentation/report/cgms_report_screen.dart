@@ -7,10 +7,10 @@ import 'package:helpcare/core/config/app_constants.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/profile_sync_service.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/presentation/report/_report_widgets.dart';
 import 'package:helpcare/presentation/settings_page/user_detail_page.dart';
-import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/widgets/debug_badge.dart';
 import 'package:helpcare/widgets/spacing.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -83,10 +83,10 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
   /// Settings 상단 사용자 카드와 동일 패턴
   Widget _buildReportUserCard(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final DateTime start = sensorStart;
+    final SensorUsageSnapshot? snap =
+        SensorUsage.snapshotFromStartLocal(sensorStart, validity: Duration(days: lifeDays));
     final int total = lifeDays;
-    final Duration used = DateTime.now().difference(start);
-    final int remain = (total - used.inDays).clamp(0, total);
+    final int remain = snap?.remainDays ?? 0;
     final String name = displayName.trim().isEmpty ? 'common_guest'.tr() : displayName.trim();
     final String e = email.trim();
     final String emailLine = e.isEmpty ? '—' : e;
@@ -202,28 +202,33 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
               child: _buildReportUserCard(context),
             ),
             VerticalSpace(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: CustomButton(
-                    text: 'report_share'.tr(),
-                    padding: ButtonPadding.PaddingAll12,
-                    variant: ButtonVariant.FillWhiteA700,
-                    fontStyle: ButtonFontStyle.GilroyMedium16IndigoA700,
-                    onTap: () {
-                      Navigator.of(context).pushNamed('/sc/07/01');
-                    },
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/sc/07/01');
+                },
+                icon: const Icon(Icons.share, size: 20),
+                label: Text(
+                  'report_share'.tr(),
+                  style: TextStyle(
+                    fontSize: getFontSize(16),
+                    fontFamily: 'Gilroy-Medium',
+                    fontWeight: FontWeight.w500,
+                    color: ColorConstant.whiteA700,
                   ),
                 ),
-                HorizontalSpace(width: 8),
-                Expanded(
-                  child: CustomButton(
-                    text: 'report_export'.tr(),
-                    padding: ButtonPadding.PaddingAll12,
-                    onTap: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ColorConstant.baseColor,
+                  foregroundColor: ColorConstant.whiteA700,
+                  elevation: 2,
+                  shadowColor: ColorConstant.indigo50,
+                  padding: getPadding(all: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(getHorizontalSize(8)),
                   ),
                 ),
-              ],
+              ),
             ),
             VerticalSpace(height: 12),
             // KPI panel

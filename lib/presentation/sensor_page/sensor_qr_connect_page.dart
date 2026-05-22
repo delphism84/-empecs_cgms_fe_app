@@ -4,11 +4,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
-import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/qr_sn_parser.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/sensor_warmup_service.dart';
+import 'package:helpcare/core/utils/self_qa_runner.dart';
 import 'package:helpcare/core/app_export.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:helpcare/presentation/sensor_page/start_monitor_page.dart';
@@ -133,7 +134,7 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
       });
       s['registeredDevices'] = list;
       s['eqsn'] = fullSn;
-      SettingsService.stripStaleSensorStart(s);
+      SensorUsage.recordLocalStartUtc(s, fullSn);
       s['lastScannedQrRegistered'] = true;
       s['lastScannedQrFullSn'] = fullSn;
       s['lastScannedQrSerial'] = serial;
@@ -141,6 +142,8 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
       s['lastScannedQrRaw'] = _raw.trim();
       s['lastScannedQrAt'] = DateTime.now().toUtc().toIso8601String();
       await SettingsStorage.save(s);
+      unawaited(SensorUsage.syncStartAtWithServer(bleMac: mac));
+      QaCmdRunner.cancelUiTour();
       try {
         await SensorWarmupService.beginWarmup(fullSn, durationSec: 30 * 60);
       } catch (_) {}
@@ -254,6 +257,8 @@ class _SensorQrConnectPageState extends State<SensorQrConnectPage> {
                     if ((_parsed?['advName'] ?? '').isNotEmpty) _InfoCard(title: 'qr_field_adv'.tr(), value: _parsed!['advName'], icon: Icons.bluetooth),
                     if ((_parsed?['mac'] ?? '').isNotEmpty) _InfoCard(title: 'qr_field_mac'.tr(), value: _parsed!['mac'], icon: Icons.router),
                     _InfoCard(title: 'qr_field_model'.tr(), value: _parsed?['model'], icon: Icons.precision_manufacturing),
+                    if ((_parsed?['year'] ?? '').trim().isNotEmpty)
+                      _InfoCard(title: 'qr_field_year'.tr(), value: _parsed!['year'], icon: Icons.calendar_today_outlined),
                     _InfoCard(title: 'sensor_detail_serial'.tr(), value: _parsed != null ? (_parsed!['serial'] ?? '') : (_raw.isNotEmpty ? '—' : null), icon: Icons.confirmation_number_outlined),
                   ]),
                   const SizedBox(height: 12),

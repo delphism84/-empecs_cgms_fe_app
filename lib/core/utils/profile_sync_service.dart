@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
 /// BE `GET /api/auth/me`로 프로필 갱신. 실패 시 무시(로컬 유지).
@@ -184,6 +185,7 @@ class ProfileSyncService {
     s2['guestMode'] = false;
     await SettingsStorage.save(s2);
     await ApiClient().loadToken();
+    await SensorUsage.applyServerStartOverwrite();
     try {
       AppSettingsBus.notify();
     } catch (_) {}

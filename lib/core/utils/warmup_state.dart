@@ -9,6 +9,16 @@ class WarmupState {
   /// [start]가 저장소에 쓰이기 전 await 구간 — 이 사이에 혈당/링크 알림이 새지 않도록 한다.
   static bool _persistingWarmup = false;
 
+  /// SC_01_06(및 동일 웜업 전면 UI)이 떠 있는 동안 true. SN 기반 게이트와 별도로 알람·notify를 확실히 막는다.
+  static bool _warmupUiVisible = false;
+
+  /// 웜업 전면 UI 표시 중이거나, 웜업 시작을 저장소에 반영하는 짧은 구간.
+  static bool get isWarmupNow => _warmupUiVisible || _persistingWarmup;
+
+  static void setWarmupUiVisible(bool visible) {
+    _warmupUiVisible = visible;
+  }
+
   static const String _kStartAt = 'sc0106WarmupStartAt';
   static const String _kEndsAt = 'sc0106WarmupEndsAt';
   static const String _kActive = 'sc0106WarmupActive';

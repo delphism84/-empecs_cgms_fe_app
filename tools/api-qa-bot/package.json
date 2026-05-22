@@ -1,0 +1,14 @@
+{
+  "name": "api-qa-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full BE API contract QA for CGMS Flutter app (auth, data, settings, sync paths)",
+  "type": "module",
+  "scripts": {
+    "qa": "node run.mjs",
+    "qa:strict": "node run.mjs --strict"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

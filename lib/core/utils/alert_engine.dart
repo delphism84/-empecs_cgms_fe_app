@@ -6,6 +6,7 @@ import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/signal_loss_monitor_log.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// 간단 알람 엔진(봇 검수용 포함)
 /// - DataSyncBus의 glucosePoint를 감시
@@ -52,7 +53,7 @@ class AlertEngine {
   /// 동일 간격 스로틀을 다시 적용하지 않는다(타이머·스로틀 이중 필터로 재알림이 막히는 것 방지).
   Future<void> notifyBleLinkLost({bool fromScheduledRepeat = false}) async {
     try {
-      if (!SensorWarmupService.isWarmupFinished) return;
+      if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
       invalidateAlarmsCache();
       await _ensureAlarmsLoaded();
       for (final raw in _alarms) {
@@ -71,7 +72,7 @@ class AlertEngine {
 
   /// 디버그/봇 검수용: 시스템(신호 손실 등) 알람 강제 트리거
   Future<void> debugTriggerSystemAlarm({String reason = 'signal_loss'}) async {
-    if (!SensorWarmupService.isWarmupFinished) return;
+    if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
     invalidateAlarmsCache();
     await _ensureAlarmsLoaded();
     final String r = reason.trim().isEmpty ? 'signal_loss' : reason.trim();
@@ -92,13 +93,43 @@ class AlertEngine {
     }
   }
 
+  String _systemAlarmTitle(String r) {
+    switch (r) {
+      case 'signal_loss':
+        return 'alert_notify_title_signal_loss'.tr();
+      case 'expired':
+        return 'alert_notify_title_sensor_expired'.tr();
+      case 'error':
+        return 'alert_notify_title_sensor_error'.tr();
+      case 'abnormal':
+        return 'alert_notify_title_abnormal_signal'.tr();
+      default:
+        return 'alert_notify_title_system'.tr();
+    }
+  }
+
+  String _systemAlarmBody(String r) {
+    switch (r) {
+      case 'signal_loss':
+        return 'alert_notify_body_signal_loss'.tr();
+      case 'expired':
+        return 'alert_notify_body_sensor_expired'.tr();
+      case 'error':
+        return 'alert_notify_body_sensor_error'.tr();
+      case 'abnormal':
+        return 'alert_notify_body_abnormal_signal'.tr();
+      default:
+        return 'alert_notify_body_system_default'.tr();
+    }
+  }
+
   Future<void> _fireSystemAlarmFromConfig(
     Map<String, dynamic> a, {
     required String reason,
     bool bypassRepeatThrottle = false,
   }) async {
     try {
-      if (!SensorWarmupService.isWarmupFinished) return;
+      if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
       if (!SettingsService.parseAlarmBool(a['enabled'], defaultValue: true)) return;
       if (_inQuietHours(a['quietFrom'] as String?, a['quietTo'] as String?)) {
         SignalLossMonitorLog.append('alarm skipped (quiet hours)');
@@ -124,17 +155,11 @@ class AlertEngine {
       _lastFired[repeatKey] = DateTime.now();
       SignalLossMonitorLog.append('alarm raise!');
 
-      final Map<String, Map<String, String>> msg = {
-        'signal_loss': {'title': 'Signal loss', 'body': 'Sensor signal lost'},
-        'expired': {'title': 'Sensor expired', 'body': 'Sensor expired'},
-        'error': {'title': 'Sensor error', 'body': 'Sensor error detected'},
-        'abnormal': {'title': 'Abnormal signal', 'body': 'Abnormal sensor signal detected'},
-      };
       final String r = reason.trim().isEmpty ? 'signal_loss' : reason.trim();
-      final String title = (msg[r]?['title']) ?? 'System alert';
-      String body = (msg[r]?['body']) ?? 'System alert';
+      final String title = _systemAlarmTitle(r);
+      String body = _systemAlarmBody(r);
       if (r != 'signal_loss') {
-        body = '$body ($r)';
+        body = 'alert_notify_body_system_extra'.tr(namedArgs: {'body': body, 'reason': r});
       }
       // 고정 id는 일부 기기에서 반복 알람이 "갱신만" 되고 소리/헤드업이 재생되지 않을 수 있음
       final int nid = 101000 + (DateTime.now().millisecondsSinceEpoch % 899000);
@@ -178,9 +203,9 @@ class AlertEngine {
     final double v = (e.payload['value'] as num?)?.toDouble() ?? double.nan;
     if (v.isNaN) return;
     final DateTime? t = (e.payload['time'] is DateTime) ? (e.payload['time'] as DateTime) : null;
-    if (!SensorWarmupService.isWarmupFinished) return;
+    if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
     await _ensureAlarmsLoaded();
-    if (!SensorWarmupService.isWarmupFinished) return;
+    if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
     await _evaluate(v, t: t);
   }
 
@@ -223,7 +248,7 @@ class AlertEngine {
   }
 
   Future<void> _evaluate(double value, {DateTime? t}) async {
-    if (!SensorWarmupService.isWarmupFinished) return;
+    if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
     String unit = 'mg/dL';
     double factor = 1.0;
     try {
@@ -260,24 +285,36 @@ class AlertEngine {
 
       bool hit = false;
       bool critical = false;
-      String title = 'CGMS Alert';
-      String body = 'Value=${fmtGlucose(value)} $unit';
+      String title = 'alert_notify_title_default'.tr();
+      String body = 'alert_notify_body_default'.tr(namedArgs: {'value': fmtGlucose(value), 'unit': unit});
       String payload = 'alarm:$type';
 
       if (type == 'high') {
         hit = value >= th.toDouble();
-        title = 'High glucose';
-        body = 'Glucose ${fmtGlucose(value)} $unit ≥ ${fmtGlucose(th.toDouble())} $unit';
+        title = 'alert_notify_title_high'.tr();
+        body = 'alert_notify_body_high'.tr(namedArgs: {
+          'value': fmtGlucose(value),
+          'threshold': fmtGlucose(th.toDouble()),
+          'unit': unit,
+        });
       } else if (type == 'low') {
         hit = value <= th.toDouble();
-        title = 'Low glucose';
-        body = 'Glucose ${fmtGlucose(value)} $unit ≤ ${fmtGlucose(th.toDouble())} $unit';
+        title = 'alert_notify_title_low'.tr();
+        body = 'alert_notify_body_low'.tr(namedArgs: {
+          'value': fmtGlucose(value),
+          'threshold': fmtGlucose(th.toDouble()),
+          'unit': unit,
+        });
       } else if (type == 'very_low') {
         hit = value <= th.toDouble();
         // overrideDnd=true 인 경우에만 "critical 채널(bypassDnd)"로 보낸다.
         critical = a['overrideDnd'] == true;
-        title = 'Very low glucose';
-        body = 'Glucose ${fmtGlucose(value)} $unit ≤ ${fmtGlucose(th.toDouble())} $unit';
+        title = 'alert_notify_title_very_low'.tr();
+        body = 'alert_notify_body_very_low'.tr(namedArgs: {
+          'value': fmtGlucose(value),
+          'threshold': fmtGlucose(th.toDouble()),
+          'unit': unit,
+        });
       } else if (type == 'rate') {
         // 급변동 알람: |Δmg/dL| / 분 >= threshold(2 또는 3)
         // 이벤트가 너무 촘촘하면(0분) 오탐이 될 수 있어 최소 15초 이상일 때만 계산
@@ -288,8 +325,12 @@ class AlertEngine {
             final dv = (value - _lastPointValue!).abs();
             final rate = dv / dt; // mg/dL/min
             hit = rate >= th.toDouble();
-            title = 'Rapid change';
-            body = 'Rate ${fmtRate(rate)} $unit/min ≥ ${fmtRate(th.toDouble())} $unit/min';
+            title = 'alert_notify_title_rate'.tr();
+            body = 'alert_notify_body_rate'.tr(namedArgs: {
+              'rate': fmtRate(rate),
+              'threshold': fmtRate(th.toDouble()),
+              'unit': unit,
+            });
           }
         }
         _lastPointAt = now;
@@ -299,7 +340,7 @@ class AlertEngine {
       }
 
       if (!hit) continue;
-      if (!SensorWarmupService.isWarmupFinished) continue;
+      if (SensorWarmupService.shouldSuppressAlarmPipeline) continue;
 
       final int repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
       final last = _lastFired[type];

@@ -26,12 +26,14 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   @override
   void initState() {
     super.initState();
+    WarmupState.setWarmupUiVisible(true);
     _load();
     _t = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
   @override
   void dispose() {
+    WarmupState.setWarmupUiVisible(false);
     _t?.cancel();
     super.dispose();
   }
@@ -69,12 +71,18 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
       }
 
       if (!mounted) return;
+      final bool alreadyDone = doneAt.isNotEmpty && !active;
       setState(() {
         _startAt = startAt;
         _endsAt = endsAt;
         _active = active;
-        _done = doneAt.isNotEmpty;
+        _done = alreadyDone;
       });
+      if (alreadyDone) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _navigateHome();
+        });
+      }
     } catch (_) {}
   }
 
@@ -119,20 +127,23 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   /// 개발자 이스터에그: 시간 롱클릭 시 웜업 스킵
   void _onTimeLongPress() {
     if (!_active || _done) return;
-    _markDone();
-    Navigator.of(context).pushReplacementNamed('/home');
+    unawaited(_finishWarmupAndGoHome());
   }
 
   void _tick() {
     if (!_active || _endsAt == null) return;
     final int rem = _remainingSec();
     if (rem <= 0 && !_done) {
-      _markDone();
-      _navigateHome();
-    } else {
-      // 화면 갱신용
-      if (mounted) setState(() {});
+      unawaited(_finishWarmupAndGoHome());
+      return;
     }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _finishWarmupAndGoHome() async {
+    await _markDone();
+    if (!mounted) return;
+    _navigateHome();
   }
 
   void _navigateHome() {

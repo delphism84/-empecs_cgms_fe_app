@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/warmup_state.dart';
 
 /// SN별 로컬 시작 시각으로 웜업 구간을 두고, 그동안 알람·노티 최종 호출을 막는다.
 /// [isWarmupFinished]는 메모리에 두고 10초마다 저장소 기준으로 갱신한다(동기 게이트).
@@ -16,6 +17,10 @@ class SensorWarmupService {
 
   /// 알람·노티 게이트: false면 임계값 계산·notify 호출 금지.
   static bool get isWarmupFinished => _isWarmupFinished;
+
+  /// SN 웜업 미종료이거나, SC_01_06 등 웜업 전면 UI가 떠 있는 동안 — 임계 계산·notify 이중 억제.
+  static bool get shouldSuppressAlarmPipeline =>
+      WarmupState.isWarmupNow || !_isWarmupFinished;
 
   static Future<void> init() async {
     await refreshFromStorage();
@@ -125,6 +130,7 @@ class SensorWarmupService {
       await SettingsStorage.save(st);
     } catch (_) {}
     _isWarmupFinished = true;
+    WarmupState.setWarmupUiVisible(false);
   }
 
   /// BLE만 붙고 웜업 화면을 거치지 않은 경우: SN에 시작 기록이 없으면 지금부터 웜업 창을 연다.

@@ -14,6 +14,7 @@
 
 # Node / tooling
 **/node_modules/
+/tools/lang-sheet/lang.import.csv
 
 # 민감 정보 (OAuth·메일 등)
 /docs/cgms info.csv

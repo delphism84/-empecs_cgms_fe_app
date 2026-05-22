@@ -16,6 +16,7 @@ import 'package:helpcare/core/utils/qr_sn_parser.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/debug_toast.dart';
 import 'package:helpcare/presentation/sensor_page/before_qr_scan_page.dart';
 import 'package:helpcare/presentation/sensor_page/start_monitor_page.dart';
@@ -58,28 +59,24 @@ class _SensorPageState extends State<SensorPage> {
   }
 
   Future<Map<String, dynamic>> _readUsage() async {
-    final st = await SettingsStorage.load();
-    if (SettingsService.stripStaleSensorStart(st)) {
-      await SettingsStorage.save(st);
+    final SensorUsageSnapshot? snap = await SensorUsage.loadSnapshot();
+    if (snap == null) {
+      final DateTime now = DateTime.now();
+      final Duration valid = AppConstants.sensorValidityDuration;
+      return {
+        'startAt': now.subtract(const Duration(days: 3)),
+        'valid': valid,
+        'used': const Duration(days: 3),
+        'remainSec': 0,
+        'pct': 1.0,
+      };
     }
-    final String raw = (st['sensorStartAt'] as String? ?? '').trim();
-    final DateTime now = DateTime.now();
-    DateTime startAt = now.subtract(const Duration(days: 3));
-    try {
-      final dt = DateTime.tryParse(raw);
-      if (dt != null) startAt = dt.toLocal();
-    } catch (_) {}
-    final Duration valid = AppConstants.sensorValidityDuration;
-    final Duration used = now.difference(startAt);
-    final Duration remain = valid - used;
-    final int remainSec = remain.inSeconds < 0 ? 0 : remain.inSeconds;
-    final double pct = (used.inSeconds / valid.inSeconds).clamp(0, 1).toDouble();
     return {
-      'startAt': startAt,
-      'valid': valid,
-      'used': used,
-      'remainSec': remainSec,
-      'pct': pct,
+      'startAt': snap.startAtLocal,
+      'valid': snap.validity,
+      'used': snap.used,
+      'remainSec': snap.remaining.inSeconds,
+      'pct': snap.progressUsed,
     };
   }
 
@@ -139,9 +136,7 @@ class _SensorPageState extends State<SensorPage> {
                       const SizedBox(height: 4),
                       Text(
                         'sensor_start_line'.tr(namedArgs: {
-                          'v': startAt == null
-                              ? '—'
-                              : '${startAt.year}/${startAt.month.toString().padLeft(2, '0')}/${startAt.day.toString().padLeft(2, '0')} ${startAt.hour.toString().padLeft(2, '0')}:${startAt.minute.toString().padLeft(2, '0')}',
+                          'v': startAt == null ? '—' : SensorUsage.formatStartLocal(startAt),
                         }),
                         style: const TextStyle(fontSize: 12, color: Colors.black54),
                       ),
@@ -691,29 +686,29 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
           ),
           const SizedBox(height: 10),
           Row(children: [
-            Expanded(child: _kv('Model', _snModel.isEmpty ? '-' : _snModel)),
+            Expanded(child: _kv('qr_field_model'.tr(), _snModel.isEmpty ? '-' : _snModel)),
             const SizedBox(width: 8),
-            Expanded(child: _kv('Year', _snYear.isEmpty ? '-' : _snYear)),
+            Expanded(child: _kv('qr_field_year'.tr(), _snYear.isEmpty ? '-' : _snYear)),
           ]),
           const SizedBox(height: 6),
           Row(children: [
             Expanded(
               child: _kv(
-                'Serial',
+                'sensor_detail_serial'.tr(),
                 _snCtrl.text.trim().isEmpty
                     ? '-'
                     : 'SN: ${_snCtrl.text.trim().toUpperCase().length >= 10 ? _snCtrl.text.trim().toUpperCase() : (_snSerial.isNotEmpty ? _snSerial : _snCtrl.text.trim().toUpperCase())}',
               ),
             ),
             const SizedBox(width: 8),
-            Expanded(child: _kv('Sample', _snSample.isEmpty ? '-' : _snSample)),
+            Expanded(child: _kv('sensor_serial_field_sample'.tr(), _snSample.isEmpty ? '-' : _snSample)),
           ]),
           const SizedBox(height: 12),
-          CustomButton(text: 'Save & Sync', variant: ButtonVariant.FillLoginGreen, onTap: _saveAndSync),
+          CustomButton(text: 'qr_save_sync'.tr(), variant: ButtonVariant.FillLoginGreen, onTap: _saveAndSync),
           const SizedBox(height: 8),
           // removed: Start Data button
           CustomButton(
-            text: 'QR SCAN',
+            text: 'sensor_qr_scan'.tr(),
             variant: ButtonVariant.OutlinePrimaryWhite,
             fontStyle: ButtonFontStyle.GilroyMedium16Primary,
             onTap: () async {
@@ -737,7 +732,7 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
             Text('sensor_last_scanned_qr'.tr(), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
             const SizedBox(height: 6),
             Text(
-              _lastScannedQrRegistered ? 'SN: $_lastScannedQrFullSn' : 'Unregistered QR SN',
+              _lastScannedQrRegistered ? 'SN: $_lastScannedQrFullSn' : 'qr_unregistered_title'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -811,10 +806,10 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
     final String newEqsn = _snCtrl.text.trim();
     final Map<String, dynamic> st = await SettingsStorage.load();
     final String prevEqsn = (st['eqsn'] as String? ?? '').trim();
-    if (newEqsn.isEmpty) { if (!mounted) return; ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter SN first'))); return; }
+    if (newEqsn.isEmpty) { if (!mounted) return; ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_enter_sn_first'.tr()))); return; }
     if (newEqsn == prevEqsn) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved & syncing...')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_saved_syncing'.tr())));
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => StartMonitorPage(targetSerial: newEqsn)),
       );
@@ -827,6 +822,9 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
     st['lastScannedQrSerial'] = up;
     st['lastScannedQrAt'] = nowIso;
     st['lastScannedQrRegistered'] = true;
+    st['sensorStartAt'] = '';
+    st['sensorStartAtEqsn'] = '';
+    SensorUsage.recordLocalStartUtc(st, newEqsn);
     await SettingsStorage.save(st);
     try {
       // SN 변경 시 로컬 데이터 전부 초기화 (혼섞임 방지)
@@ -835,36 +833,11 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
     } catch (_) {}
     // 대시보드 등 실시간 값 표시를 대시(–)로 즉시 반영
     try { DataSyncBus().emitGlucoseBulk(count: 0); } catch (_) {}
-    // 시작일: 서버에 등록된 동일 SN 또는 동일 BLE MAC 행이 있으면 startAt 우선(req 1-7)
     String resolvedEqsn = newEqsn;
     try {
-      final ss = SettingsService();
-      DateTime? startLocal;
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final String? mac = prefs.getString('cgms.last_mac');
-        final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: newEqsn, bleMac: mac);
-        if (SettingsService.shouldApplyResolvedEqStart(eq, newEqsn)) {
-          final String? stRemote = (eq['startAt'] as String?);
-          if (stRemote != null && stRemote.trim().isNotEmpty) {
-            startLocal = DateTime.tryParse(stRemote)?.toLocal();
-          }
-          final String? srvSn = (eq['serial'] as String?)?.trim();
-          if (srvSn != null && srvSn.isNotEmpty) resolvedEqsn = srvSn;
-        }
-      } catch (_) {}
-      startLocal ??= DateTime.now();
-      try {
-        final m = await SettingsStorage.load();
-        m['sensorStartAt'] = startLocal.toUtc().toIso8601String();
-        m['sensorStartAtEqsn'] = resolvedEqsn;
-        if (resolvedEqsn != newEqsn) m['eqsn'] = resolvedEqsn;
-        await SettingsStorage.save(m);
-      } catch (_) {}
-      try {
-        await ss.upsertEqStart(serial: resolvedEqsn, startAt: startLocal);
-      } catch (_) {}
-      try { DataSyncBus().emitGlucoseBulk(count: 1); } catch (_) {}
+      await SensorUsage.syncStartAtWithServer();
+      final Map<String, dynamic> m = await SettingsStorage.load();
+      resolvedEqsn = (m['eqsn'] as String? ?? newEqsn).trim();
     } catch (_) {}
     try {
       await SensorWarmupService.beginWarmup(resolvedEqsn, durationSec: 30 * 60);
@@ -879,7 +852,7 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
     try { final int last = await GlucoseLocalRepo().maxTrid(eqsn: resolvedEqsn); await BleService().requestRacpFromTrid((last + 1) & 0xFFFF); } catch (_) {}
     if (!mounted) return;
     if (resolvedEqsn != newEqsn) _snCtrl.text = resolvedEqsn;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved & syncing...')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_saved_syncing'.tr())));
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => StartMonitorPage(targetSerial: resolvedEqsn.isNotEmpty ? resolvedEqsn : null)),
     );
@@ -887,7 +860,7 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
 
   Future<void> _startDataNow() async {
     final String sn = _snCtrl.text.trim();
-    if (sn.isEmpty) { if (!mounted) return; ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter SN first'))); return; }
+    if (sn.isEmpty) { if (!mounted) return; ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_enter_sn_first'.tr()))); return; }
     bool ok = false;
     try {
       final ss = SettingsService();
@@ -1006,7 +979,7 @@ class _SensorStartTimePageState extends State<SensorStartTimePage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _group(context, title: 'Start', children: [
+          _group(context, title: 'sensor_sc0501_section_start'.tr(), children: [
             ListTile(
               title: Text('sensor_start_at'.tr()),
               subtitle: Text(_startAt == null
@@ -1014,15 +987,15 @@ class _SensorStartTimePageState extends State<SensorStartTimePage> {
                   : '${_startAt!.year}/${_startAt!.month.toString().padLeft(2, '0')}/${_startAt!.day.toString().padLeft(2, '0')} '
                       '${_startAt!.hour.toString().padLeft(2, '0')}:${_startAt!.minute.toString().padLeft(2, '0')}'),
             ),
-            const ListTile(
-              title: Text('Note'),
-              subtitle: Text('Start time is updated automatically when sensor becomes active.'),
+            ListTile(
+              title: Text('sensor_reference_label'.tr()),
+              subtitle: Text('sensor_start_auto_update_sub'.tr()),
             ),
           ]),
-          _group(context, title: 'Warm-up', children: const [
+          _group(context, title: 'sensor_sc0501_section_warmup'.tr(), children: [
             ListTile(
-              title: Text('Note'),
-              subtitle: Text('During warm-up, readings may be unavailable.'),
+              title: Text('sensor_reference_label'.tr()),
+              subtitle: Text('warmup_readings_unavailable'.tr()),
             ),
           ]),
         ],

@@ -165,7 +165,8 @@ class NotificationService {
   }) async {
     if (!_enabled) return;
     final String p = (payload ?? '').trim();
-    if (p.startsWith('alarm:') && !SensorWarmupService.isWarmupFinished) {
+    if (p.startsWith('alarm:') &&
+        SensorWarmupService.shouldSuppressAlarmPipeline) {
       return;
     }
     if (p.startsWith('alarm:')) {
@@ -237,7 +238,7 @@ class NotificationService {
     DateTime? measuredAt,
   }) async {
     if (!_enabled) return;
-    if (!SensorWarmupService.isWarmupFinished) return;
+    if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
     // AR_01_08: lock screen banner per-feature toggle
     try {
       final s = await SettingsStorage.load();

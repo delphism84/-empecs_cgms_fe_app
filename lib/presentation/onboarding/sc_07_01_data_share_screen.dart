@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:helpcare/core/utils/pdf_cjk_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/color_constant.dart';
@@ -37,6 +39,15 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
 
   /// 연속 Share 탭으로 fetch/share가 겹치지 않게 함.
   bool _shareInFlight = false;
+
+  void _leaveScreen() {
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+      return;
+    }
+    nav.pushNamedAndRemoveUntil('/home', (route) => false);
+  }
 
   @override
   void initState() {
@@ -281,7 +292,6 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
             valueListenable: shareStep,
             builder: (context, step, _) {
               final List<String> titles = <String>[
-                'sensor_share_step_save'.tr(),
                 'sensor_share_step_glucose'.tr(),
                 'sensor_share_step_build'.tr(),
                 'sensor_share_step_sheet'.tr(),
@@ -328,9 +338,8 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
     bool presentedShare = false;
     try {
       shareStep.value = 0;
-      await _saveEvidence(shared: true);
+      await _saveEvidence(shared: false);
       throwIfCancelled();
-      shareStep.value = 1;
 
       final Directory dir = await getApplicationDocumentsDirectory();
       final String ext = exportFormat.toLowerCase();
@@ -371,10 +380,12 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
         glucoseRows = rows;
       }
 
-      shareStep.value = 2;
+      shareStep.value = 1;
       throwIfCancelled();
 
+      Uint8List? pdfBytes;
       if (exportFormat.toUpperCase() == 'PDF') {
+        await PdfCjkFonts.ensureInitialized();
         final Map<String, dynamic> st0 = await SettingsStorage.load();
         final String profileName = (st0['displayName'] as String? ?? '').trim();
         final String profileId = (st0['lastUserId'] as String? ?? '').trim();
@@ -382,6 +393,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
         final pw.Document doc = pw.Document();
         doc.addPage(
           pw.MultiPage(
+            theme: PdfCjkFonts.theme,
             pageFormat: PdfPageFormat.a4,
             margin: const pw.EdgeInsets.all(28),
             build: (pw.Context ctx) {
@@ -439,7 +451,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                   if (shareGlucoseDistribution) {
                     final Map<String, int> d = _distributionCounts(glucoseRows);
                     children.add(pw.Text('sensor_share_distribution'.tr(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold)));
-                    children.add(pw.Text('<54: ${d['veryLow']} · 54–69: ${d['low']} · 70–180: ${d['inRange']} · >180: ${d['high']}'));
+                    children.add(pw.Text('<54: ${d['veryLow']} · 54-69: ${d['low']} · 70-180: ${d['inRange']} · >180: ${d['high']}'));
                     children.add(pw.SizedBox(height: 8));
                   }
                   if (shareGlucoseGraph || shareGlucoseSummary || shareGlucoseDistribution) {
@@ -450,7 +462,8 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                       final Map<String, dynamic> row = glucoseRows[i];
                       final int ms = (row['time_ms'] as int?) ?? 0;
                       final String iso = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toIso8601String();
-                      final String v = ((row['value'] as num?) ?? 0).toString();
+                      final double vNum = ((row['value'] as num?) ?? 0).toDouble();
+                      final String v = vNum.toStringAsFixed(1);
                       final Object? tr = row['trid'];
                       data.add(<String>[iso, v, '$tr']);
                     }
@@ -476,20 +489,31 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
               }
 
               children.add(pw.SizedBox(height: 16));
-              children.add(pw.Text(
-                'Generated (UTC): ${DateTime.now().toUtc().toIso8601String()}',
-                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
-              ));
+              children.add(pw.Divider(thickness: 0.5, color: PdfColors.grey400));
+              children.add(pw.SizedBox(height: 6));
+              children.add(
+                pw.Text(
+                  '${'sensor_share_pdf_generated_utc'.tr()}: ${DateTime.now().toUtc().toIso8601String()}',
+                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+                ),
+              );
+              children.add(
+                pw.Text(
+                  'EMPECS CGMS — PDF export (local file + system share)',
+                  style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
+                ),
+              );
               return children;
             },
           ),
         );
-        await file.writeAsBytes(await doc.save());
+        pdfBytes = await doc.save();
+        await file.writeAsBytes(pdfBytes);
       } else {
         final StringBuffer buf = StringBuffer();
-        buf.writeln('# CGMS Data Share (SC_07_01)');
-        buf.writeln('# range=${_rangeLabel(r)}');
-        buf.writeln('# generatedAt=${DateTime.now().toUtc().toIso8601String()}');
+        buf.writeln('# ${'sensor_share_pdf_title'.tr()} (SC_07_01)');
+        buf.writeln('# ${'sensor_share_date_range'.tr()}=${_rangeLabel(r)}');
+        buf.writeln('# ${'sensor_share_pdf_generated_utc'.tr()}=${DateTime.now().toUtc().toIso8601String()}');
         if (shareUserProfile) {
           final Map<String, dynamic> st = await SettingsStorage.load();
           buf.writeln('# profile.displayName=${st['displayName']}');
@@ -500,12 +524,13 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
           for (final Map<String, dynamic> row in glucoseRows) {
             final int ms = (row['time_ms'] as int?) ?? 0;
             final String iso = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toIso8601String();
-            final String v = ((row['value'] as num?) ?? 0).toString();
+            final double vNum = ((row['value'] as num?) ?? 0).toDouble();
+            final String v = vNum.toStringAsFixed(1);
             final Object? tr = row['trid'];
             buf.writeln('$iso,$v,$tr');
           }
           if (glucoseRows.isEmpty) {
-            buf.writeln('# sensor_share_no_glucose_in_range');
+            buf.writeln('# ${'sensor_share_no_glucose_in_range'.tr()}');
           }
         }
         await file.writeAsString('\ufeff${buf.toString()}');
@@ -515,32 +540,61 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
       await SettingsStorage.save(st);
       final String shareBase = 'cgms-share-$ts.$ext';
       final bool isPdf = exportFormat.toUpperCase() == 'PDF';
-      shareStep.value = 3;
+      shareStep.value = 2;
       throwIfCancelled();
-      await Share.shareXFiles(
-        <XFile>[
-          XFile(
-            file.path,
-            mimeType: isPdf ? 'application/pdf' : 'text/csv',
-            name: shareBase,
-          ),
-        ],
-        text: '${'sensor_share_pdf_title'.tr()} - ${_rangeLabel(r)}',
-      );
-      presentedShare = true;
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('sensor_share_done_snack'.tr(namedArgs: {'format': exportFormat}))),
+
+      final String shareCaption = '${'sensor_share_pdf_title'.tr()} - ${_rangeLabel(r)}';
+      final ShareResult shareResult;
+      if (isPdf) {
+        final Uint8List bytes = pdfBytes!;
+        shareResult = await Share.shareXFiles(
+          <XFile>[
+            kIsWeb
+                ? XFile.fromData(bytes, mimeType: 'application/pdf', name: shareBase)
+                : XFile(file.path, mimeType: 'application/pdf', name: shareBase),
+          ],
+          text: shareCaption,
         );
+      } else {
+        shareResult = await Share.shareXFiles(
+          <XFile>[
+            kIsWeb
+                ? XFile.fromData(await file.readAsBytes(), mimeType: 'text/csv', name: shareBase)
+                : XFile(
+                    file.path,
+                    mimeType: 'text/csv',
+                    name: shareBase,
+                  ),
+          ],
+          text: shareCaption,
+        );
+      }
+      presentedShare = shareResult.status != ShareResultStatus.dismissed;
+
+      if (presentedShare) {
+        await _saveEvidence(shared: true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('sensor_share_done_snack'.tr(namedArgs: {'format': exportFormat}))),
+          );
+        }
       }
     } on _ShareFlowCancelled catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_share_cancelled'.tr())));
       }
-    } catch (_) {
+    } catch (e, st) {
+      assert(() {
+        debugPrint('SC_07_01 share failed: $e\n$st');
+        return true;
+      }());
       if (mounted && !presentedShare && !shareCancelled.value) {
+        String detail = '$e';
+        if (detail.length > 220) {
+          detail = '${detail.substring(0, 220)}…';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('sensor_share_prepared_snack'.tr(namedArgs: {'format': exportFormat}))),
+          SnackBar(content: Text('auth_error_with_detail'.tr(namedArgs: {'e': detail}))),
         );
       }
     } finally {
@@ -562,9 +616,16 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
     final r = customRange ?? _default7d();
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: Text('sensor_share_appbar'.tr())),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: _leaveScreen,
+        ),
+        automaticallyImplyLeading: false,
+        title: Text('sensor_share_appbar'.tr()),
+      ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -646,40 +707,19 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: (enable && !_shareInFlight) ? _share : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorConstant.loginGreen,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text('sensor_share_upper_share'.tr(), style: const TextStyle(fontWeight: FontWeight.w800)),
-                    ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.share, size: 20),
+                  label: Text('sensor_share_upper_share'.tr(), style: const TextStyle(fontWeight: FontWeight.w800)),
+                  onPressed: (enable && !_shareInFlight) ? _share : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorConstant.loginGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () async {
-                        await _saveEvidence(shared: false);
-                        if (!mounted) return;
-                        Navigator.pop(context);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: ColorConstant.baseColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: ColorConstant.baseColor, width: 1),
-                        ),
-                      ),
-                      child: Text('sensor_save_upper'.tr(), style: const TextStyle(fontWeight: FontWeight.w800)),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),

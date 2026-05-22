@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EMPECS CGMS � Web QA panel</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; background: #0f1419; color: #e6edf3; }
+    body { max-width: 720px; margin: 24px auto; padding: 0 16px 48px; line-height: 1.45; }
+    h1 { font-size: 1.25rem; font-weight: 700; }
+    h2 { font-size: 1rem; margin-top: 1.75rem; color: #8b949e; font-weight: 600; }
+    p.note { color: #8b949e; font-size: 0.875rem; }
+    ul { padding-left: 1.1rem; }
+    a.qa {
+      display: block; margin: 8px 0; padding: 10px 12px;
+      background: #21262d; color: #58a6ff; border-radius: 8px; text-decoration: none;
+      border: 1px solid #30363d; font-family: ui-monospace, monospace; font-size: 0.85rem;
+    }
+    a.qa:hover { background: #30363d; }
+    code { background: #21262d; padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <h1>Web QA � Data share &amp; Login</h1>
+  <p class="note">
+    ?? ??? ?? ? ? ???? ?????.
+    <code>flutter run -d chrome</code>
+    (?? ??? ?? ???)?? ??? ??? Flutter ? ??? ?????.
+  </p>
+
+  <h2>Data share (SC_07_01)</h2>
+  <ul class="note">
+    <li>PDF/CSV ?? ??�??? ?? ?? ??.</li>
+    <li>?? ??? ??? ? ???? PDF ??? ?????.</li>
+  </ul>
+  <a class="qa" href="#" data-route="/sc/07/01">#/sc/07/01 � Data share ??</a>
+
+  <h2>Login ?? (?? ??, ???)</h2>
+  <a class="qa" href="#" data-route="/login">#/login � ??? ??</a>
+  <a class="qa" href="#" data-route="/lo/01/01/email">#/lo/01/01/email � ??? ??? ?</a>
+
+  <h2>?? ??? (?? ?? ???)</h2>
+  <a class="qa" href="#" data-route="/qa/web-check">#/qa/web-check � guestMode�eqsn�sc0701�?? ??</a>
+
+  <h2>??</h2>
+  <p class="note">
+    ???? ?? <code>BleEmuServer</code>(8788)? ? ??? ????.
+    ???? QA? ?? <code>adb forward</code> + <code>tools/qa-bot</code>? ?????.
+  </p>
+
+  <script>
+    function go(route) {
+      window.location.href = window.location.origin + '/#' + route;
+    }
+    document.querySelectorAll('a.qa[data-route]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        go(a.getAttribute('data-route'));
+      });
+    });
+  </script>
+</body>
+</html>

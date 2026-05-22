@@ -6,6 +6,7 @@ import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -249,7 +250,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
       final st = await SettingsStorage.load();
       if (expectedSerial.isNotEmpty) {
         st['eqsn'] = expectedSerial;
-        SettingsService.stripStaleSensorStart(st);
+        SensorUsage.recordLocalStartUtc(st, expectedSerial);
         await SettingsStorage.save(st);
       }
     } catch (_) {}

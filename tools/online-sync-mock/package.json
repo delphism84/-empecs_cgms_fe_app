@@ -1,0 +1,13 @@
+{
+  "name": "online-sync-mock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dummy sync-with-server flow against CGMS BE (register/login, settings/app, glucose batch, events batch)",
+  "type": "module",
+  "scripts": {
+    "sync": "node sync-with-server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

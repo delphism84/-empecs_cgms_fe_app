@@ -10,6 +10,25 @@ cd tools/qa-bot
 npm install
 ```
 
+### 웹 QA 패널 (Data share / 로그인 진입)
+
+앱을 `flutter run -d chrome`으로 띄운 뒤 브라우저에서 `http://localhost:<포트>/qa-debug.html` 을 열면, Flutter 앱의 해시 라우트(`#/sc/07/01`, `#/login` 등)로 점프하는 링크가 있습니다. 네이티브 `BleEmuServer`(8788)와는 별개입니다.
+
+### Flutter `QA_CMD` (로그인·회원가입·데이터 공유 + BE 자가 QA)
+
+한 줄로 **REST 자가 QA**(로그인/가입·EQ·혈당 업로드·GET)와 **화면 순회**(`/login` → 회원가입 인트로 `/lo/02/01` → 데이터 공유 `/sc/07/01`)를 같이 켤 수 있습니다.
+
+```bash
+cd empecs_cgms
+flutter run -d chrome --web-port=8099 --dart-define=QA_CMD=full
+```
+
+- `full` / `all` / `ui` / `tour` — 위 BE 검증 + 세 화면 순서 이동
+- `api` — BE 자가 QA만 (`IS_SELF_QA=1`과 동일 계열)
+- 조합 예: `--dart-define=QA_CMD=api,login,signup,share`
+
+콘솔에 `[SelfQA]`·`[QaCmd]` 로그가 찍힙니다. Windows에서 `127.0.0.1`이 안 열리면 `http://localhost:8099`를 사용하세요.
+
 ### 리포트 위치
 
 - `req/req1/_qa/qa-results.json`

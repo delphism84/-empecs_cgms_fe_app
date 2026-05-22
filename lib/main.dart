@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:helpcare/presentation/splash_screen/splash_screen.dart';
-import 'package:helpcare/core/utils/csv_lang_loader.dart';
+import 'package:helpcare/core/utils/xlsx_lang_loader.dart';
 
 import 'core/theme/theme_constants.dart';
 import 'core/theme/theme_manager.dart';
@@ -39,6 +39,7 @@ import 'presentation/alarms/ar_01_08_lock_screen_screen.dart';
 import 'presentation/alarms/alarm_type_detail_page.dart';
 import 'presentation/sensor_page/sensor_qr_connect_page.dart';
 import 'presentation/qa/qa_qr_scan_success_redirect.dart';
+import 'presentation/sign_in_one_screen/sign_in_one_screen.dart';
 import 'presentation/settings_page/local_data_page.dart';
 import 'core/utils/global_loading.dart';
 import 'core/utils/notification_service.dart';
@@ -75,7 +76,7 @@ Future<void> main() async {
   // QA 자동화 서버는 가장 먼저 시도해서 초기화 병목의 영향을 받지 않도록 한다.
   await BleEmuServer.maybeStart();
   await EasyLocalization.ensureInitialized();
-  await CsvLangAssetLoader.preload('assets/lang/lang.csv');
+  await XlsxLangAssetLoader.preload('assets/lang/lang.xlsx');
   final Locale startLocale = await _appStartLocale();
   await NotificationService().initialize();
   await AlertEngine().start();
@@ -100,7 +101,7 @@ Future<void> main() async {
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ko')],
       path: 'assets/lang',
-      assetLoader: const CsvLangAssetLoader(),
+      assetLoader: const XlsxLangAssetLoader(),
       fallbackLocale: const Locale('en'),
       startLocale: startLocale,
       saveLocale: false,
@@ -200,6 +201,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
+      scaffoldMessengerKey: AppNav.scaffoldMessengerKey,
       navigatorObservers: [AppNav.observer],
       builder: (context, child) {
         Future<void> handleGlobalBack() async {
@@ -312,6 +314,7 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/home': (_) => const Home(),
         '/login': (_) => const LoginChoiceScreen(),
+        '/lo/01/01/email': (_) => const SignInOneScreen(),
         // direct QA routes (avoid bottom-nav dependency)
         '/gu/01/01': (_) => const MainDashboardPage(),
         '/pd/01/01': (_) => const Pd0101PreviousDataScreen(),
@@ -359,6 +362,7 @@ class _MyAppState extends State<MyApp> {
         '/settings': (_) => const SettingsPage(),
         '/data/local': (_) => const LocalDataPage(),
         '/qa/qr-scan-success': (_) => const QaQrScanSuccessRedirect(),
+        '/qa/web-check': (_) => const QaWebCheckScreen(),
       },
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:helpcare/core/utils/warmup_state.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class SensorScanNfcPage extends StatelessWidget {
@@ -110,6 +111,7 @@ class _SensorWarmupPageState extends State<SensorWarmupPage> {
   @override
   void initState() {
     super.initState();
+    WarmupState.setWarmupUiVisible(true);
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) return;
       setState(() {
@@ -124,6 +126,7 @@ class _SensorWarmupPageState extends State<SensorWarmupPage> {
 
   @override
   void dispose() {
+    WarmupState.setWarmupUiVisible(false);
     timer.cancel();
     super.dispose();
   }
