@@ -8,7 +8,6 @@ import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/core/utils/sensor_warmup_service.dart';
-import 'package:helpcare/core/utils/cgms_notify_debug.dart';
 
 class IngestQueueService {
   IngestQueueService._internal();
@@ -22,11 +21,8 @@ class IngestQueueService {
     // 로컬 캐시 우선: 저장 후 즉시 UI 브로드캐스트/알림, 서버 동기는 비동기 처리
     GlucoseLocalRepo().addPoint(time: time, value: value.toDouble(), trid: trid, eqsn: eqsn ?? _inferEqsn(), userId: userId ?? _inferUserId());
     if (!silent) {
-      cgmsNotifyLog('ingest emitGlucosePoint v=$value trid=$trid');
       DataSyncBus().emitGlucosePoint(time: time, value: value.toDouble());
       unawaited(_pushLockScreenBanner(time, value.toDouble()));
-    } else {
-      cgmsNotifyLog('ingest SKIP_UI_BROADCAST silent=true v=$value trid=$trid');
     }
     _queue.add({'type': 'glucose', 'time': time, 'value': value, if (trid != null) 'trid': trid, 'eqsn': eqsn ?? _inferEqsn(), 'userId': userId ?? _inferUserId()});
     _drain();
@@ -76,7 +72,7 @@ class IngestQueueService {
   }
 
   Future<void> _pushLockScreenBanner(DateTime time, double value) async {
-    if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
+    if (!SensorWarmupService.isWarmupFinished) return;
     try {
       final st = await SettingsStorage.load();
       final String u = (st['glucoseUnit'] as String? ?? 'mgdl') == 'mmol' ? 'mmol/L' : 'mg/dL';
