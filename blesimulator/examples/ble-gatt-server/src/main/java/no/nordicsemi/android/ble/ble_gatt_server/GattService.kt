@@ -299,9 +299,8 @@ class GattService : Service() {
             val now = System.currentTimeMillis()
             val dtSec = ((now - lastNotifyAtMs).coerceAtLeast(1)).toDouble() / 1000.0
             lastNotifyAtMs = now
-            val trendPerMin = ((mgdl - simValue).toDouble() * (60.0 / dtSec)).coerceIn(-200.0, 200.0)
             val seq = (seqCounter and 0xFFFF)
-            val payload = encodeCgmsMeasurement(mgdl.toDouble(), trendPerMin, timeOffset = seq)
+            val payload = encodeCgmsMeasurement(mgdl.toDouble(), timeOffsetMinutes = seq)
             if (store) {
                 synchronized(records) {
                     val rec = StoredRecord(payload, seq)
@@ -309,30 +308,41 @@ class GattService : Service() {
                     while (records.size > maxRecords) records.removeFirst()
                 }
             }
+            check(payload.size == CgmsProfile.NRF_MEASUREMENT_RECORD_LENGTH) {
+                "nRF meas must be ${CgmsProfile.NRF_MEASUREMENT_RECORD_LENGTH} bytes, got ${payload.size}"
+            }
             serverConnections.values.forEach { it.sendNotificationFor(measCharacteristic, payload) }
-            addLog("TX MEAS v=${mgdl}${if (store) " (store)" else ""} seq=${seq}")
+            addLog("TX MEAS v=${mgdl}${if (store) " (store)" else ""} seq=${seq} hex=[${formatHex(payload)}]")
             seqCounter = (seqCounter + 1) and 0x7FFFFFFF
         }
 
-        private fun encodeCgmsMeasurement(glucoseMgdl: Double, trendMgdlPerMin: Double, timeOffset: Int): ByteArray {
-            // nRF Toolbox CGMMeasurementParser expects: SIZE(1) | FLAGS(1) | SFLOAT(2) | TimeOffset(2) [+ optional fields]
-            // Minimal packet: SIZE=6, FLAGS=0x00 (no trend/quality/status), glucose + timeOffset
-            val size: Byte = 6
-            val flags: Byte = 0x00
-            val g = encodeSfloat(glucoseMgdl)
-            val toLo = (timeOffset and 0xFF).toByte()
-            val toHi = ((timeOffset ushr 8) and 0xFF).toByte()
-            return byteArrayOf(size, flags, g[0], g[1], toLo, toHi)
+        /**
+         * nRF Toolbox / empecs_cgms [BleService._parseCgmsMeasurements] 와 동일한 6바이트 최소 레코드.
+         * [0]=SIZE(6) [1]=FLAGS [2-3]=SFLOAT glucose LE [4-5]=timeOffset LE(분)
+         * EMPEC 실측 9바이트(0x1A 헤더) 포맷이 아님 — 시뮬은 앱 파서 검증용.
+         */
+        private fun encodeCgmsMeasurement(glucoseMgdl: Double, timeOffsetMinutes: Int): ByteArray {
+            val g = encodeSfloatLe(glucoseMgdl)
+            val toLo = (timeOffsetMinutes and 0xFF).toByte()
+            val toHi = ((timeOffsetMinutes ushr 8) and 0xFF).toByte()
+            return byteArrayOf(
+                CgmsProfile.NRF_MEASUREMENT_SIZE,
+                CgmsProfile.NRF_MEASUREMENT_FLAGS_NONE,
+                g[0], g[1],
+                toLo, toHi,
+            )
         }
 
-        private fun encodeSfloat(v: Double): ByteArray {
-            // simple SFLOAT: exponent=0, mantissa=rounded
+        /** IEEE-11073 SFLOAT little-endian (lo, hi), exponent=0 — Flutter _decodeSfloat 와 호환 */
+        private fun encodeSfloatLe(v: Double): ByteArray {
             val m = v.roundToInt().coerceIn(-2048, 2047) and 0x0FFF
-            val raw = m // | (0 shl 12)
-            val lo = (raw and 0xFF).toByte()
-            val hi = ((raw ushr 8) and 0xFF).toByte()
+            val lo = (m and 0xFF).toByte()
+            val hi = ((m ushr 8) and 0xFF).toByte()
             return byteArrayOf(lo, hi)
         }
+
+        private fun formatHex(payload: ByteArray): String =
+            payload.joinToString(" ") { b -> "%02x".format(b.toInt() and 0xFF) }
 
         private fun sendOpsAck(success: Boolean) {
             // nRF Toolbox expects CGM Specific Ops Control Point Indication:
@@ -627,6 +637,11 @@ class GattService : Service() {
     }
 
     object CgmsProfile {
+        /** nRF 최소 CGM Measurement 레코드 길이 (byte[0]=SIZE) */
+        const val NRF_MEASUREMENT_RECORD_LENGTH = 6
+        val NRF_MEASUREMENT_SIZE: Byte = NRF_MEASUREMENT_RECORD_LENGTH.toByte()
+        val NRF_MEASUREMENT_FLAGS_NONE: Byte = 0x00
+
         val SERVICE_CGMS: UUID = UUID.fromString("0000181F-0000-1000-8000-00805F9B34FB")
         val CHAR_MEASUREMENT: UUID = UUID.fromString("00002AA7-0000-1000-8000-00805F9B34FB")
         val CHAR_FEATURE: UUID = UUID.fromString("00002AA8-0000-1000-8000-00805F9B34FB")

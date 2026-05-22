@@ -356,22 +356,52 @@ class DataService {
     } catch (_) { return false; }
   }
 
-  Future<bool> postGlucoseBatch({required List<int> t, required List<num> v, required List<int?> tr}) async {
-    if (!await _canUpload()) return false;
+  /// 혈당 배치 업로드 결과 (OnlineSync·QA 로그용).
+  Future<({bool ok, String reason, int? statusCode})> postGlucoseBatchResult({
+    required List<int> t,
+    required List<num> v,
+    required List<int?> tr,
+  }) async {
+    if (t.isEmpty) return (ok: true, reason: 'empty_batch', statusCode: null);
+    try {
+      final s = await SettingsStorage.load();
+      final String eqsn = (s['eqsn'] as String? ?? '').trim();
+      final String startAt = (s['sensorStartAt'] as String? ?? '').trim();
+      if (eqsn.isEmpty) {
+        return (ok: false, reason: 'blocked_no_eqsn', statusCode: null);
+      }
+      if (startAt.isEmpty) {
+        return (ok: false, reason: 'blocked_no_sensorStartAt', statusCode: null);
+      }
+    } catch (_) {
+      return (ok: false, reason: 'blocked_settings_read', statusCode: null);
+    }
     await _api.loadToken();
-    // server upload only: local queue already keeps source data.
     try {
       String eqsn = '';
-      try { final s = await SettingsStorage.load(); eqsn = (s['eqsn'] as String? ?? ''); } catch (_) {}
+      try {
+        final s = await SettingsStorage.load();
+        eqsn = (s['eqsn'] as String? ?? '').trim();
+      } catch (_) {}
       final r = await _api.post('/api/data/glucose/batch', body: {
         't': t,
         'v': v,
         'tr': tr,
         if (eqsn.isNotEmpty) 'eqsn': eqsn,
       }, withGlobalLoading: false);
-      if (ApiClient.isHttpSuccess(r.statusCode)) { await _markOnline(); return true; }
-    } catch (_) {}
-    return false;
+      if (ApiClient.isHttpSuccess(r.statusCode)) {
+        await _markOnline();
+        return (ok: true, reason: 'ok', statusCode: r.statusCode);
+      }
+      return (ok: false, reason: 'http_${r.statusCode}', statusCode: r.statusCode);
+    } catch (e) {
+      return (ok: false, reason: 'network_$e', statusCode: null);
+    }
+  }
+
+  Future<bool> postGlucoseBatch({required List<int> t, required List<num> v, required List<int?> tr}) async {
+    final r = await postGlucoseBatchResult(t: t, v: v, tr: tr);
+    return r.ok;
   }
 
   Future<bool> postEvent({required String type, required DateTime time, String? memo}) async {

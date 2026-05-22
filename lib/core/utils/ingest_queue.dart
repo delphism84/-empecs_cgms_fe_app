@@ -72,7 +72,7 @@ class IngestQueueService {
   }
 
   Future<void> _pushLockScreenBanner(DateTime time, double value) async {
-    if (!SensorWarmupService.isWarmupFinished) return;
+    if (SensorWarmupService.shouldSuppressAlarmPipeline) return;
     try {
       final st = await SettingsStorage.load();
       final String u = (st['glucoseUnit'] as String? ?? 'mgdl') == 'mmol' ? 'mmol/L' : 'mg/dL';

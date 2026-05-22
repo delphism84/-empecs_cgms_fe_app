@@ -1,13 +1,21 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math' as math;
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:helpcare/core/utils/api_client.dart';
-import 'package:helpcare/core/utils/app_nav.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
+import 'package:helpcare/core/utils/settings_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void _onlineSyncLog(String message) {
+  final String line = '[OnlineSync] $message';
+  developer.log(line, name: 'OnlineSync');
+  debugPrint(line);
+}
 
 class OnlineMonitor {
   OnlineMonitor._internal();
@@ -21,7 +29,13 @@ class OnlineMonitor {
   /// 동기화 작업 직렬화(온라인 전환·백그라운드 이어하기 동시 진입 방지)
   Future<void> _backlogChain = Future<void>.value();
 
-  static const Duration _uiSyncBudget = Duration(seconds: 12);
+  /// 증가 시 진행 중 [_pushBacklog] 루프가 즉시 중단(타임아웃·새 세션)
+  int _backlogRunId = 0;
+
+  bool _onlineSyncInFlight = false;
+
+  /// 백그라운드 백로그 1회 시도 예산 — 초과·실패 시 이어하기 없이 skip
+  static const Duration _backgroundSyncBudget = Duration(seconds: 5);
 
   static bool _pastDeadline(DateTime? deadline) =>
       deadline != null && !DateTime.now().isBefore(deadline);
@@ -45,10 +59,13 @@ class OnlineMonitor {
       try {
         final api = ApiClient();
         await api.loadToken();
+        _onlineSyncLog('GET /api/settings/app … (timeout=${api.timeout.inMilliseconds}ms)');
         final r = await api.get('/api/settings/app', withGlobalLoading: false);
         online = (r.statusCode == 200);
-      } catch (_) {
+        _onlineSyncLog('GET /api/settings/app → ${r.statusCode} online=$online');
+      } catch (e, st) {
         online = false;
+        _onlineSyncLog('GET /api/settings/app FAILED: $e\n$st');
       }
       try {
         final s = await SettingsStorage.load();
@@ -57,6 +74,7 @@ class OnlineMonitor {
       } catch (_) {}
 
       if (online && !_prevOnline) {
+        _onlineSyncLog('offline→online: background backlog (no dialog)');
         unawaited(_onBecameOnline());
       }
       _prevOnline = online;
@@ -65,81 +83,132 @@ class OnlineMonitor {
     }
   }
 
-  /// 오프라인→온라인 직후: 짧은 시간만 블로킹 다이얼로그, 남은 백로그는 백그라운드에서 이어감.
-  Future<void> _onBecameOnline() async {
-    final BuildContext? ctx0 = AppNav.navigatorKey.currentContext;
-    var shown = false;
-    NavigatorState? dialogNav;
-    if (ctx0 != null && ctx0.mounted) {
-      try {
-        dialogNav = Navigator.of(ctx0, rootNavigator: true);
-        showDialog<void>(
-          context: ctx0,
-          barrierDismissible: false,
-          useRootNavigator: true,
-          builder: (_) => AlertDialog(
-            content: Row(
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(width: 16),
-                Expanded(child: Text('online_sync_title'.tr())),
-              ],
-            ),
-          ),
-        );
-        shown = true;
-      } catch (_) {
-        dialogNav = null;
-      }
-    }
-    final DateTime uiDeadline = DateTime.now().add(_uiSyncBudget);
-    late final ({bool complete, bool failed}) outcome;
+  void _abortActiveBacklog() {
+    _backlogRunId++;
+    _onlineSyncLog('backlog aborted (runId=$_backlogRunId)');
+  }
+
+  /// 서버 1회 POST 실패 시 1회만 재시도, 이후 false.
+  Future<bool> _postOnceWithRetry(Future<bool> Function() post, {required bool Function() aborted}) async {
+    if (aborted()) return false;
     try {
-      outcome = await _enqueueBacklog(deadline: uiDeadline);
+      if (await post()) return true;
+    } catch (_) {}
+    if (aborted()) return false;
+    try {
+      return await post();
     } catch (_) {
-      outcome = (complete: false, failed: true);
-    } finally {
-      if (shown) {
-        try {
-          dialogNav?.pop();
-        } catch (_) {
-          final NavigatorState? nav = AppNav.navigatorKey.currentState;
-          if (nav != null && nav.canPop()) nav.pop();
-        }
+      return false;
+    }
+  }
+
+  /// 오프라인→온라인 직후: UI 없이 백그라운드만. 5초·서버 실패 시 skip(재시도·스낵바 없음).
+  Future<void> _onBecameOnline() async {
+    if (_onlineSyncInFlight) {
+      _onlineSyncLog('_onBecameOnline skipped (already in flight)');
+      return;
+    }
+    _onlineSyncInFlight = true;
+    try {
+      _onlineSyncLog('_onBecameOnline background budget=${_backgroundSyncBudget.inSeconds}s');
+      try {
+        await SensorUsage.applyServerStartOverwrite().timeout(
+          _backgroundSyncBudget,
+          onTimeout: () {
+            _onlineSyncLog('applyServerStartOverwrite timeout → skip backlog');
+            return false;
+          },
+        );
+      } catch (e, st) {
+        _onlineSyncLog('applyServerStartOverwrite error (skip backlog): $e\n$st');
+        return;
       }
-    }
-    if (!outcome.complete && !outcome.failed) {
-      unawaited(_enqueueBacklog(deadline: null).then((r) {
-        if (!r.complete && r.failed) {
-          final BuildContext? c = AppNav.navigatorKey.currentContext;
-          if (c != null && c.mounted) {
-            ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text('online_sync_failed'.tr())));
-          }
-        }
-      }));
-    }
-    final BuildContext? ctx2 = AppNav.navigatorKey.currentContext;
-    if (ctx2 != null && ctx2.mounted && outcome.failed) {
-      ScaffoldMessenger.of(ctx2).showSnackBar(SnackBar(content: Text('online_sync_failed'.tr())));
+
+      final int runId = _backlogRunId + 1;
+      _backlogRunId = runId;
+      final DateTime deadline = DateTime.now().add(_backgroundSyncBudget);
+      final ({bool complete, bool failed}) outcome = await _enqueueBacklog(deadline: deadline, runId: runId).timeout(
+        _backgroundSyncBudget,
+        onTimeout: () {
+          _abortActiveBacklog();
+          _onlineSyncLog('backlog enqueue timeout → skip');
+          return (complete: false, failed: true);
+        },
+      );
+      if (outcome.complete) {
+        _onlineSyncLog('background backlog complete');
+      } else {
+        _onlineSyncLog(
+          'background backlog skipped complete=${outcome.complete} failed=${outcome.failed}',
+        );
+      }
+    } catch (e, st) {
+      _onlineSyncLog('background backlog EXCEPTION (skipped): $e\n$st');
+    } finally {
+      _onlineSyncInFlight = false;
     }
   }
 
   /// [deadline]이 지나면 체크포인트만 저장하고 중단한다. complete=false·failed=false면 이어하기 필요.
-  Future<({bool complete, bool failed})> _enqueueBacklog({DateTime? deadline}) {
+  Future<({bool complete, bool failed})> _enqueueBacklog({DateTime? deadline, required int runId}) {
     final Future<({bool complete, bool failed})> next =
-        _backlogChain.then((_) => _pushBacklog(deadline: deadline));
+        _backlogChain.then((_) => _pushBacklog(deadline: deadline, runId: runId));
     _backlogChain = next.then((_) {}).catchError((_) {});
     return next;
   }
 
   /// Returns complete=true when glucose·이벤트·삭제 outbox까지 모두 처리됨. failed=true면 API 실패.
-  Future<({bool complete, bool failed})> _pushBacklog({DateTime? deadline}) async {
+  Future<({bool complete, bool failed})> _pushBacklog({DateTime? deadline, required int runId}) async {
+    bool aborted() => runId != _backlogRunId;
+    _onlineSyncLog(
+      '_pushBacklog start runId=$runId deadline=${deadline?.toIso8601String() ?? 'none'}',
+    );
+    if (aborted()) {
+      return (complete: false, failed: true);
+    }
     try {
       final st = await SettingsStorage.load();
-      final String eqsn = (st['eqsn'] as String? ?? '');
+      String eqsn = (st['eqsn'] as String? ?? '').trim();
       final String userId = (st['lastUserId'] as String? ?? '');
       final DateTime now = DateTime.now();
       var pending = st['offlineUploadPending'] == true;
+
+      // eqsn 없으면 postGlucoseBatch가 서버 호출 전 차단됨 — BLE MAC resolve로 보강
+      if (eqsn.isEmpty) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final String? mac = prefs.getString('cgms.last_mac');
+          if (mac != null && mac.trim().isNotEmpty) {
+            final Map<String, dynamic> eq =
+                await SettingsService().resolveEqRegistration(bleMac: mac.trim());
+            final String sn = (eq['serial'] as String? ?? '').trim();
+            if (sn.isNotEmpty) {
+              st['eqsn'] = sn;
+              await SettingsStorage.save(st);
+              eqsn = sn;
+              _onlineSyncLog('eqsn hydrated via resolve bleMac=$mac → $eqsn');
+            }
+          }
+        } catch (e) {
+          _onlineSyncLog('eqsn hydrate failed: $e');
+        }
+      }
+      final String startAt = (st['sensorStartAt'] as String? ?? '').trim();
+      if (eqsn.isNotEmpty && startAt.isEmpty) {
+        try {
+          await SensorUsage.syncStartAtWithServer();
+          final st2 = await SettingsStorage.load();
+          st['sensorStartAt'] = st2['sensorStartAt'];
+          st['sensorStartAtEqsn'] = st2['sensorStartAtEqsn'];
+        } catch (e) {
+          _onlineSyncLog('sensorStartAt sync failed: $e');
+        }
+      }
+
+      _onlineSyncLog(
+        'eqsn=$eqsn startAt=${(st['sensorStartAt'] as String? ?? '').trim().isEmpty ? "—" : "set"} '
+        'userIdLen=${userId.length} pending=$pending',
+      );
       final DateTime fromG = _parseIsoOrDefault(
         pending ? (st['offlineUploadFromGlucose'] as String?) : (st['lastPushAtGlucose'] as String?),
         now.subtract(const Duration(hours: 2)),
@@ -174,7 +243,20 @@ class OnlineMonitor {
       int flushCounter = 0;
       int lastUploadedMs = 0;
 
-      while (true) {
+      final String uploadStartAt = (st['sensorStartAt'] as String? ?? '').trim();
+      final bool skipGlucoseUpload = eqsn.isEmpty || uploadStartAt.isEmpty;
+      if (skipGlucoseUpload) {
+        _onlineSyncLog(
+          'glucose upload skipped (preflight): eqsnEmpty=${eqsn.isEmpty} startAtEmpty=${uploadStartAt.isEmpty}',
+        );
+      }
+
+      while (!skipGlucoseUpload) {
+        if (aborted()) {
+          _onlineSyncLog('glucose: aborted (superseded run)');
+          glucoseAllOk = false;
+          break;
+        }
         if (_pastDeadline(deadline)) {
           abortedByDeadline = true;
           glucoseAllOk = false;
@@ -187,9 +269,15 @@ class OnlineMonitor {
 
         int i = 0;
         while (i < gRows.length) {
+          if (aborted()) {
+            _onlineSyncLog('glucose: aborted (superseded run, in batch)');
+            glucoseAllOk = false;
+            break;
+          }
           if (_pastDeadline(deadline)) {
             abortedByDeadline = true;
             glucoseAllOk = false;
+            _onlineSyncLog('glucose: aborted by deadline (before batch)');
             break;
           }
           final int end = math.min(i + 500, gRows.length);
@@ -201,9 +289,20 @@ class OnlineMonitor {
             v.add(((gRows[j]['value'] as num?) ?? 0));
             tr.add((gRows[j]['trid'] as num?)?.toInt());
           }
-          final bool batchOk = await ds.postGlucoseBatch(t: t, v: v, tr: tr);
+          _onlineSyncLog('glucose batch POST n=${t.length} (batchIndex=$batchIndex)');
+          Future<bool> postOnce() async {
+            final r = await ds.postGlucoseBatchResult(t: t, v: v, tr: tr);
+            if (!r.ok) {
+              _onlineSyncLog(
+                'glucose batch fail reason=${r.reason} status=${r.statusCode ?? "—"}',
+              );
+            }
+            return r.ok;
+          }
+          final bool batchOk = await _postOnceWithRetry(postOnce, aborted: aborted);
           if (!batchOk) {
             glucoseAllOk = false;
+            _onlineSyncLog('glucose batch POST failed after retry → close');
             break;
           }
           final int lastMs = t.isNotEmpty ? t.last : 0;
@@ -241,6 +340,7 @@ class OnlineMonitor {
       }
 
       if (abortedByDeadline) {
+        _onlineSyncLog('return partial (glucose phase): deadline, pending flagged');
         await markPendingIfChunked();
         try {
           DataSyncBus().emitGlucoseBulk(count: 0);
@@ -255,6 +355,11 @@ class OnlineMonitor {
       DateTime? lastUploadedEventAt;
 
       while (true) {
+        if (aborted()) {
+          _onlineSyncLog('events: aborted (superseded run)');
+          eventsAllOk = false;
+          break;
+        }
         if (_pastDeadline(deadline)) {
           abortedByDeadline = true;
           eventsAllOk = false;
@@ -265,32 +370,62 @@ class OnlineMonitor {
             await repoE.range(from: eCursor, to: now, limit: eChunkLimit, eqsn: eqsn, userId: userId);
         if (eRows.isEmpty) break;
 
-        for (final m in eRows) {
-          if (_pastDeadline(deadline)) {
-            abortedByDeadline = true;
+        /// BE `POST /api/data/events/batch` 최대 200건; 실패 시 1회 재시도 후 중단(단건 폴백 없음).
+        const int kEventBatchMax = 200;
+        int rowPos = 0;
+        while (rowPos < eRows.length) {
+          if (aborted()) {
+            _onlineSyncLog('events: aborted (superseded run, in batch)');
             eventsAllOk = false;
             break;
           }
-          final String type = (m['type'] as String?) ?? 'memo';
-          final DateTime tm = DateTime.fromMillisecondsSinceEpoch((m['time_ms'] as num).toInt()).toLocal();
-          final String? memo = (m['memo'] as String?);
-          try {
-            final bool postOk = await ds.postEvent(type: type, time: tm, memo: memo);
-            if (!postOk) {
-              eventsAllOk = false;
-              break;
+          if (_pastDeadline(deadline)) {
+            abortedByDeadline = true;
+            eventsAllOk = false;
+            _onlineSyncLog('events: aborted by deadline (before batch)');
+            break;
+          }
+          final int batchEnd = math.min(rowPos + kEventBatchMax, eRows.length);
+          final List<Map<String, dynamic>> slice = eRows.sublist(rowPos, batchEnd);
+          final List<Map<String, dynamic>> payload = <Map<String, dynamic>>[];
+          for (final Map<String, dynamic> m in slice) {
+            final String type = (m['type'] as String?) ?? 'memo';
+            final DateTime tm =
+                DateTime.fromMillisecondsSinceEpoch((m['time_ms'] as num).toInt()).toLocal();
+            final String? memo = m['memo'] as String?;
+            final Map<String, dynamic> one = <String, dynamic>{
+              'type': type,
+              'time': tm.toUtc().toIso8601String(),
+            };
+            if (memo != null && memo.isNotEmpty) {
+              one['memo'] = memo;
             }
+            payload.add(one);
+          }
+          if (idx == 0) {
+            _onlineSyncLog('events upload: try batch n=${payload.length}');
+          }
+          final bool batchOk = await _postOnceWithRetry(
+            () => ds.postEventsBatch(events: payload),
+            aborted: aborted,
+          );
+          if (!batchOk) {
+            eventsAllOk = false;
+            _onlineSyncLog('events batch POST failed after retry → close');
+            break;
+          }
+          for (final Map<String, dynamic> m in slice) {
             idx++;
+            final DateTime tm =
+                DateTime.fromMillisecondsSinceEpoch((m['time_ms'] as num).toInt()).toLocal();
             lastUploadedEventAt = tm;
             if (idx % 25 == 0) {
               st['offlineUploadFromEvents'] = tm.toUtc().toIso8601String();
               await SettingsStorage.save(st);
             }
             if (idx % 10 == 0) await yieldUi();
-          } catch (_) {
-            eventsAllOk = false;
-            break;
           }
+          rowPos = batchEnd;
         }
 
         if (!eventsAllOk || abortedByDeadline) break;
@@ -311,6 +446,7 @@ class OnlineMonitor {
       }
 
       if (abortedByDeadline) {
+        _onlineSyncLog('return partial (events phase): deadline, pending flagged');
         await markPendingIfChunked();
         try {
           DataSyncBus().emitGlucoseBulk(count: 0);
@@ -321,22 +457,30 @@ class OnlineMonitor {
       try {
         final List<dynamic> box = (st['eventDeleteOutbox'] as List<dynamic>? ?? <dynamic>[]);
         if (box.isNotEmpty) {
+          _onlineSyncLog('delete outbox size=${box.length}');
           final List<String> remain = <String>[];
           int delIdx = 0;
           for (final e in box) {
+            if (aborted()) {
+              deletesOk = false;
+              _onlineSyncLog('delete outbox: aborted (superseded run)');
+              break;
+            }
             if (_pastDeadline(deadline)) {
               abortedByDeadline = true;
               deletesOk = false;
+              _onlineSyncLog('delete outbox: aborted by deadline');
               break;
             }
             final String id = e.toString();
             var delOk = false;
             try {
-              delOk = await ds.deleteEvent(id);
+              delOk = await _postOnceWithRetry(() => ds.deleteEvent(id), aborted: aborted);
             } catch (_) {
               delOk = false;
             }
             if (!delOk) {
+              _onlineSyncLog('deleteEvent failed id=$id');
               remain.add(id);
             }
             delIdx++;
@@ -353,6 +497,7 @@ class OnlineMonitor {
       }
 
       if (abortedByDeadline) {
+        _onlineSyncLog('return partial (delete phase): deadline, pending flagged');
         await markPendingIfChunked();
         try {
           DataSyncBus().emitGlucoseBulk(count: 0);
@@ -374,8 +519,12 @@ class OnlineMonitor {
         DataSyncBus().emitGlucoseBulk(count: 0);
       } catch (_) {}
       final bool complete = glucoseAllOk && eventsAllOk && deletesOk;
+      _onlineSyncLog(
+        '_pushBacklog end glucoseOk=$glucoseAllOk eventsOk=$eventsAllOk deletesOk=$deletesOk → complete=$complete',
+      );
       return (complete: complete, failed: !complete);
-    } catch (_) {
+    } catch (e, st) {
+      _onlineSyncLog('_pushBacklog EXCEPTION: $e\n$st');
       return (complete: false, failed: true);
     }
   }

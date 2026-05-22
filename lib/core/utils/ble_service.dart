@@ -455,15 +455,16 @@ class BleService {
         await SettingsStorage.save(st);
       }
 
-      final bool doneFlag = (st['sc0106WarmupDoneAt'] as String? ?? '').trim().isNotEmpty;
       // 저장 플래그만 보지 않음: isActive()가 만료·정리까지 반영(플래그 불일치 시 알람 새는 케이스 방지)
       final bool liveWarmup = await WarmupState.isActive();
-      if (doneFlag && !liveWarmup) {
+      if (liveWarmup) {
         if (AppNav.route != '/sc/01/06') await AppNav.goNamed('/sc/01/06');
         return;
       }
-      if (liveWarmup) {
-        if (AppNav.route != '/sc/01/06') await AppNav.goNamed('/sc/01/06');
+
+      final bool doneFlag = (st['sc0106WarmupDoneAt'] as String? ?? '').trim().isNotEmpty;
+      if (doneFlag) {
+        // 이미 SC_01_06 웜업이 끝난 세션 — 재연결·QR 후에 웜업 화면으로 되돌리지 않음
         return;
       }
 

@@ -11,13 +11,13 @@ import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/ingest_queue.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
+import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/debug_toast.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/config/app_constants.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:helpcare/presentation/dashboard/pd_01_01_previous_data_screen.dart';
 import 'package:helpcare/presentation/dashboard/pd_previous_routes.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -295,43 +295,15 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   Future<void> _loadSensorInfo() async {
     try {
       final ss = SettingsService();
-      // 1) 로컬 캐시 우선 (오프라인 우선 원칙)
       try {
+        await SensorUsage.syncStartAtWithServer();
         final Map<String, dynamic> s = await SettingsStorage.load();
-        final String eqsn = (s['eqsn'] as String? ?? '').trim();
         if (SettingsService.stripStaleSensorStart(s)) {
           await SettingsStorage.save(s);
         }
         final String cached = (s['sensorStartAt'] as String? ?? '').trim();
         if (cached.isNotEmpty) {
           _sensorStart = DateTime.tryParse(cached)?.toLocal();
-        } else if (eqsn.isNotEmpty) {
-          // 2) 로컬 없으면 서버에서 조회 후 캐시 (SN 또는 BLE MAC 일치 시, req 1-7)
-          try {
-            final prefs = await SharedPreferences.getInstance();
-            final String? mac = prefs.getString('cgms.last_mac');
-            final Map<String, dynamic> eq = await ss.resolveEqRegistration(serial: eqsn, bleMac: mac);
-            if (SettingsService.shouldApplyResolvedEqStart(eq, eqsn)) {
-              final String? st = (eq['startAt'] as String?);
-              if (st != null && st.isNotEmpty) {
-                _sensorStart = DateTime.tryParse(st)?.toLocal();
-                try {
-                  final m = await SettingsStorage.load();
-                  m['sensorStartAt'] = st;
-                  m['sensorStartAtEqsn'] = eqsn;
-                  await SettingsStorage.save(m);
-                } catch (_) {}
-              }
-              final String? srvSn = (eq['serial'] as String?)?.trim();
-              if (srvSn != null && srvSn.isNotEmpty && srvSn != eqsn) {
-                try {
-                  final m = await SettingsStorage.load();
-                  m['eqsn'] = srvSn;
-                  await SettingsStorage.save(m);
-                } catch (_) {}
-              }
-            }
-          } catch (_) {}
         }
       } catch (_) {}
       // 3) 기존 sensors 엔드포인트(백업 경로)
@@ -442,9 +414,9 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     }
     // removed: TIR 계산 및 표시
     if (_sensorStart != null) {
-      final int total = _sensorLifeDays;
-      final int used = now.difference(_sensorStart!).inDays;
-      _daysLeft = (total - used).clamp(0, total);
+      final SensorUsageSnapshot? snap =
+          SensorUsage.snapshotFromStartLocal(_sensorStart, validity: Duration(days: _sensorLifeDays));
+      _daysLeft = snap?.remainDays ?? 0;
     }
     _markGuEvidence();
   }
