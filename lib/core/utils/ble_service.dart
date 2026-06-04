@@ -17,6 +17,9 @@ import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/warmup_state.dart';
+import 'package:helpcare/core/utils/background_sync_gate.dart';
+import 'package:helpcare/core/utils/ble_auto_pair_store.dart';
+
 class _CgmsSample {
   _CgmsSample({required this.time, required this.value, required this.trid});
   final DateTime time;
@@ -249,8 +252,10 @@ class BleService {
               }
             } else if (eqsn.isNotEmpty) {
               if (SettingsService.stripStaleSensorStart(st)) dirty = true;
-              await SensorUsage.syncStartAtWithServer(bleMac: deviceId);
-              dirty = true;
+              BackgroundSyncGate.runWhenUnblocked(
+                () => SensorUsage.syncStartAtWithServer(bleMac: deviceId),
+                dedupeKey: 'sensorStartSync',
+              );
             } else {
               final String existingStart = (st['sensorStartAt'] as String? ?? '').trim();
               if (existingStart.isEmpty) {
@@ -320,7 +325,7 @@ class BleService {
         // 저장된 last_mac이 있을 때만 자동 재연결(SC_01_01 등 “의도적 끊김” 후 반복 연결 시도 방지).
         unawaited(() async {
           try {
-            if (await _hasReconnectTarget()) {
+            if (await BleAutoPairStore.hasPair()) {
               _startAutoReconnectPoller();
             }
           } catch (_) {}
@@ -528,38 +533,18 @@ class BleService {
   static String _bleAddressKey(String id) =>
       id.replaceAll(RegExp(r'[^0-9A-Fa-f]'), '').toUpperCase();
 
-  Future<List<String>> _reconnectDeviceIdCandidates() async {
-    final List<String> out = <String>[];
-    void add(String? raw) {
-      final String t = (raw ?? '').trim();
-      if (t.isEmpty) return;
-      if (_bleAddressKey(t).isEmpty) return;
-      if (!out.any((e) => _bleAddressKey(e) == _bleAddressKey(t))) {
-        out.add(t);
-      }
-    }
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      add(prefs.getString('cgms.last_mac'));
-    } catch (_) {}
-    try {
-      final Map<String, dynamic> s = await SettingsStorage.load();
-      add(s['lastScannedQrMac'] as String?);
-    } catch (_) {}
-    return out;
-  }
+  /// 자동 재연결은 [BleAutoPairStore]에 저장된 MAC만 사용(cgms.last_mac·QR MAC 미사용).
+  Future<String?> _autoPairTargetId() async => BleAutoPairStore.read();
 
-  Future<bool> _hasReconnectTarget() async {
-    final List<String> ids = await _reconnectDeviceIdCandidates();
-    return ids.isNotEmpty;
-  }
+  /// 사용자 성공 접속(QR·수동 Connect) 후에만 자동 재연결 대상 MAC을 등록.
+  static Future<void> registerAutoPairTarget(String deviceId) =>
+      BleAutoPairStore.save(deviceId);
 
-  /// `cgms.last_mac` 우선, 없으면 마지막 QR의 MAC(동일 주소 다른 표기는 한 번만 시도).
   Future<void> tryAutoReconnect() async {
-    final List<String> ids = await _reconnectDeviceIdCandidates();
-    if (ids.isEmpty) return;
-    final String id = ids.first;
-    unawaited(BleLogService().add('BLE', 'auto-reconnect -> $id (candidates=${ids.length})'));
+    final String? id = await _autoPairTargetId();
+    if (id == null || id.isEmpty) return;
+    BleAutoPairStore.showAutoPairingToast();
+    unawaited(BleLogService().add('BLE', 'auto-pair -> $id'));
     unawaited(connectToDevice(id));
   }
 
@@ -574,8 +559,8 @@ class BleService {
     _autoReconnectTimer = Timer.periodic(const Duration(seconds: 12), (_) async {
       if (phase.value == BleConnPhase.connecting) return;
       if (phase.value != BleConnPhase.off) return;
-      if (!await _hasReconnectTarget()) return;
-      unawaited(BleLogService().add('BLE', 'auto-reconnect poll'));
+      if (!await BleAutoPairStore.hasPair()) return;
+      unawaited(BleLogService().add('BLE', 'auto-pair poll'));
       unawaited(tryAutoReconnect());
     });
   }
@@ -624,13 +609,6 @@ class BleService {
     phase.value = BleConnPhase.notifySubscribed;
     _ar0106SessionReady = true;
     _cancelSignalLossRepeatTimer();
-  }
-
-  /// 테스트/에뮬레이션용: 실제 BLE notify 수신 경로와 동일한 파서를 호출한다.
-  /// - data: CGM Measurement(0x2AA7) notify payload (raw bytes)
-  /// - silent: true면(히스토리 동기화처럼) UI 브로드캐스트를 최소화
-  Future<void> debugInjectCgmsNotifyBytes(List<int> data, {bool silent = false}) async {
-    await _handleCgmsNotifyPacket(data, source: 'emu', silent: silent);
   }
 
   Future<void> _handleCgmsNotifyPacket(List<int> data, {required String source, required bool silent}) async {
@@ -932,21 +910,8 @@ class BleService {
     return mantissa * pow(10, exponent).toDouble();
   }
 
-  // simulated notify (for random generation): call this with synthetic payload
-  void simulateNotify(double value) async {
-    final st = await SettingsStorage.load();
-    int last = (st['lastTrid'] as int? ?? 0);
-    last = (last + 1) & 0xFFFF;
-    st['lastTrid'] = last;
-    await SettingsStorage.save(st);
-    // 시뮬레이션: 곧바로 큐로 인입 (로컬 DB 및 서버 업로드 경로 동일)
-    IngestQueueService().enqueueGlucose(DateTime.now(), value, trid: last);
-  }
-
-  // removed unused _encodeSfloatPayload helper (not referenced)
-
-  /// [clearPersistentPairing]: true면 `cgms.last_mac` 등을 지우고 자동 재연결 폴링을 시작하지 않음(사용자 Disconnect·로그아웃 등).
-  /// false면 BLE 스택만 정리하고 저장 MAC은 유지하며, 필요 시 자동 재연결 폴링을 이어감(부팅 정리·다른 기기로 교체 직전 등).
+  /// [clearPersistentPairing]: true면 `cgms.last_mac`·[BleAutoPairStore] 제거, 자동 재연결 없음.
+  /// false면 UI용 last_mac은 유지; 자동 재연결은 [BleAutoPairStore]가 있을 때만 폴링.
   Future<void> disconnect({bool clearPersistentPairing = true}) async {
     _userInitiatedDisconnect = clearPersistentPairing;
     _cancelSignalLossRepeatTimer();
@@ -968,9 +933,14 @@ class BleService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('cgms.last_mac');
         await prefs.remove('cgms.last_name');
+        await BleAutoPairStore.clear();
       } catch (_) {}
     } else {
-      _startAutoReconnectPoller();
+      unawaited(() async {
+        if (await BleAutoPairStore.hasPair()) {
+          _startAutoReconnectPoller();
+        }
+      }());
     }
     // 구독 취소로 disconnected 이벤트가 오지 않을 수 있음 — 플래그가 남지 않도록 정리
     unawaited(Future<void>.delayed(const Duration(seconds: 2), () {

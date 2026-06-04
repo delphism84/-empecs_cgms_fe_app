@@ -13,7 +13,7 @@ import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/local_offline_auth_store.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:helpcare/core/utils/ble_install_guard.dart';
 
 /// Create Account Step 5: Confirmation & Permissions (local-first signup, server sync when online)
 class CreateAccountStep5ConfirmPage extends StatefulWidget {
@@ -67,6 +67,7 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
       st['sensorStartAtEqsn'] = '';
       st['eqsn'] = '';
       st['lastTrid'] = 0;
+      st['lastServerUploadedTrid'] = 0;
       st['sc0106WarmupDoneAt'] = '';
       st['sc0106WarmupActive'] = false;
       st['sc0106WarmupEqsn'] = '';
@@ -87,9 +88,7 @@ class _CreateAccountStep5ConfirmPageState extends State<CreateAccountStep5Confir
         DataSyncBus().emitEventBulk(count: 0);
       } catch (_) {}
       try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('cgms.last_mac');
-        await prefs.remove('cgms.last_name');
+        await BleInstallGuard.wipePersistentBleState();
       } catch (_) {}
       try {
         AppSettingsBus.notify();

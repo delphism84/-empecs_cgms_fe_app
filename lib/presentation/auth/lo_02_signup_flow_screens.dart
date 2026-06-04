@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/config/test_reg.dart';
+import 'package:helpcare/core/config/test_account.dart';
 import 'package:helpcare/presentation/auth/create_account_step1.dart';
 import 'package:helpcare/presentation/auth/create_account_step4_profile.dart';
 
@@ -36,6 +38,14 @@ class _Lo0201SignUpIntroScreenState extends State<Lo0201SignUpIntroScreen> {
     } catch (_) {}
   }
 
+  Future<void> _enableTestReg() async {
+    await TestReg.enable();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('testreg=on')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,10 +56,13 @@ class _Lo0201SignUpIntroScreenState extends State<Lo0201SignUpIntroScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Text(
-              'lo0201_title'.tr(),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              textAlign: TextAlign.start,
+            GestureDetector(
+              onDoubleTap: _enableTestReg,
+              child: Text(
+                'lo0201_title'.tr(),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                textAlign: TextAlign.start,
+              ),
             ),
             const SizedBox(height: 12),
             Text(

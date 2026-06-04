@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:helpcare/core/utils/ble_log_service.dart';
+import 'package:helpcare/core/utils/ble_auto_pair_store.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
@@ -184,6 +185,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('cgms.last_mac');
+        await BleAutoPairStore.clear();
       } catch (_) {}
       setState(() {
         for (var j = 0; j < _statuses.length; j++) {
@@ -245,6 +247,7 @@ class _StartMonitorPageState extends State<StartMonitorPage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('cgms.last_mac', matched.id);
       await prefs.setString('cgms.last_name', matched.name.isEmpty ? 'CGMS' : matched.name);
+      await BleService.registerAutoPairTarget(matched.id);
     } catch (_) {}
     try {
       final st = await SettingsStorage.load();

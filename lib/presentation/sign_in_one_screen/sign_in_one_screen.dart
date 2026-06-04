@@ -18,6 +18,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:helpcare/widgets/common_toast.dart';
 import 'package:helpcare/core/config/default_dev_account.dart';
+import 'package:helpcare/core/config/test_account.dart';
 import 'package:helpcare/core/utils/auth_input_validation.dart';
 import 'package:helpcare/core/utils/local_offline_auth_store.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -59,22 +60,26 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
       if (savedEmail.isNotEmpty || savedPw.isNotEmpty) {
         setState(() => switchVal = true);
       }
-      if (_idCtrl.text.isEmpty && _pwCtrl.text.isEmpty) {
+      if (_idCtrl.text.isEmpty && _pwCtrl.text.isEmpty && TestAccount.enabled) {
         await Future<void>.delayed(const Duration(milliseconds: 200));
         if (!mounted) return;
-        _idCtrl.text = DefaultDevAccount.email;
-        _pwCtrl.text = DefaultDevAccount.password;
+        _idCtrl.text = TestAccount.email;
+        _pwCtrl.text = TestAccount.password;
       }
       if (mounted) setState(() {});
+      if (DefaultDevAccount.autoSubmitExistingLogin && !_autoSubmitTried) {
+        _autoSubmitTried = true;
+        unawaited(Future<void>.delayed(const Duration(milliseconds: 350), _submitLogin));
+      }
     } catch (_) {}
   }
 
   Future<void> _persistLoginCredentials(String email, String password) async {
     try {
-      final st = await SettingsStorage.load();
-      st['savedLoginEmail'] = email;
-      st['savedLoginPassword'] = password;
-      await SettingsStorage.save(st);
+      await SettingsStorage.save(<String, dynamic>{
+        'savedLoginEmail': email,
+        'savedLoginPassword': password,
+      });
     } catch (_) {}
   }
 
@@ -124,6 +129,150 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
   }
 
   bool _loggingIn = false;
+  bool _autoSubmitTried = false;
+
+  Future<void> _submitLogin() async {
+    if (_loggingIn) return;
+    setState(() => _loggingIn = true);
+    Future<http.Response> doLogin(ApiClient api, String email, String password) {
+      return api.post('/api/auth/login', body: {'email': email, 'password': password});
+    }
+    try {
+      final email = _idCtrl.text.trim();
+      final password = _pwCtrl.text;
+      if (email.isEmpty || password.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('auth_enter_id_password_snack'.tr())),
+        );
+        return;
+      }
+      if (!isValidLoginEmailId(email)) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('auth_login_invalid_email'.tr())),
+        );
+        return;
+      }
+      final api = ApiClient();
+      await api.loadToken();
+      http.Response resp;
+      try {
+        resp = await doLogin(api, email, password);
+      } on TimeoutException catch (_) {
+        final bool ok = await _tryOfflineLocalLogin(api, email, password);
+        if (ok) return;
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('auth_login_network_required'.tr())),
+        );
+        return;
+      } on SocketException catch (_) {
+        final bool ok = await _tryOfflineLocalLogin(api, email, password);
+        if (ok) return;
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('auth_login_network_required'.tr())),
+        );
+        return;
+      } on http.ClientException catch (_) {
+        final bool ok = await _tryOfflineLocalLogin(api, email, password);
+        if (ok) return;
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('auth_login_network_required'.tr())),
+        );
+        return;
+      } catch (e) {
+        final msg = e.toString().toLowerCase();
+        if (msg.contains('socket') ||
+            msg.contains('network') ||
+            msg.contains('connection') ||
+            msg.contains('failed host lookup')) {
+          final bool ok = await _tryOfflineLocalLogin(api, email, password);
+          if (ok) return;
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('auth_login_network_required'.tr())),
+          );
+          return;
+        }
+        if (!mounted) return;
+        await showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text('auth_login_failed'.tr()),
+            content: Text('auth_error_with_detail'.tr(namedArgs: {'e': '$e'})),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('common_ok'.tr()),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+      if (resp.statusCode == 200) {
+        final decoded = jsonDecode(resp.body);
+        if (decoded is! Map) {
+          if (!mounted) return;
+          CommonToast.showWarning(context, 'auth_invalid_login_response'.tr());
+          return;
+        }
+        final data = Map<String, dynamic>.from(decoded);
+        final prof = AuthResponseParser.parseLoginProfile(
+          envelope: data,
+          formEmail: email,
+        );
+        final String? token = prof.token;
+        if (token != null && token.isNotEmpty) {
+          await api.saveToken(token);
+          try {
+            await _persistLoginCredentials(prof.email, password);
+            final st = await SettingsStorage.load();
+            LocalOfflineAuthStore.writeCredentials(st, prof.email, password);
+            st['lastUserId'] = prof.email;
+            st['displayName'] =
+                prof.displayName.isNotEmpty ? prof.displayName : prof.email;
+            st['guestMode'] = false;
+            st['offlineUploadPending'] = false;
+            await SettingsStorage.save(st);
+          } catch (_) {}
+          try {
+            AppSettingsBus.notify();
+          } catch (_) {}
+          unawaited(ProfileSyncService.refreshFromServer());
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const Home()),
+            (Route<dynamic> route) => false,
+          );
+          CommonToast.showSuccess(context, 'auth_login_success_toast'.tr());
+        } else {
+          if (!mounted) return;
+          CommonToast.showWarning(context, 'auth_invalid_token'.tr());
+        }
+      } else {
+        if (!mounted) return;
+        await showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text('auth_login_failed'.tr()),
+            content: Text('auth_login_server_error'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('common_ok'.tr()),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loggingIn = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -394,111 +543,7 @@ class _SignInOneScreenState extends State<SignInOneScreen> {
                           ),
                           alignment: Alignment.centerLeft,
                           onTap: () async {
-                            if (_loggingIn) return;
-                            setState(() => _loggingIn = true);
-                            Future<http.Response> doLogin(ApiClient api, String email, String password) {
-                              return api.post('/api/auth/login', body: { 'email': email, 'password': password });
-                            }
-                            try {
-                              final email = _idCtrl.text.trim();
-                              final password = _pwCtrl.text;
-                              if (email.isEmpty || password.isEmpty) {
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('auth_enter_id_password_snack'.tr())));
-                                return;
-                              }
-                              if (!isValidLoginEmailId(email)) {
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('auth_login_invalid_email'.tr())),
-                                );
-                                return;
-                              }
-                              final api = ApiClient();
-                              await api.loadToken();
-                              http.Response resp;
-                              try {
-                                resp = await doLogin(api, email, password);
-                              } on TimeoutException catch (_) {
-                                final bool ok = await _tryOfflineLocalLogin(api, email, password);
-                                if (ok) return;
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('auth_login_network_required'.tr())),
-                                );
-                                return;
-                              } on SocketException catch (_) {
-                                final bool ok = await _tryOfflineLocalLogin(api, email, password);
-                                if (ok) return;
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('auth_login_network_required'.tr())),
-                                );
-                                return;
-                              } on http.ClientException catch (_) {
-                                final bool ok = await _tryOfflineLocalLogin(api, email, password);
-                                if (ok) return;
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('auth_login_network_required'.tr())),
-                                );
-                                return;
-                              } catch (e) {
-                                final msg = e.toString().toLowerCase();
-                                if (msg.contains('socket') || msg.contains('network') || msg.contains('connection') || msg.contains('failed host lookup')) {
-                                  final bool ok = await _tryOfflineLocalLogin(api, email, password);
-                                  if (ok) return;
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('auth_login_network_required'.tr())),
-                                  );
-                                  return;
-                                }
-                                if (!mounted) return;
-                                await showDialog(context: context, builder: (_) => AlertDialog(title: Text('auth_login_failed'.tr()), content: Text('auth_error_with_detail'.tr(namedArgs: {'e': '$e'})), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text('common_ok'.tr()))]));
-                                return;
-                              }
-                              if (resp.statusCode == 200) {
-                                final decoded = jsonDecode(resp.body);
-                                if (decoded is! Map) {
-                                  if (!mounted) return;
-                                  CommonToast.showWarning(context, 'auth_invalid_login_response'.tr());
-                                  return;
-                                }
-                                final data = Map<String, dynamic>.from(decoded as Map);
-                                final prof = AuthResponseParser.parseLoginProfile(envelope: data, formEmail: email);
-                                final String? token = prof.token;
-                                if (token != null && token.isNotEmpty) {
-                                  await api.saveToken(token);
-                                try {
-                                  await _persistLoginCredentials(prof.email, password);
-                                  final st = await SettingsStorage.load();
-                                  LocalOfflineAuthStore.writeCredentials(st, prof.email, password);
-                                  st['lastUserId'] = prof.email;
-                                  st['displayName'] = prof.displayName.isNotEmpty ? prof.displayName : prof.email;
-                                  st['guestMode'] = false;
-                                  st['offlineUploadPending'] = false;
-                                  await SettingsStorage.save(st);
-                                } catch (_) {}
-                                  try {
-                                    AppSettingsBus.notify();
-                                  } catch (_) {}
-                                  // 서버 로그인 직후 프로필 동기화는 비동기 — UI·로그인 완료 경로를 블로킹하지 않음
-                                  unawaited(ProfileSyncService.refreshFromServer());
-                                  if (!mounted) return;
-                                  Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const Home()), (Route<dynamic> route) => false);
-                                  CommonToast.showSuccess(context, 'auth_login_success_toast'.tr());
-                                } else {
-                                  if (!mounted) return;
-                                  CommonToast.showWarning(context, 'auth_invalid_token'.tr());
-                                }
-                              } else {
-                                if (!mounted) return;
-                                await showDialog(context: context, builder: (_) => AlertDialog(title: Text('auth_login_failed'.tr()), content: Text('auth_login_server_error'.tr()), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text('common_ok'.tr()))]));
-                              }
-                            } finally {
-                              if (mounted) setState(() => _loggingIn = false);
-                            }
+                            await _submitLogin();
                           },
                             ),
                         // removed sign-up and create-account entry (existing login only)

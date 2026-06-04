@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
+import 'package:helpcare/core/utils/focus_bus.dart';
+import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 
 class Sc0101PermissionRangeScreen extends StatefulWidget {
@@ -11,6 +13,7 @@ class Sc0101PermissionRangeScreen extends StatefulWidget {
 }
 
 class _Sc0101PermissionRangeScreenState extends State<Sc0101PermissionRangeScreen> {
+  final SettingsService _svc = SettingsService();
   bool _consent = false;
   int _low = 70;
   int _high = 180;
@@ -42,43 +45,29 @@ class _Sc0101PermissionRangeScreenState extends State<Sc0101PermissionRangeScree
       setState(() { _feedbackKey = 'perm_invalid_range'; });
       return;
     }
-    final st = await SettingsStorage.load();
-    st['sc0101Consent'] = _consent;
-    st['sc0101Low'] = _low;
-    st['sc0101High'] = _high;
-
-    // Slide5: Low/High 알람 기준값 변경·저장 반영 (local-first).
-    // AlertEngine은 alarmsCache(또는 서버 alarms)를 기준으로 평가하므로, 여기서도 alarmsCache를 함께 갱신한다.
+    // SC_01_01 값은 부분 저장으로 기록.
     try {
-      final List<Map<String, dynamic>> list = (st['alarmsCache'] is List)
-          ? (st['alarmsCache'] as List).cast<Map>().map((e) => e.cast<String, dynamic>()).toList()
-          : <Map<String, dynamic>>[];
-      void upsert(String type, num threshold) {
-        final int idx = list.indexWhere((e) => (e['type'] ?? '').toString() == type);
-        if (idx >= 0) {
-          list[idx] = {...list[idx], 'threshold': threshold};
-        } else {
-          list.add({
-            '_id': 'local:$type',
-            'type': type,
-            'enabled': true,
-            'threshold': threshold,
-            'sound': true,
-            'vibrate': true,
-            'repeatMin': 10,
-            'quietFrom': '22:00',
-            'quietTo': '07:00',
-          });
-        }
-      }
-      upsert('low', _low);
-      upsert('high', _high);
-      st['alarmsCache'] = list;
-      st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
+      await SettingsStorage.save(<String, dynamic>{
+        'sc0101Consent': _consent,
+        'sc0101Low': _low,
+        'sc0101High': _high,
+      });
+    } catch (_) {}
+
+    // Low/High 알람 임계값은 SettingsService 단일 저장 경로로 갱신한다.
+    try {
+      await _svc.upsertAlarmByType('low', <String, dynamic>{
+        'type': 'low',
+        'threshold': _low,
+      });
+      await _svc.upsertAlarmByType('high', <String, dynamic>{
+        'type': 'high',
+        'threshold': _high,
+      });
       AlertEngine().invalidateAlarmsCache();
     } catch (_) {}
 
-    await SettingsStorage.save(st);
+    ChartThresholdBus.notify();
     setState(() { _feedbackKey = 'perm_saved'; });
   }
 

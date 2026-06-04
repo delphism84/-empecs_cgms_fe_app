@@ -7,6 +7,8 @@ import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/warmup_state.dart';
+import 'package:helpcare/core/utils/background_sync_gate.dart';
+import 'package:helpcare/core/utils/online_monitor.dart';
 
 class Sc0106WarmupScreen extends StatefulWidget {
   const Sc0106WarmupScreen({super.key});
@@ -27,7 +29,7 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   void initState() {
     super.initState();
     WarmupState.setWarmupUiVisible(true);
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_load()));
     _t = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
@@ -79,8 +81,11 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
         _done = alreadyDone;
       });
       if (alreadyDone) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _navigateHome();
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) return;
+          await _ensureSnWarmupAlignedWithUiDone();
+          if (!mounted) return;
+          _navigateHome();
         });
       }
     } catch (_) {}
@@ -115,6 +120,7 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
       } catch (_) {}
       await SensorWarmupService.applyUiWarmupSkipped(eqsn);
       await WarmupState.completeNow();
+      await SensorWarmupService.refreshFromStorage();
       AlertEngine().invalidateWarmupCache();
     } catch (_) {}
     if (!mounted) return;
@@ -143,11 +149,27 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   Future<void> _finishWarmupAndGoHome() async {
     await _markDone();
     if (!mounted) return;
-    _navigateHome();
+    WarmupState.setWarmupUiVisible(false);
+    BackgroundSyncGate.notifyUiWarmupEnded();
+    Future<void>.delayed(const Duration(seconds: 4), OnlineMonitor().schedulePostWarmupSync);
+    Navigator.of(context).pushReplacementNamed('/home');
+  }
+
+  Future<void> _ensureSnWarmupAlignedWithUiDone() async {
+    try {
+      final st = await SettingsStorage.load();
+      final String eqsn = (st['eqsn'] as String? ?? '').trim();
+      await SensorWarmupService.applyUiWarmupSkipped(eqsn);
+      await SensorWarmupService.refreshFromStorage();
+      AlertEngine().invalidateWarmupCache();
+    } catch (_) {}
   }
 
   void _navigateHome() {
     if (!mounted) return;
+    WarmupState.setWarmupUiVisible(false);
+    BackgroundSyncGate.notifyUiWarmupEnded();
+    Future<void>.delayed(const Duration(seconds: 4), OnlineMonitor().schedulePostWarmupSync);
     Navigator.of(context).pushReplacementNamed('/home');
   }
 

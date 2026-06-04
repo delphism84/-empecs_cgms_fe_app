@@ -9,6 +9,8 @@ import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/sensor_usage.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
+import 'package:helpcare/core/utils/background_sync_gate.dart';
+import 'package:helpcare/core/utils/ingest_queue.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void _onlineSyncLog(String message) {
@@ -34,8 +36,39 @@ class OnlineMonitor {
 
   bool _onlineSyncInFlight = false;
 
+  /// 웜업 중 오프라인→온라인 전환 시 백로그를 한 번 미룬다.
+  bool _deferredOnlineBacklog = false;
+
   /// 백그라운드 백로그 1회 시도 예산 — 초과·실패 시 이어하기 없이 skip
   static const Duration _backgroundSyncBudget = Duration(seconds: 5);
+
+  /// 웜업 종료·홈 진입 후: 온라인이면 백로그를 UI 블로킹 없이 재시도.
+  void schedulePostWarmupSync() {
+    BackgroundSyncGate.runWhenUnblocked(() async {
+      await kickDeferredOnlineSync();
+    }, dedupeKey: 'onlinePostWarmup');
+  }
+
+  /// 웜업으로 미뤄 둔 동기화 또는 즉시 1회 백로그(사용자 주도, 예산 확대).
+  Future<void> kickDeferredOnlineSync() async {
+    if (BackgroundSyncGate.blocksHeavySync) {
+      _deferredOnlineBacklog = true;
+      return;
+    }
+    bool online = false;
+    try {
+      final api = ApiClient();
+      await api.loadToken();
+      final r = await api.get('/api/settings/app', withGlobalLoading: false);
+      online = (r.statusCode == 200);
+    } catch (_) {
+      online = false;
+    }
+    if (!online) return;
+    _deferredOnlineBacklog = false;
+    _prevOnline = true;
+    await _onBecameOnline(budget: const Duration(seconds: 12));
+  }
 
   static bool _pastDeadline(DateTime? deadline) =>
       deadline != null && !DateTime.now().isBefore(deadline);
@@ -74,10 +107,23 @@ class OnlineMonitor {
       } catch (_) {}
 
       if (online && !_prevOnline) {
-        _onlineSyncLog('offline→online: background backlog (no dialog)');
-        unawaited(_onBecameOnline());
+        if (BackgroundSyncGate.blocksHeavySync) {
+          _deferredOnlineBacklog = true;
+          _onlineSyncLog('offline→online: deferred (warmup active)');
+        } else {
+          _onlineSyncLog('offline→online: background backlog (no dialog)');
+          unawaited(_onBecameOnline());
+        }
+      }
+      if (!online) {
+        _deferredOnlineBacklog = false;
       }
       _prevOnline = online;
+      if (online && _deferredOnlineBacklog && !BackgroundSyncGate.blocksHeavySync) {
+        _deferredOnlineBacklog = false;
+        _onlineSyncLog('warmup ended: flushing deferred backlog');
+        unawaited(_onBecameOnline());
+      }
     } finally {
       _tickRunning = false;
     }
@@ -102,18 +148,24 @@ class OnlineMonitor {
     }
   }
 
-  /// 오프라인→온라인 직후: UI 없이 백그라운드만. 5초·서버 실패 시 skip(재시도·스낵바 없음).
-  Future<void> _onBecameOnline() async {
+  /// 오프라인→온라인 직후: UI 없이 백그라운드만. 예산 초과·서버 실패 시 skip(재시도·스낵바 없음).
+  Future<void> _onBecameOnline({Duration? budget}) async {
+    if (BackgroundSyncGate.blocksHeavySync) {
+      _deferredOnlineBacklog = true;
+      _onlineSyncLog('_onBecameOnline deferred (warmup)');
+      return;
+    }
     if (_onlineSyncInFlight) {
       _onlineSyncLog('_onBecameOnline skipped (already in flight)');
       return;
     }
     _onlineSyncInFlight = true;
+    final Duration syncBudget = budget ?? _backgroundSyncBudget;
     try {
-      _onlineSyncLog('_onBecameOnline background budget=${_backgroundSyncBudget.inSeconds}s');
+      _onlineSyncLog('_onBecameOnline background budget=${syncBudget.inSeconds}s');
       try {
         await SensorUsage.applyServerStartOverwrite().timeout(
-          _backgroundSyncBudget,
+          syncBudget,
           onTimeout: () {
             _onlineSyncLog('applyServerStartOverwrite timeout → skip backlog');
             return false;
@@ -126,9 +178,9 @@ class OnlineMonitor {
 
       final int runId = _backlogRunId + 1;
       _backlogRunId = runId;
-      final DateTime deadline = DateTime.now().add(_backgroundSyncBudget);
+      final DateTime deadline = DateTime.now().add(syncBudget);
       final ({bool complete, bool failed}) outcome = await _enqueueBacklog(deadline: deadline, runId: runId).timeout(
-        _backgroundSyncBudget,
+        syncBudget,
         onTimeout: () {
           _abortActiveBacklog();
           _onlineSyncLog('backlog enqueue timeout → skip');
@@ -224,7 +276,7 @@ class OnlineMonitor {
       int batchIndex = 0;
 
       Future<void> yieldUi() async {
-        await Future<void>.delayed(Duration.zero);
+        await BackgroundSyncGate.yieldToUi();
       }
 
       Future<void> markPendingIfChunked() async {
@@ -281,13 +333,20 @@ class OnlineMonitor {
             break;
           }
           final int end = math.min(i + 500, gRows.length);
+          final int lastTrUp = await IngestQueueService.readLastServerUploadedTrid();
           final List<int> t = [];
           final List<num> v = [];
           final List<int?> tr = [];
           for (int j = i; j < end; j++) {
+            final int? rowTr = (gRows[j]['trid'] as num?)?.toInt();
+            if (rowTr != null && rowTr > 0 && rowTr <= lastTrUp) continue;
             t.add((gRows[j]['time_ms'] as num).toInt());
             v.add(((gRows[j]['value'] as num?) ?? 0));
-            tr.add((gRows[j]['trid'] as num?)?.toInt());
+            tr.add(rowTr);
+          }
+          if (t.isEmpty) {
+            i = end;
+            continue;
           }
           _onlineSyncLog('glucose batch POST n=${t.length} (batchIndex=$batchIndex)');
           Future<bool> postOnce() async {
@@ -304,6 +363,13 @@ class OnlineMonitor {
             glucoseAllOk = false;
             _onlineSyncLog('glucose batch POST failed after retry → close');
             break;
+          }
+          int maxTr = lastTrUp;
+          for (final int? tid in tr) {
+            if (tid != null && tid > maxTr) maxTr = tid;
+          }
+          if (maxTr > lastTrUp) {
+            await IngestQueueService.markServerUploadedTrid(maxTr);
           }
           final int lastMs = t.isNotEmpty ? t.last : 0;
           if (lastMs > 0) {
@@ -342,9 +408,6 @@ class OnlineMonitor {
       if (abortedByDeadline) {
         _onlineSyncLog('return partial (glucose phase): deadline, pending flagged');
         await markPendingIfChunked();
-        try {
-          DataSyncBus().emitGlucoseBulk(count: 0);
-        } catch (_) {}
         return (complete: false, failed: false);
       }
 
@@ -448,9 +511,6 @@ class OnlineMonitor {
       if (abortedByDeadline) {
         _onlineSyncLog('return partial (events phase): deadline, pending flagged');
         await markPendingIfChunked();
-        try {
-          DataSyncBus().emitGlucoseBulk(count: 0);
-        } catch (_) {}
         return (complete: false, failed: false);
       }
 
@@ -499,9 +559,6 @@ class OnlineMonitor {
       if (abortedByDeadline) {
         _onlineSyncLog('return partial (delete phase): deadline, pending flagged');
         await markPendingIfChunked();
-        try {
-          DataSyncBus().emitGlucoseBulk(count: 0);
-        } catch (_) {}
         return (complete: false, failed: false);
       }
 
@@ -515,8 +572,9 @@ class OnlineMonitor {
         }
       }
 
+      // count:0은 SN/DB 초기화 전용. 동기화 완료는 로컬 재로드만 알린다.
       try {
-        DataSyncBus().emitGlucoseBulk(count: 0);
+        DataSyncBus().emitGlucoseBulk(count: 1);
       } catch (_) {}
       final bool complete = glucoseAllOk && eventsAllOk && deletesOk;
       _onlineSyncLog(

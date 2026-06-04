@@ -71,9 +71,10 @@ class _ChartPageState extends State<ChartPage> {
     _loadUnit();
     _loadDotSize();
     _loadThresholds();
-    widget.refreshTick?.addListener(_fetchFromServer);
+    widget.refreshTick?.addListener(_onRefreshTick);
     GlucoseFocus.focusTime.addListener(_onExternalFocus);
     AppSettingsBus.changed.addListener(_onSettingsChanged);
+    ChartThresholdBus.changed.addListener(_onChartThresholdChanged);
     _syncSub = DataSyncBus().stream.listen(_onDataSync);
   }
 
@@ -81,8 +82,8 @@ class _ChartPageState extends State<ChartPage> {
   void didUpdateWidget(covariant ChartPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshTick != widget.refreshTick) {
-      oldWidget.refreshTick?.removeListener(_fetchFromServer);
-      widget.refreshTick?.addListener(_fetchFromServer);
+      oldWidget.refreshTick?.removeListener(_onRefreshTick);
+      widget.refreshTick?.addListener(_onRefreshTick);
     }
   }
 
@@ -90,6 +91,8 @@ class _ChartPageState extends State<ChartPage> {
   void dispose() {
     GlucoseFocus.focusTime.removeListener(_onExternalFocus);
     AppSettingsBus.changed.removeListener(_onSettingsChanged);
+    ChartThresholdBus.changed.removeListener(_onChartThresholdChanged);
+    _pointsReloadDebounce?.cancel();
     _syncSub?.cancel();
     super.dispose();
   }
@@ -124,24 +127,57 @@ class _ChartPageState extends State<ChartPage> {
     });
   }
 
-  void _onSettingsChanged() {
-    // 단위/임계값 등 설정이 바뀌면 서버에서 재로드하고 y축/데이터 갱신
-    _loadUnit();
-    _loadDotSize();
-    _loadThresholds();
-    _fetchFromServer();
-    setState(() {});
+  StreamSubscription<DataSyncEvent>? _syncSub;
+  Timer? _pointsReloadDebounce;
+
+  void _onRefreshTick() {
+    _schedulePointsReloadDebounced();
   }
 
-  StreamSubscription<DataSyncEvent>? _syncSub;
+  void _onSettingsChanged() {
+    _loadUnit();
+    _loadDotSize();
+  }
+
+  void _onChartThresholdChanged() {
+    _loadThresholds();
+  }
+
+  void _appendGlucosePoint(DateTime t, double v) {
+    final DateTime local = t.toLocal();
+    if (points.isNotEmpty) {
+      final GlucosePoint last = points.last;
+      if (last.time == local && (last.value - v).abs() < 0.001) return;
+    }
+    setState(() {
+      // 새 List — _FlGlucoseChart.didUpdateWidget의 appended 비교가 동작해야 우측 스냅됨.
+      final List<GlucosePoint> next = [...points, GlucosePoint(time: local, value: v)];
+      if (next.length > 1) {
+        next.sort((a, b) => a.time.compareTo(b.time));
+      }
+      final DateTime cutoff = DateTime.now().subtract(const Duration(days: 30));
+      next.removeWhere((p) => p.time.isBefore(cutoff));
+      points = next;
+    });
+  }
+
+  void _schedulePointsReloadDebounced() {
+    _pointsReloadDebounce?.cancel();
+    _pointsReloadDebounce = Timer(const Duration(milliseconds: 500), () {
+      unawaited(_reloadPointsOnly());
+    });
+  }
+
   void _onDataSync(DataSyncEvent ev) {
     if (!mounted) return;
+    if (widget.embedded && HomeTab.index.value != 0) return;
     if (ev.kind == DataSyncKind.glucosePoint) {
-      // 새 포인트 수신 시 이벤트를 재조회하지 않고, 포인트만 로컬에서 갱신
-      _reloadPointsOnly();
+      final DateTime t = ev.payload['time'] as DateTime;
+      final double v = ((ev.payload['value'] as num?) ?? double.nan).toDouble();
+      if (!v.isNaN) _appendGlucosePoint(t, v);
+      return;
     } else if (ev.kind == DataSyncKind.glucoseBulk) {
-      // 히스토리 일괄 동기화 후에는 배치로만 로드
-      _reloadPointsOnly();
+      _schedulePointsReloadDebounced();
     } else if (ev.kind == DataSyncKind.eventBulk) {
       // 이벤트도 일괄 동기화 완료 시 1회만 재조회
       _fetchFromServer();
@@ -166,15 +202,28 @@ class _ChartPageState extends State<ChartPage> {
     }
   }
 
-  Future<void> _reloadPointsOnly() async {
+  Future<List<Map<String, dynamic>>> _loadLocalGlucoseRows() async {
     final now = DateTime.now();
     final from = now.subtract(const Duration(days: 30));
     final DateTime to = now.add(const Duration(hours: 1));
+    String eqsn = '';
+    String userId = '';
     try {
-      String eqsn = '';
-      String userId = '';
-      try { final s = await SettingsStorage.load(); eqsn = (s['eqsn'] as String? ?? ''); userId = (s['lastUserId'] as String? ?? ''); } catch (_) {}
-      final local = await GlucoseLocalRepo().range(from: from, to: to, limit: 5000, eqsn: eqsn, userId: userId);
+      final s = await SettingsStorage.load();
+      eqsn = (s['eqsn'] as String? ?? '');
+      userId = (s['lastUserId'] as String? ?? '');
+    } catch (_) {}
+    List<Map<String, dynamic>> local =
+        await GlucoseLocalRepo().range(from: from, to: to, limit: 5000, eqsn: eqsn, userId: userId);
+    if (local.isEmpty && eqsn.isNotEmpty) {
+      local = await GlucoseLocalRepo().range(from: from, to: to, limit: 5000, eqsn: null, userId: userId);
+    }
+    return local;
+  }
+
+  Future<void> _reloadPointsOnly() async {
+    try {
+      final local = await _loadLocalGlucoseRows();
       if (!mounted) return;
       setState(() {
         points = local
@@ -194,10 +243,7 @@ class _ChartPageState extends State<ChartPage> {
     final DateTime to = now.add(const Duration(hours: 1));
     // 1) 혈당 데이터는 로컬 DB에서 즉시 로드 (오프라인에서도 동작)
     try {
-      String eqsn = '';
-      String userId = '';
-      try { final s = await SettingsStorage.load(); eqsn = (s['eqsn'] as String? ?? ''); userId = (s['lastUserId'] as String? ?? ''); } catch (_) {}
-      final local = await GlucoseLocalRepo().range(from: from, to: to, limit: 5000, eqsn: eqsn, userId: userId);
+      final local = await _loadLocalGlucoseRows();
       if (!mounted) return;
       setState(() {
         points = local
@@ -282,18 +328,16 @@ class _ChartPageState extends State<ChartPage> {
       double low = (s['sc0101Low'] as num?)?.toDouble() ?? 70;
       double high = (s['sc0101High'] as num?)?.toDouble() ?? 180;
       // AR_01_04(Low) / AR_01_03(High) 알람 설정값 우선 반영
-      final dynamic ac = s['alarmsCache'];
-      if (ac is List) {
-        for (final e in ac.cast<Map>()) {
-          final map = e.cast<String, dynamic>();
-          final t = (map['type'] ?? '').toString();
-          final th = (map['threshold'] as num?)?.toDouble();
-          if (th == null || !th.isFinite) continue;
-          if (t == 'low') low = th.clamp(40.0, 120.0);
-          if (t == 'high') high = th.clamp(120.0, 300.0);
-        }
+      final List<Map<String, dynamic>> alarms = await SettingsService().listAlarms();
+      for (final map in alarms) {
+        final t = (map['type'] ?? '').toString();
+        final th = (map['threshold'] as num?)?.toDouble();
+        if (th == null || !th.isFinite) continue;
+        if (t == 'low') low = th.clamp(40.0, 120.0);
+        if (t == 'high') high = th.clamp(120.0, 300.0);
       }
       if (!mounted) return;
+      if (low == _lowTh && high == _highTh) return;
       setState(() { _lowTh = low; _highTh = high; });
     } catch (_) {}
   }

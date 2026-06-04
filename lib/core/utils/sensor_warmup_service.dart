@@ -70,8 +70,14 @@ class SensorWarmupService {
       final Map<String, String> map = _parseStartMap(st[_kStartBySn]);
       final String? startIso = map[eq];
       if (startIso == null || startIso.isEmpty) {
-        // SN은 있는데 시작 기록 없음: 보수적으로 웜업 중으로 둔다(등록 직후 beginWarmup 전 레이스).
-        _isWarmupFinished = false;
+        // SC_01_06 완료 후 SN 맵만 없는 레거시/레이스: UI 웜업은 끝났으므로 알람 억제 해제.
+        final String doneAt = (st['sc0106WarmupDoneAt'] as String? ?? '').trim();
+        final String warmupEq = (st['sc0106WarmupEqsn'] as String? ?? '').trim().toUpperCase();
+        if (doneAt.isNotEmpty && (warmupEq.isEmpty || warmupEq == eq)) {
+          _isWarmupFinished = true;
+        } else {
+          _isWarmupFinished = false;
+        }
         return;
       }
       final DateTime? start = DateTime.tryParse(startIso)?.toUtc();
@@ -141,6 +147,11 @@ class SensorWarmupService {
       if (k.isEmpty) return;
       final Map<String, String> map = _parseStartMap(st[_kStartBySn]);
       if (map.containsKey(k)) return;
+      final String doneAt = (st['sc0106WarmupDoneAt'] as String? ?? '').trim();
+      if (doneAt.isNotEmpty) {
+        await applyUiWarmupSkipped(k);
+        return;
+      }
       await beginWarmup(k, durationSec: _readDurationSec(st));
     } catch (_) {}
   }

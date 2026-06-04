@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
-import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/presentation/settings_page/alarm_detail_page.dart';
 
 class AlarmTypeDetailPage extends StatefulWidget {
@@ -9,11 +10,14 @@ class AlarmTypeDetailPage extends StatefulWidget {
     required this.type,
     required this.title,
     required this.reqId,
+    this.initialAlarm,
   });
 
   final String type; // very_low|low|high|rate|system
   final String title;
   final String reqId;
+  /// 알림 목록에서 이미 알고 있는 설정 — 진입 시 로딩 스피너 생략.
+  final Map<String, dynamic>? initialAlarm;
 
   @override
   State<AlarmTypeDetailPage> createState() => _AlarmTypeDetailPageState();
@@ -27,7 +31,14 @@ class _AlarmTypeDetailPageState extends State<AlarmTypeDetailPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    final Map<String, dynamic>? seed = widget.initialAlarm;
+    if (seed != null && seed.isNotEmpty) {
+      _alarm = Map<String, dynamic>.from(seed);
+      SettingsService.normalizeAlarmMethodFields(_alarm!);
+      _loading = false;
+    } else {
+      unawaited(_load());
+    }
   }
 
   Map<String, dynamic> _seedLocal(String type) {
@@ -56,32 +67,17 @@ class _AlarmTypeDetailPageState extends State<AlarmTypeDetailPage> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    if (mounted) setState(() => _loading = true);
     Map<String, dynamic>? one;
-    // 1) server
     try {
       final list = await _svc.listAlarms();
-      one = list.cast<Map<String, dynamic>>().firstWhere(
-            (a) => (a['type'] ?? '').toString() == widget.type,
-            orElse: () => <String, dynamic>{},
-          );
-      if (one.isEmpty) one = null;
-    } catch (_) {}
-    // 2) local cache
-    if (one == null) {
-      try {
-        final st = await SettingsStorage.load();
-        final dynamic v = st['alarmsCache'];
-        if (v is List) {
-          final list = v.cast<Map>().map((e) => e.cast<String, dynamic>()).toList();
-          one = list.firstWhere(
-            (a) => (a['type'] ?? '').toString() == widget.type,
-            orElse: () => <String, dynamic>{},
-          );
-          if (one.isEmpty) one = null;
+      for (final a in list) {
+        if ((a['type'] ?? '').toString() == widget.type) {
+          one = a;
+          break;
         }
-      } catch (_) {}
-    }
+      }
+    } catch (_) {}
     one ??= _seedLocal(widget.type);
 
     if (!mounted) return;
@@ -100,11 +96,10 @@ class _AlarmTypeDetailPageState extends State<AlarmTypeDetailPage> {
       );
     }
     return AlarmDetailPage(
-      alarm: _alarm ?? _seedLocal(widget.type),
+      alarm: _alarm!,
       title: widget.title,
       fixedType: widget.type,
       hideTypePicker: true,
     );
   }
 }
-

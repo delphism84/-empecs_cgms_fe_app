@@ -33,9 +33,9 @@ import 'package:helpcare/core/utils/notification_service.dart';
 import 'package:helpcare/presentation/settings_page/local_data_page.dart';
 import 'package:helpcare/presentation/settings_page/user_detail_page.dart';
 import 'package:helpcare/core/config/app_constants.dart';
+import 'package:helpcare/core/utils/app_locale.dart';
 import 'package:helpcare/core/utils/profile_sync_service.dart';
 import 'package:helpcare/core/utils/sensor_usage.dart';
-import 'package:helpcare/core/utils/emul_ble_recv_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -55,7 +55,6 @@ class _SettingsPageState extends State<SettingsPage> {
   bool accHighContrast = false;
   bool accLargerFont = false;
   bool accColorblind = false;
-  bool emulBleRecvEnabled = false;
   int chartDotSize = 2;
   // support: log transmission
   String _lastLogTxAt = '';
@@ -102,6 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _load();
     // 반영 즉시 UI에 보여주기 위해 설정 변경 이벤트 수신
     AppSettingsBus.changed.addListener(_onAppSettingsChanged);
+    LocaleBus.language.addListener(_onLocaleBusChanged);
   }
 
   Future<int> _getStoredDotSize() async {
@@ -130,6 +130,13 @@ class _SettingsPageState extends State<SettingsPage> {
         AppSettingsBus.notify();
       },
     );
+  }
+
+  void _onLocaleBusChanged() {
+    if (!mounted) return;
+    final String code = LocaleBus.language.value;
+    if (language == code) return;
+    setState(() => language = code);
   }
 
   void _onAppSettingsChanged() async {
@@ -166,7 +173,16 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     try { AppSettingsBus.changed.removeListener(_onAppSettingsChanged); } catch (_) {}
+    try { LocaleBus.language.removeListener(_onLocaleBusChanged); } catch (_) {}
     super.dispose();
+  }
+
+  Future<void> _refreshAlarmsFromCache() async {
+    try {
+      final list = await _svc.listAlarms();
+      if (!mounted) return;
+      setState(() => alarms = list);
+    } catch (_) {}
   }
 
   Future<void> _load() async {
@@ -190,7 +206,6 @@ class _SettingsPageState extends State<SettingsPage> {
         accHighContrast = (prefs['accHighContrast'] ?? accHighContrast) == true;
         accLargerFont = (prefs['accLargerFont'] ?? accLargerFont) == true;
         accColorblind = (prefs['accColorblind'] ?? accColorblind) == true;
-        emulBleRecvEnabled = local['emulBleRecvEnabled'] == true;
         alarms = list;
         final int cds = ((local['chartDotSize'] as num?)?.toInt() ?? 2);
         chartDotSize = cds.clamp(1, 10);
@@ -286,6 +301,7 @@ class _SettingsPageState extends State<SettingsPage> {
       // reset counters
       final st = await SettingsStorage.load();
       st['lastTrid'] = 0;
+      st['lastServerUploadedTrid'] = 0;
       st['lastEvid'] = 0;
       await SettingsStorage.save(st);
       await _loadDataSummary();
@@ -372,6 +388,14 @@ class _SettingsPageState extends State<SettingsPage> {
         if (resolvedEqsn != newEqsn) _snCtrl.text = resolvedEqsn;
       });
     }
+    // 3) 알람 설정은 SN별로 관리: 서버값 자동 다운로드 후 로컬을 해당 SN 값으로 덮어씀.
+    SettingsService.invalidateAlarmsMemCache();
+    try {
+      await _svc.downloadAlarmsForCurrentSn();
+    } catch (_) {
+      // 서버 미연결 시에도 로컬 SN 버킷(기본값 시드) 사용
+      await _svc.listAlarms();
+    }
     // 4) fetch from DB (server) into local cache (recent 30 days)
     try {
       final ds = DataService();
@@ -447,32 +471,38 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> _applyLanguage(String v) async {
+    final String lang = AppLocale.normalize(v);
+    if (language == lang) return;
+    setState(() => language = lang);
+    await AppLocale.apply(lang);
+    unawaited(() async {
+      try {
+        await _svc.updateAppSetting({
+          'preferences': {'language': lang},
+        });
+      } catch (_) {}
+    }());
+  }
+
   Future<void> _save() async {
     final String lang = language == 'ko' ? 'ko' : 'en';
     // 1) 로컬 저장(즉시 적용/원복 방지)
     try {
-      final local = await SettingsStorage.load();
       final String tf = (timeFormat == '12h' || timeFormat == '24h') ? timeFormat : '24h';
-      local['language'] = lang;
-      local['region'] = region;
-      local['autoRegion'] = autoRegion;
-      local['guestMode'] = guestMode;
-      local['glucoseUnit'] = glucoseUnit;
-      local['timeFormat'] = tf;
-      local['accHighContrast'] = accHighContrast;
-      local['accLargerFont'] = accLargerFont;
-      local['accColorblind'] = accColorblind;
-      local['emulBleRecvEnabled'] = emulBleRecvEnabled;
-      local['notificationsEnabled'] = true;
-      await SettingsStorage.save(local);
-      await EmulBleRecvService().setEnabled(emulBleRecvEnabled);
+      await SettingsStorage.save(<String, dynamic>{
+        'language': lang,
+        'region': region,
+        'autoRegion': autoRegion,
+        'guestMode': guestMode,
+        'glucoseUnit': glucoseUnit,
+        'timeFormat': tf,
+        'accHighContrast': accHighContrast,
+        'accLargerFont': accLargerFont,
+        'accColorblind': accColorblind,
+        'notificationsEnabled': true,
+      });
       try { NotificationService().setEnabled(true); } catch (_) {}
-      // 런타임 언어 변경(지원 로케일만)
-      try {
-        if (mounted) {
-          await context.setLocale(Locale(lang));
-        }
-      } catch (_) {}
       AppSettingsBus.notify();
     } catch (_) {}
 
@@ -605,7 +635,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: 'settings_region'.tr(),
                         options: const ['KR', 'US', 'GB', 'CA', 'EU'],
                         current: region,
-                        onSelected: (v) => setState(() { region = v; _save(); AppSettingsBus.notify(); }),
+                        onSelected: (v) => setState(() { region = v; _save(); }),
                       ),
                     ),
                     _notifItem(
@@ -619,7 +649,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         options: const ['en', 'ko'],
                         current: language,
                         labelFor: (code) => code == 'ko' ? tr('settings_language_ko') : tr('settings_language_en'),
-                        onSelected: (v) => setState(() { language = v; _save(); AppSettingsBus.notify(); }),
+                        onSelected: (v) async {
+                          await _applyLanguage(v);
+                        },
                       ),
                     ),
                     _notifItem(
@@ -632,7 +664,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: 'settings_time_format'.tr(),
                         options: const ['24h', '12h'],
                         current: timeFormat,
-                        onSelected: (v) => setState(() { timeFormat = v; _save(); AppSettingsBus.notify(); }),
+                        onSelected: (v) => setState(() { timeFormat = v; _save(); }),
                       ),
                     ),
                     _notifItem(
@@ -662,7 +694,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         onSelected: (v) => setState(() {
                           glucoseUnit = (v == 'mmol/L') ? 'mmol' : 'mgdl';
                           _save();
-                          AppSettingsBus.notify();
                         }),
                       ),
                     ),
@@ -677,17 +708,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     _toggleItem('settings_acc_high_contrast'.tr(), accHighContrast, (v) async {
                       setState(() { accHighContrast = v; });
                       await _save();
-                      AppSettingsBus.notify();
                     }),
                     _toggleItem('settings_acc_larger_font'.tr(), accLargerFont, (v) async {
                       setState(() { accLargerFont = v; });
                       await _save();
-                      AppSettingsBus.notify();
                     }),
                     _toggleItem('settings_acc_colorblind'.tr(), accColorblind, (v) async {
                       setState(() { accColorblind = v; });
                       await _save();
-                      AppSettingsBus.notify();
                     }),
                   ]),
                 ),
@@ -762,13 +790,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       subtitle: _logTxSubtitle(),
                       onTap: _sendLogTx,
                     ),
-                    const SizedBox(height: 8),
-                    _toggleItem('settings_emul_ble_recv'.tr(), emulBleRecvEnabled, (v) async {
-                      setState(() {
-                        emulBleRecvEnabled = v;
-                      });
-                      await _save();
-                    }),
                     const SizedBox(height: 8),
                     _notifItem(
                       context,
@@ -974,7 +995,7 @@ class _SettingsPageState extends State<SettingsPage> {
           MaterialPageRoute(builder: (_) => AlarmDetailPage(alarm: a)),
         );
         if (changed == true) {
-          _load();
+          await _refreshAlarmsFromCache();
         }
       },
       borderRadius: BorderRadius.circular(12),
@@ -1012,22 +1033,24 @@ class _SettingsPageState extends State<SettingsPage> {
             });
             // local-first cache (so alarms/notifications still work even when backend is unreachable)
             try {
-              final st = await SettingsStorage.load();
-              final List<Map<String, dynamic>> list = (st['alarmsCache'] is List)
-                  ? (st['alarmsCache'] as List).cast<Map>().map((e) => e.cast<String, dynamic>()).toList()
-                  : <Map<String, dynamic>>[];
               final String ty = (a['type'] ?? '').toString();
-              final int i = list.indexWhere((e) => (e['type'] ?? '').toString() == ty);
-              if (i >= 0) list[i] = {...list[i], 'enabled': v};
-              else list.add({'_id': id.isEmpty ? 'local:$ty' : id, 'type': ty, 'enabled': v});
-              st['alarmsCache'] = list;
-              st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
-              await SettingsStorage.save(st);
+              await _svc.upsertAlarmByType(ty, <String, dynamic>{
+                '_id': id.isEmpty ? 'local:$ty' : id,
+                'type': ty,
+                'enabled': v,
+                'threshold': a['threshold'],
+                'quietFrom': a['quietFrom'],
+                'quietTo': a['quietTo'],
+                'sound': a['sound'],
+                'vibrate': a['vibrate'],
+                'repeatMin': a['repeatMin'],
+                if (a['overrideDnd'] != null) 'overrideDnd': a['overrideDnd'],
+              });
               AlertEngine().invalidateAlarmsCache();
             } catch (_) {}
             // best-effort server update
             if (id.isNotEmpty && !id.startsWith('local:')) {
-              try { await _svc.updateAlarm(id, {'enabled': v}); } catch (_) {}
+              unawaited(_svc.updateAlarm(id, {'enabled': v}));
             }
           },
         ),

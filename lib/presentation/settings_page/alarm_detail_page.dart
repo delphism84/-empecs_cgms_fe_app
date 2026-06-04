@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
-import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
@@ -42,13 +42,30 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
   void initState() {
     super.initState();
     final a = Map<String, dynamic>.from(widget.alarm);
-    SettingsService.normalizeAlarmMethodFields(a);
+    // method 레거시 필드는 진입 시 sound/vibrate로 정규화
+    if (!a.containsKey('sound') && !a.containsKey('vibrate')) {
+      final String raw = (a['method'] ?? a['alertMethod'] ?? '').toString().trim().toLowerCase();
+      final String norm = raw.replaceAll(RegExp(r'[\s\-+]'), '_');
+      if (norm == 'sound_vibration' || norm == 'soundandvibration' || norm == 'both') {
+        a['sound'] = true;
+        a['vibrate'] = true;
+      } else if (norm == 'sound_only' || norm == 'sound') {
+        a['sound'] = true;
+        a['vibrate'] = false;
+      } else if (norm == 'vibration_only' || norm == 'vibrate_only' || norm == 'vibration') {
+        a['sound'] = false;
+        a['vibrate'] = true;
+      } else if (norm == 'silent' || norm == 'none' || norm == 'off') {
+        a['sound'] = false;
+        a['vibrate'] = false;
+      }
+    }
     _type = (widget.fixedType ?? (a['type'] ?? 'high')).toString();
-    _enabled = SettingsService.parseAlarmBool(a['enabled'], defaultValue: true);
-    _sound = SettingsService.parseAlarmBool(a['sound'], defaultValue: true);
-    _vibrate = SettingsService.parseAlarmBool(a['vibrate'], defaultValue: true);
+    _enabled = a['enabled'] == null ? true : a['enabled'] == true || a['enabled'].toString() == '1';
+    _sound = a['sound'] == null ? true : a['sound'] == true || a['sound'].toString() == '1';
+    _vibrate = a['vibrate'] == null ? true : a['vibrate'] == true || a['vibrate'].toString() == '1';
     _overrideDnd = a['overrideDnd'] == true;
-    _repeatMin = SettingsService.parseAlarmRepeatMinutes(a['repeatMin']);
+    _repeatMin = int.tryParse('${a['repeatMin'] ?? 10}') ?? 10;
     final dynamic thRaw = a['threshold'];
     final String thStr = (thRaw == null) ? '' : thRaw.toString();
     String thInitial = thStr;
@@ -69,8 +86,9 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
     super.dispose();
   }
 
-  Future<void> _saveLocalCache() async {
+  Future<bool> _saveLocalCache() async {
     try {
+      SettingsService.invalidateAlarmsMemCache();
       final id = (widget.alarm['_id'] ?? '').toString();
       final Map<String, dynamic> one = {
         '_id': id.isEmpty ? 'local:$_type' : id,
@@ -93,56 +111,31 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
           one['threshold'] = p;
         }
       }
-      final st = await SettingsStorage.load();
-      final List<Map<String, dynamic>> list = (st['alarmsCache'] is List)
-          ? (st['alarmsCache'] as List).cast<Map>().map((e) => e.cast<String, dynamic>()).toList()
-          : <Map<String, dynamic>>[];
-      final int idx = list.indexWhere((e) => (e['type'] ?? '').toString() == _type);
-      if (idx >= 0) {
-        list[idx] = {...list[idx], ...one};
-      } else {
-        list.add(one);
-      }
-      st['alarmsCache'] = list;
-      st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
-      await SettingsStorage.save(st);
+      await _svc.upsertAlarmByType(_type, one);
       AlertEngine().invalidateAlarmsCache();
       if (_type == 'system') {
         BleService().rescheduleSignalLossRepeatsIfDisconnected();
       }
-      AppSettingsBus.notify(); // 메인 차트 고/저 라인(AR_01_03/AR_01_04) 즉시 반영
-    } catch (_) {}
+      if (_type == 'high' || _type == 'low') {
+        ChartThresholdBus.notify();
+      }
+      return true;
+    } catch (e, st) {
+      log('[qa][AlarmDetailPage._saveLocalCache] failed type=$_type: $e', name: 'qa', stackTrace: st);
+      return false;
+    }
   }
 
   Future<void> _save() async {
-    final id = (widget.alarm['_id'] ?? '').toString();
-    final num? thresholdServer = _type == 'system'
-        ? -88
-        : (_type == 'rate'
-            ? (num.tryParse(_threshold.text.trim()) ?? 2)
-            : num.tryParse(_threshold.text.trim()));
-    // 1) local-first: apply immediately even when backend is unavailable
-    await _saveLocalCache();
-    // 2) best-effort server update
-    if (id.isNotEmpty && !id.startsWith('local:')) {
-      // 네트워크가 느릴 때도 UI 전환(저장 완료/화면 닫기)은 즉시 처리.
-      unawaited(() async {
-        try {
-          await _svc.updateAlarm(id, {
-            'type': _type,
-            'enabled': _enabled,
-            'threshold': thresholdServer,
-            'quietFrom': _quietFrom.text.trim(),
-            'quietTo': _quietTo.text.trim(),
-            'sound': _sound,
-            'vibrate': _vibrate,
-            'repeatMin': _repeatMin,
-            if (_type == 'very_low') 'overrideDnd': _overrideDnd,
-          });
-        } catch (_) {}
-      }());
-    }
+    // 알람 저장은 로컬 단일 루틴으로만 처리(수동 업/다운로드 버튼에서만 서버 동기화).
+    final bool ok = await _saveLocalCache();
     if (!mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('alarm_detail_save_failed'.tr())),
+      );
+      return;
+    }
     Navigator.of(context).pop(true);
   }
 

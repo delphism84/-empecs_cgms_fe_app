@@ -1433,12 +1433,13 @@ class _SensorBleScanPageState extends State<SensorBleScanPage> {
 
   Future<void> _connect(Map<String, dynamic> d) async {
     setState(() => connected = d);
+    final String deviceId = (d['id'] as String? ?? '').trim();
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cgms.last_mac', (d['id'] as String? ?? ''));
+      await prefs.setString('cgms.last_mac', deviceId);
       await prefs.setString('cgms.last_name', (d['name'] as String? ?? 'CGMS'));
+      await BleService.registerAutoPairTarget(deviceId);
     } catch (_) {}
-    final String deviceId = d['id'] as String? ?? '';
     await BleService().connectToDevice(deviceId);
     if (!mounted) return;
     // 연결 성공 후 Sensor Connect 화면은 건너뛰고 바로 Warm-up 진입.

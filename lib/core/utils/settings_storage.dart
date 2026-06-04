@@ -1,8 +1,90 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsStorage {
+  SettingsStorage._();
+
   static const String storageKey = 'cgms.settings';
+
+  static const Set<String> _alarmPatchKeys = <String>{
+    'alarmsCacheBySn',
+    'alarmsCache',
+    'alarmsCacheAt',
+  };
+
+  /// load() 직후 오래된 스냅샷으로 save(전체 map) 할 때 덮어쓰면 안 되는 사용자 설정 키.
+  static const Set<String> _userPrefPatchKeys = <String>{
+    'language',
+    'region',
+    'autoRegion',
+    'guestMode',
+    'glucoseUnit',
+    'timeFormat',
+    'accHighContrast',
+    'accLargerFont',
+    'accColorblind',
+    'notificationsEnabled',
+    'darkMode',
+    'alarmsMuteAll',
+  };
+
+  /// 센서/온보딩/동기화 메타만 건드리는 저장인데 patch 에 사용자 설정이 끼어 있으면 stale.
+  static bool _patchTouchesIncidentalMetadata(Map<String, dynamic> patch) {
+    for (final String k in patch.keys) {
+      if (k == 'eqsn' ||
+          k == 'lastTrid' ||
+          k == 'lastEvid' ||
+          k == 'lastServerUploadedTrid' ||
+          k.startsWith('sc') ||
+          k.startsWith('lo0') ||
+          k.startsWith('gu') ||
+          k.startsWith('tg') ||
+          k.startsWith('rp') ||
+          k.startsWith('pd') ||
+          k.startsWith('me') ||
+          k.startsWith('ar01') ||
+          k.startsWith('lastPush') ||
+          k.startsWith('offline')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static Map<String, dynamic> _sanitizeSettingsPatch(Map<String, dynamic> patch) {
+    final Map<String, dynamic> out = Map<String, dynamic>.from(patch);
+    for (final String k in _alarmPatchKeys) {
+      out.remove(k);
+    }
+    if (_patchTouchesIncidentalMetadata(out)) {
+      for (final String k in _userPrefPatchKeys) {
+        out.remove(k);
+      }
+    }
+    return out;
+  }
+
+  static void _stripAlarmKeysFromSettingsMap(Map<String, dynamic> data) {
+    data['alarmsCache'] = <Map<String, dynamic>>[];
+    data['alarmsCacheBySn'] = <String, dynamic>{};
+    data['alarmsCacheAt'] = '';
+  }
+
+  static Future<void> _ioChain = Future<void>.value();
+
+  static Future<T> _runSerialized<T>(Future<T> Function() fn) {
+    final Completer<T> completer = Completer<T>();
+    _ioChain = _ioChain.then((_) async {
+      try {
+        completer.complete(await fn());
+      } catch (e, st) {
+        completer.completeError(e, st);
+      }
+    });
+    return completer.future;
+  }
 
   static const Map<String, dynamic> defaultSettings = {
     'language': 'en',
@@ -22,23 +104,20 @@ class SettingsStorage {
     'accColorblind': false,
     'authToken': '',
     'lastUserId': '',
-    // 로그인 화면 Remember Me용(평문). 오프라인 검증은 offlineLastLoginEmail + offlinePw* 해시.
     'savedLoginEmail': '',
     'savedLoginPassword': '',
     'offlineLastLoginEmail': '',
     'offlinePwSaltHex': '',
     'offlinePwHashHex': '',
-    'displayName': '', // local user display (from signup or login)
+    'displayName': '',
     'eqsn': '',
-    // SN별 웜업 시작(UTC ISO). 알람은 [sensorWarmupDurationSec] 동안 막는다.
     'sensorWarmupStartBySn': <String, dynamic>{},
     'sensorWarmupDurationSec': 30 * 60,
     'notificationsEnabled': true,
-    // AR_01_01: mute all alarms
     'alarmsMuteAll': false,
-    // registered devices (persisted after QR & Connect)
     'registeredDevices': <Map<String, dynamic>>[],
     'lastTrid': 0,
+    'lastServerUploadedTrid': 0,
     'lastEvid': 0,
     'chartDotSize': 2,
     'eventsSync': false,
@@ -48,38 +127,28 @@ class SettingsStorage {
     'offlineUploadPending': false,
     'offlineUploadFromGlucose': '',
     'offlineUploadFromEvents': '',
-    // queued ids for event deletions when offline
     'eventDeleteOutbox': <String>[],
-    // API base override (dev)
     'apiBaseUrl': '',
-    'emulBleRecvEnabled': false,
-    // last alert debug snapshot (for bot verification)
     'lastAlert': <String, dynamic>{},
-    // log data transmission (support)
     'lastLogTxAt': '',
     'lastLogTxOk': false,
-    // lockscreen banner notification (AR_01_08)
     'ar0108Enabled': true,
     'ar0108UpdatedAt': '',
     'lastLockScreenAt': '',
     'lastLockScreenOk': false,
     'lastLockScreenValue': null,
     'lastLockScreenTrend': '',
-    // LO_01_01: login page SNS options evidence (QA/bot helpers)
     'lo0101ViewedAt': '',
     'lo0101AutoOpenEasyLoginSheet': false,
     'lo0101SheetOpenedAt': '',
-    'lo0101LastProvider': '', // google/apple/kakao
+    'lo0101LastProvider': '',
     'lo0101LastProviderAt': '',
-    // LO_01_02~04: SNS provider login process screens evidence
     'lo0102ViewedAt': '',
     'lo0103ViewedAt': '',
     'lo0104ViewedAt': '',
-    // LO_01_08: guest mode entry evidence
     'lo0108EnteredAt': '',
-    // LO_02_01~05: sign-up flow evidence
     'lo0201ViewedAt': '',
-    'lo0201Choice': '', // start|later
+    'lo0201Choice': '',
     'lo0202ViewedAt': '',
     'lo0202AgreedAt': '',
     'lo0203ViewedAt': '',
@@ -87,46 +156,33 @@ class SettingsStorage {
     'lo0203VerifiedAt': '',
     'lo0204ViewedAt': '',
     'lo0205ViewedAt': '',
-    // LO_01_05: easy passcode login (4 digits)
     'passcodeEnabled': false,
     'passcodeHash': '',
-    // LO_01_06 / LO_02_06: biometric login
     'biometricEnabled': false,
-    // 디버그/봇용: 생체인증 팝업을 우회하여 성공 처리
     'biometricDebugBypass': false,
-    // SC_01_01: permission consent + alarm range
     'sc0101Consent': false,
     'sc0101Low': 70,
     'sc0101High': 180,
-    // UM_01_01: sensor attachment guide
     'um0101ViewedAt': '',
-    // LO_01_07: sensor registration check viewed
     'lo0107ViewedAt': '',
-    // SC_01_04: QR scan screen viewed
     'sc0104ViewedAt': '',
-    // SC_01_05: manual SN entry
     'sc0105ManualSnAt': '',
     'sc0105ManualSnValue': '',
-    // 마지막 스캔 QR (로컬 저장, Serial Number 페이지 등에서 표시)
     'lastScannedQrRaw': '',
     'lastScannedQrFullSn': '',
     'lastScannedQrSerial': '',
     'lastScannedQrAt': '',
     'lastScannedQrRegistered': false,
-    // SC_01_06: warm-up countdown
     'sc0106WarmupStartAt': '',
     'sc0106WarmupEndsAt': '',
     'sc0106WarmupActive': false,
     'sc0106WarmupDoneAt': '',
-    // SC_01_03: NFC scan guide viewed
     'sc0103ViewedAt': '',
-    // SC_06_02: QR reconnect guide viewed
     'sc0602ViewedAt': '',
     'sc0602Reason': '',
-    // SC_07_01: data share settings/evidence
     'sc0701ViewedAt': '',
     'sc0701Enabled': true,
-    'sc0701Preset': 'Custom', // 1D/7D/30D/Custom
+    'sc0701Preset': 'Custom',
     'sc0701From': '',
     'sc0701To': '',
     'sc0701ItemSummary': true,
@@ -135,14 +191,12 @@ class SettingsStorage {
     'sc0701ItemUserProfile': false,
     'sc0701MethodEmail': true,
     'sc0701MethodSms': false,
-    'sc0701Format': 'PDF', // CSV/PDF
+    'sc0701Format': 'PDF',
     'sc0701Revocable': true,
     'sc0701LastSharedAt': '',
     'sc0701LastSharedOk': false,
     'sc0701LastNote': '',
-    // SC_07_01: render marker for screenshot verification
     'sc0701RenderedAt': '',
-    // SC_02_01/04_01/05_01/08_01 evidence markers
     'sc0201ViewedAt': '',
     'sc0201RenderedAt': '',
     'sc0301ViewedAt': '',
@@ -150,71 +204,93 @@ class SettingsStorage {
     'sc0501ViewedAt': '',
     'sc0601ViewedAt': '',
     'sc0801ViewedAt': '',
-
-    // GU_01_01~03: main glucose display evidence
     'gu0101RenderedAt': '',
     'gu0101Value': null,
-    'gu0102Trend': '', // upFast/up/flat/down/downFast
-    'gu0103Color': '', // low/in/high
-
-    // TG_01_01~02: trend chart portrait/landscape evidence
+    'gu0102Trend': '',
+    'gu0103Color': '',
     'tg0101ViewedAt': '',
     'tg0102ViewedAt': '',
-
-    // RP_01_01: report screen evidence
     'rp0101ViewedAt': '',
     'rp0101RenderedAt': '',
-
-    // PD_01_01: previous data view (ppt Slide 2)
     'pd0101ViewedAt': '',
     'pd0101RefreshedAt': '',
     'pd0101ItemsCount': 0,
-
-    // ME_01_01: event editor popup evidence
     'me0101ViewedAt': '',
     'me0101SavedAt': '',
     'me0101SavedType': '',
-    // ME_01_01: food shot attachment (Meal)
     'me0101FoodShotAt': '',
     'me0101FoodShotAsset': '',
-
-    // 알람/센서: 모든 설정 기본 로컬 저장. BE는 로컬 성공 후 업로드용, 실패 시 폴백 없음.
     'alarmsCache': <Map<String, dynamic>>[],
+    'alarmsCacheBySn': <String, dynamic>{},
     'alarmsCacheAt': '',
     'sensorsCache': <Map<String, dynamic>>[],
     'sensorsCacheAt': '',
   };
 
-  static Future<Map<String, dynamic>> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(storageKey);
+  static Future<Map<String, dynamic>> _readRaw(SharedPreferences prefs) async {
+    final String? raw = prefs.getString(storageKey);
     if (raw == null || raw.isEmpty) {
-      await prefs.setString(storageKey, jsonEncode(defaultSettings));
       return Map<String, dynamic>.from(defaultSettings);
     }
     try {
       final data = jsonDecode(raw) as Map<String, dynamic>;
-      // migration: fill missing keys
       final merged = {...defaultSettings, ...data};
-      // validation: basic guards
       if (merged['language'] is! String) merged['language'] = 'en';
       if (merged['region'] is! String) merged['region'] = 'KR';
       if (merged['autoRegion'] is! bool) merged['autoRegion'] = true;
       if (merged['glucoseUnit'] is! String) merged['glucoseUnit'] = 'mgdl';
       if (merged['timeFormat'] is! String) merged['timeFormat'] = '24h';
-      await prefs.setString(storageKey, jsonEncode(merged));
-      return Map<String, dynamic>.from(merged);
+      _stripAlarmKeysFromSettingsMap(merged);
+      return merged;
     } catch (_) {
-      await prefs.setString(storageKey, jsonEncode(defaultSettings));
       return Map<String, dynamic>.from(defaultSettings);
     }
   }
 
-  static Future<void> save(Map<String, dynamic> settings) async {
-    final prefs = await SharedPreferences.getInstance();
-    final merged = {...defaultSettings, ...settings};
-    await prefs.setString(storageKey, jsonEncode(merged));
+  static Future<void> _writeRaw(SharedPreferences prefs, Map<String, dynamic> data) async {
+    await prefs.setString(storageKey, jsonEncode(data));
+  }
+
+  static Future<Map<String, dynamic>> load() {
+    return _runSerialized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      final merged = await _readRaw(prefs);
+      return Map<String, dynamic>.from(merged);
+    });
+  }
+
+  static void _applyPatch(Map<String, dynamic> current, Map<String, dynamic> patch) {
+    for (final MapEntry<String, dynamic> entry in patch.entries) {
+      final String k = entry.key;
+      final dynamic v = entry.value;
+      if (k == 'sensorWarmupStartBySn' && v is Map) {
+        final Map<String, dynamic> existing = current[k] is Map
+            ? (current[k] as Map).map((key, val) => MapEntry(key.toString(), val))
+            : <String, dynamic>{};
+        for (final MapEntry<dynamic, dynamic> sn in v.entries) {
+          existing[sn.key.toString()] = sn.value;
+        }
+        current[k] = existing;
+      } else {
+        current[k] = v;
+      }
+    }
+  }
+
+  /// [patch] keys are merged into the latest on-disk settings (serialized, SN buckets deep-merged).
+  static Future<void> save(Map<String, dynamic> patch) {
+    // Avoid too much noise: only log keys relevant to the issues (alarms/language/notifications).
+    final List<String> keys = patch.keys.toList()..sort();
+    final bool shouldLog = keys.any((k) => k == 'alarmsCacheBySn' || k == 'language' || k == 'notificationsEnabled');
+    if (shouldLog) {
+      // Example: [SettingsStorage.save] keys=[language] patch=...
+      log('[SettingsStorage.save] keys=$keys', name: 'qa');
+    }
+    return _runSerialized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      final current = await _readRaw(prefs);
+      _applyPatch(current, _sanitizeSettingsPatch(patch));
+      await _writeRaw(prefs, current);
+    });
   }
 }
-
-

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart' show SystemNavigator;
@@ -13,6 +15,8 @@ import 'package:helpcare/presentation/report/cgms_report_screen.dart';
 import 'package:helpcare/presentation/dashboard/main_dashboard.dart';
 import 'package:helpcare/presentation/alerts/alerts_root.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
+import 'package:helpcare/core/utils/test_account_runner.dart';
+import 'package:helpcare/core/config/test_account.dart';
 
 import '../core/app_export.dart';
 import 'package:helpcare/widgets/gradient_icon.dart';
@@ -43,12 +47,23 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     HomeTab.index.addListener(_onTabChange);
+    LocaleBus.language.addListener(_onLocaleChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (TestAccount.autoRunQaOnHome) {
+        unawaited(TestAccountRunner.runAfterHome(context));
+      }
+    });
   }
 
   @override
   void dispose() {
     HomeTab.index.removeListener(_onTabChange);
+    LocaleBus.language.removeListener(_onLocaleChanged);
     super.dispose();
+  }
+
+  void _onLocaleChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onTabChange() {
@@ -140,32 +155,32 @@ class _HomeState extends State<Home> {
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.home_outlined, gradient: AppIconGradients.resolve(Icons.home_outlined))),
             activeIcon: GradientIcon(Icons.home_rounded, gradient: AppIconGradients.resolve(Icons.home_rounded)),
-            label: tr('nav_home'),
+            label: context.tr('nav_home'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.timeline, gradient: AppGradients.primary)),
             activeIcon: GradientIcon(Icons.timeline, gradient: AppGradients.primary),
-            label: tr('nav_trend'),
+            label: context.tr('nav_trend'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.description_outlined, gradient: AppIconGradients.resolve(Icons.description_outlined))),
             activeIcon: GradientIcon(Icons.description, gradient: AppIconGradients.resolve(Icons.description)),
-            label: tr('nav_report'),
+            label: context.tr('nav_report'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.sensors, gradient: AppGradients.primary)),
             activeIcon: GradientIcon(Icons.sensors, gradient: AppGradients.primary),
-            label: tr('nav_sensor'),
+            label: context.tr('nav_sensor'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.notifications_none, gradient: AppGradients.primary)),
             activeIcon: GradientIcon(Icons.notifications, gradient: AppGradients.primary),
-            label: tr('nav_alarm'),
+            label: context.tr('nav_alarm'),
           ),
           BottomNavigationBarItem(
             icon: Opacity(opacity: 0.4, child: GradientIcon(Icons.settings, gradient: AppIconGradients.resolve(Icons.settings))),
             activeIcon: GradientIcon(Icons.settings, gradient: AppIconGradients.resolve(Icons.settings)),
-            label: tr('nav_settings'),
+            label: context.tr('nav_settings'),
           ),
         ],
       ),

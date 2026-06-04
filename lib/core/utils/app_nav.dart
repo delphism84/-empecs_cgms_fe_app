@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// 앱 네비게이션 접근(봇/디버그용 포함)
 /// - main.dart/MaterialApp이 이 키를 사용해야 한다.
-/// - BleEmuServer가 이 키를 통해 라우팅을 강제로 전환할 수 있다.
+/// 앱 전역 Navigator 키.
 class AppNav {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   /// [OnlineMonitor] 등 오버레이 밖에서도 SnackBar(동기화 실패 등)를 띄우기 위한 전역 메신저.

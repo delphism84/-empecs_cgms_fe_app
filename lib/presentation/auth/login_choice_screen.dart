@@ -4,6 +4,7 @@ import 'package:helpcare/presentation/sign_in_one_screen/sign_in_one_screen.dart
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/presentation/auth/lo_01_02_04_sns_login_process_screens.dart';
 import 'package:helpcare/presentation/auth/lo_02_signup_flow_screens.dart';
+import 'package:helpcare/core/config/default_dev_account.dart';
 import 'package:helpcare/widgets/custom_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -29,15 +30,25 @@ class _LoginChoiceScreenState extends State<LoginChoiceScreen> {
     try {
       final now = DateTime.now().toUtc().toIso8601String();
       final s = await SettingsStorage.load();
-      s['lo0101ViewedAt'] = now;
       final bool autoOpen = s['lo0101AutoOpenEasyLoginSheet'] == true;
-      if (autoOpen) s['lo0101AutoOpenEasyLoginSheet'] = false; // one-shot
-      await SettingsStorage.save(s);
+      await SettingsStorage.save(<String, dynamic>{
+        'lo0101ViewedAt': now,
+        if (autoOpen) 'lo0101AutoOpenEasyLoginSheet': false,
+      });
 
       if (autoOpen) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           _showEasyLogin(context);
+        });
+      }
+
+      if (DefaultDevAccount.autoOpenExistingLogin) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SignInOneScreen()),
+          );
         });
       }
     } catch (_) {}

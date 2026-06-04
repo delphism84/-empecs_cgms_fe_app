@@ -1,16 +1,18 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/ingest_queue.dart';
 import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/local_db.dart';
-import 'package:helpcare/core/utils/ble_log_service.dart';
+import 'package:helpcare/core/utils/ble_install_guard.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/alarms_storage.dart';
 import 'package:helpcare/core/utils/qr_sn_parser.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/local_sync_service.dart';
 import 'package:helpcare/core/config/default_dev_account.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 /// SN별 `startAt` 서버 동기화 결과. 서버 등록 행이 있으면 서버가 항상 우선(삭제·비움 포함).
 class SensorStartSyncResult {
@@ -38,6 +40,154 @@ class SettingsService {
         {'_id': 'local:rate', 'type': 'rate', 'enabled': true, 'threshold': 2, 'sound': true, 'vibrate': true, 'repeatMin': 10},
         {'_id': 'local:system', 'type': 'system', 'enabled': true, 'threshold': -88, 'sound': true, 'vibrate': true, 'repeatMin': 10, 'quietFrom': '22:00', 'quietTo': '07:00'},
       ];
+
+  /// SN별 알람 메모리 캐시 — 저장/조회마다 전체 settings JSON I/O 방지.
+  static List<Map<String, dynamic>>? _memAlarms;
+  static String? _memAlarmsEqsn;
+
+  static int _qaAlarmSeq = 0;
+
+  static Future<void> _alarmOpChain = Future<void>.value();
+
+  static Future<T> _withAlarmLock<T>(Future<T> Function() fn) {
+    final Completer<T> completer = Completer<T>();
+    _alarmOpChain = _alarmOpChain.then((_) async {
+      try {
+        completer.complete(await fn());
+      } catch (e, st) {
+        completer.completeError(e, st);
+      }
+    });
+    return completer.future;
+  }
+
+  static void invalidateAlarmsMemCache() {
+    _memAlarms = null;
+    _memAlarmsEqsn = null;
+  }
+
+  static String _normalizeEqsn(String? raw) {
+    return (raw ?? '').trim().toUpperCase();
+  }
+
+  static Future<String> _currentEqsn() async {
+    final st = await SettingsStorage.load();
+    final String eqsn = _normalizeEqsn(st['eqsn'] as String?);
+    return eqsn.isEmpty ? 'DEFAULT' : eqsn;
+  }
+
+  static Map<String, dynamic> _readAlarmsBySn(Map<String, dynamic> bySnRaw) {
+    return bySnRaw.map((k, v) => MapEntry(k.toString(), v));
+  }
+
+  static List<Map<String, dynamic>> _castAlarmList(dynamic raw) {
+    if (raw is! List) return <Map<String, dynamic>>[];
+    return raw
+        .cast<Map>()
+        .map((e) => Map<String, dynamic>.from(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  static List<Map<String, dynamic>> _normalizeAlarmRows(
+    List<Map<String, dynamic>> rows, {
+    required String eqsn,
+  }) {
+    final List<Map<String, dynamic>> out = <Map<String, dynamic>>[];
+    final Set<String> seenTypes = <String>{};
+    for (final row in rows) {
+      final Map<String, dynamic> next = Map<String, dynamic>.from(row);
+      final String ty = (next['type'] ?? '').toString();
+      if (ty.isEmpty || seenTypes.contains(ty)) continue;
+      seenTypes.add(ty);
+      next['type'] = ty;
+      next['eqsn'] = eqsn;
+      normalizeAlarmMethodFields(next);
+      out.add(next);
+    }
+    return out;
+  }
+
+  Future<List<Map<String, dynamic>>> _loadCurrentSnAlarms({bool ensureSeed = true}) async {
+    await AlarmsStorage.ensureInitialized();
+    final String eqsn = await _currentEqsn();
+    final Map<String, dynamic> bySn = _readAlarmsBySn(await AlarmsStorage.loadBySn());
+    List<Map<String, dynamic>> list = _castAlarmList(bySn[eqsn]);
+    if (list.isEmpty) {
+      final List<Map<String, dynamic>> legacy = await AlarmsStorage.loadFlatCache();
+      if (legacy.isNotEmpty) {
+        list = _normalizeAlarmRows(legacy, eqsn: eqsn);
+      }
+    }
+    if (list.isEmpty && eqsn != 'DEFAULT') {
+      final List<Map<String, dynamic>> fromDefault = _castAlarmList(bySn['DEFAULT']);
+      if (fromDefault.isNotEmpty) {
+        list = _normalizeAlarmRows(fromDefault, eqsn: eqsn);
+      }
+    }
+    if (list.isNotEmpty && (bySn[eqsn] == null || _castAlarmList(bySn[eqsn]).isEmpty)) {
+      bySn[eqsn] = list;
+      await AlarmsStorage.save(bySn: bySn, currentSnList: list);
+    }
+    // 서버 알람은 downloadAlarmsForCurrentSn() / SN 변경 시에만 (listAlarms 경로에서 API 호출 금지).
+    if (list.isEmpty && ensureSeed) {
+      list = _normalizeAlarmRows(_defaultAlarms(), eqsn: eqsn);
+      bySn[eqsn] = list;
+      await AlarmsStorage.save(bySn: bySn, currentSnList: list);
+    }
+    for (final row in list) {
+      normalizeAlarmMethodFields(row);
+    }
+    return list;
+  }
+
+  Future<void> _saveCurrentSnAlarms(List<Map<String, dynamic>> rows) async {
+    await AlarmsStorage.ensureInitialized();
+    final String eqsn = await _currentEqsn();
+    final List<Map<String, dynamic>> normalized = _normalizeAlarmRows(rows, eqsn: eqsn);
+    final Map<String, dynamic> bySn = _readAlarmsBySn(await AlarmsStorage.loadBySn());
+    bySn[eqsn] = normalized;
+
+    int? thOf(String type) {
+      final Iterable<Map<String, dynamic>> r =
+          normalized.where((e) => (e['type'] ?? '').toString() == type);
+      if (r.isEmpty) return null;
+      final v = r.first['threshold'];
+      return v is num ? v.toInt() : null;
+    }
+
+    int? repeatOf(String type) {
+      final Iterable<Map<String, dynamic>> r =
+          normalized.where((e) => (e['type'] ?? '').toString() == type);
+      if (r.isEmpty) return null;
+      final v = r.first['repeatMin'];
+      return v is num ? v.toInt() : null;
+    }
+
+    final int? vLowTh = thOf('very_low');
+    final int? vLowRep = repeatOf('very_low');
+    final int? highTh = thOf('high');
+    final int? highRep = repeatOf('high');
+    final int? lowTh = thOf('low');
+    final int? lowRep = repeatOf('low');
+    final int? rateTh = thOf('rate');
+    final int? rateRep = repeatOf('rate');
+    final int? systemTh = thOf('system');
+    final int? systemRep = repeatOf('system');
+
+    log(
+      '[qa][SettingsService._saveCurrentSnAlarms] eqsn=$eqsn rows=${normalized.length} '
+      'very_low(th=$vLowTh, rep=$vLowRep), '
+      'high(th=$highTh, rep=$highRep), '
+      'low(th=$lowTh, rep=$lowRep), '
+      'rate(th=$rateTh, rep=$rateRep), '
+      'system(th=$systemTh, rep=$systemRep)',
+      name: 'qa',
+    );
+
+    await AlarmsStorage.save(bySn: bySn, currentSnList: normalized);
+    _memAlarms = normalized.map((e) => Map<String, dynamic>.from(e)).toList();
+    _memAlarmsEqsn = eqsn;
+  }
 
   // sensors — 로컬만 읽기. 저장 시 로컬 성공 후 BE 업로드, 실패 시 폴백 없음.
   Future<List<Map<String, dynamic>>> listSensors() async {
@@ -205,95 +355,169 @@ class SettingsService {
   }
 
   Future<List<Map<String, dynamic>>> listAlarms() async {
-    final st = await SettingsStorage.load();
-    List<Map<String, dynamic>> list = (st['alarmsCache'] is List)
-        ? (st['alarmsCache'] as List).cast<Map>().map((e) => Map<String, dynamic>.from(e.cast<String, dynamic>())).toList()
-        : <Map<String, dynamic>>[];
-    if (list.isEmpty) {
-      list = _defaultAlarms();
-      st['alarmsCache'] = list;
-      st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
-      await SettingsStorage.save(st);
+    final String eqsn = await _currentEqsn();
+    final bool memHit = _memAlarms != null && _memAlarmsEqsn == eqsn;
+    if (memHit) {
+      log('[qa][SettingsService.listAlarms] mem hit eqsn=$eqsn', name: 'qa');
+    } else {
+      log('[qa][SettingsService.listAlarms] disk load eqsn=$eqsn', name: 'qa');
     }
-    for (final row in list) {
-      normalizeAlarmMethodFields(row);
+    if (memHit) {
+      return _memAlarms!.map((e) => Map<String, dynamic>.from(e)).toList();
     }
-    return list;
+    final list = await _loadCurrentSnAlarms(ensureSeed: true);
+    _memAlarms = list.map((e) => Map<String, dynamic>.from(e)).toList();
+    _memAlarmsEqsn = eqsn;
+    return list.map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  Future<Map<String, dynamic>?> createAlarm(Map<String, dynamic> body) async {
-    final st = await SettingsStorage.load();
-    List<Map<String, dynamic>> list = (st['alarmsCache'] is List)
-        ? (st['alarmsCache'] as List).cast<Map>().map((e) => Map<String, dynamic>.from(e.cast<String, dynamic>())).toList()
-        : <Map<String, dynamic>>[];
-    if (list.isEmpty) list = _defaultAlarms();
-    final ty = (body['type'] ?? 'high').toString();
-    final localId = 'local:$ty';
-    final one = {...body, '_id': localId, 'type': ty};
-    list.add(one);
-    st['alarmsCache'] = list;
-    st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
-    await SettingsStorage.save(st);
-    try {
-      await _api.loadToken();
-      final r = await _api.post('/api/settings/alarms', body: body);
-      if (r.statusCode == 200 || r.statusCode == 201) {
-        final created = jsonDecode(r.body) as Map<String, dynamic>;
-        final sid = (created['_id'] ?? '').toString();
-        if (sid.isNotEmpty) {
-          final idx = list.indexWhere((e) => (e['_id'] ?? '').toString() == localId);
-          if (idx >= 0) {
-            list[idx] = {...list[idx], '_id': sid};
-            st['alarmsCache'] = list;
-            await SettingsStorage.save(st);
-          }
-        }
-        return created;
+  /// 알람 상세 저장 — type 기준 upsert (직렬화·부분 디스크 저장).
+  Future<Map<String, dynamic>?> upsertAlarmByType(String type, Map<String, dynamic> body) {
+    final int opId = ++_qaAlarmSeq;
+    final String ty = type.trim();
+    log(
+      '[qa][SettingsService.upsertAlarmByType#$opId] request type=$ty '
+      'threshold=${body['threshold']} repeatMin=${body['repeatMin']} enabled=${body['enabled']}',
+      name: 'qa',
+    );
+
+    return _withAlarmLock(() async {
+      if (ty.isEmpty) return null;
+      List<Map<String, dynamic>> list = await _loadCurrentSnAlarms(ensureSeed: true);
+      if (list.isEmpty) list = _defaultAlarms();
+      final String eqsn = await _currentEqsn();
+
+      final Map<String, dynamic>? b = list
+          .where((e) => (e['type'] ?? '').toString() == ty)
+          .isEmpty
+          ? null
+          : list.firstWhere((e) => (e['type'] ?? '').toString() == ty);
+      log(
+        '[qa][SettingsService.upsertAlarmByType#$opId] lock eqsn=$eqsn before(ty=$ty) '
+        'th=${b?['threshold']} rep=${b?['repeatMin']}',
+        name: 'qa',
+      );
+
+      final int idx = list.indexWhere((e) => (e['type'] ?? '').toString() == ty);
+      final Map<String, dynamic> one = {
+        ...body,
+        'type': ty,
+        'eqsn': eqsn,
+        '_id': (body['_id'] ?? (idx >= 0 ? list[idx]['_id'] : 'local:$ty')).toString(),
+      };
+      if (one['_id'].toString().isEmpty) one['_id'] = 'local:$ty';
+      if (idx >= 0) {
+        list[idx] = {...list[idx], ...one};
+      } else {
+        list.add(one);
       }
-    } catch (_) {}
-    return one;
+      await _saveCurrentSnAlarms(list);
+      final int outIdx = list.indexWhere((e) => (e['type'] ?? '').toString() == ty);
+      final Map<String, dynamic> after = outIdx >= 0 ? list[outIdx] : one;
+      log(
+        '[qa][SettingsService.upsertAlarmByType#$opId] done eqsn=$eqsn after(ty=$ty) '
+        'th=${after['threshold']} rep=${after['repeatMin']}',
+        name: 'qa',
+      );
+      return outIdx >= 0 ? list[outIdx] : one;
+    });
   }
 
-  Future<Map<String, dynamic>?> updateAlarm(String id, Map<String, dynamic> body) async {
-    final st = await SettingsStorage.load();
-    final list = (st['alarmsCache'] is List)
-        ? (st['alarmsCache'] as List).cast<Map>().map((e) => Map<String, dynamic>.from(e.cast<String, dynamic>())).toList()
-        : <Map<String, dynamic>>[];
-    final idx = list.indexWhere((e) => (e['_id'] ?? '').toString() == id);
-    if (idx < 0) return null;
-    list[idx] = {...list[idx], ...body};
-    st['alarmsCache'] = list;
-    st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
-    await SettingsStorage.save(st);
-    if (!id.startsWith('local:')) {
-      try {
-        await _api.loadToken();
-        final r = await _api.put('/api/settings/alarms/$id', body: body);
-        if (r.statusCode == 200) return jsonDecode(r.body) as Map<String, dynamic>;
-      } catch (_) {}
-    }
-    return list[idx];
+  Future<Map<String, dynamic>?> createAlarm(Map<String, dynamic> body) {
+    return _withAlarmLock(() async {
+      List<Map<String, dynamic>> list = await _loadCurrentSnAlarms(ensureSeed: true);
+      if (list.isEmpty) list = _defaultAlarms();
+      final ty = (body['type'] ?? 'high').toString();
+      final localId = 'local:$ty';
+      final String eqsn = await _currentEqsn();
+      final one = {...body, '_id': localId, 'type': ty, 'eqsn': eqsn};
+      list.add(one);
+      await _saveCurrentSnAlarms(list);
+      return one;
+    });
   }
 
-  Future<bool> deleteAlarm(String id) async {
-    final st = await SettingsStorage.load();
-    final list = (st['alarmsCache'] is List)
-        ? (st['alarmsCache'] as List).cast<Map>().map((e) => Map<String, dynamic>.from(e.cast<String, dynamic>())).toList()
-        : <Map<String, dynamic>>[];
-    final idx = list.indexWhere((e) => (e['_id'] ?? '').toString() == id);
-    if (idx < 0) return true;
-    list.removeAt(idx);
-    st['alarmsCache'] = list;
-    st['alarmsCacheAt'] = DateTime.now().toUtc().toIso8601String();
-    await SettingsStorage.save(st);
-    if (!id.startsWith('local:')) {
-      try {
-        await _api.loadToken();
-        final r = await _api.delete('/api/settings/alarms/$id');
-        if (r.statusCode == 200) return true;
-      } catch (_) {}
+  Future<Map<String, dynamic>?> updateAlarm(String id, Map<String, dynamic> body) {
+    return _withAlarmLock(() async {
+      final list = await _loadCurrentSnAlarms(ensureSeed: true);
+      final idx = list.indexWhere((e) => (e['_id'] ?? '').toString() == id);
+      if (idx < 0) return null;
+      list[idx] = {...list[idx], ...body};
+      await _saveCurrentSnAlarms(list);
+      return list[idx];
+    });
+  }
+
+  Future<bool> deleteAlarm(String id) {
+    return _withAlarmLock(() async {
+      final list = await _loadCurrentSnAlarms(ensureSeed: true);
+      final idx = list.indexWhere((e) => (e['_id'] ?? '').toString() == id);
+      if (idx < 0) return true;
+      list.removeAt(idx);
+      await _saveCurrentSnAlarms(list);
+      return true;
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> downloadAlarmsForCurrentSn() async {
+    final String eqsn = await _currentEqsn();
+    List<Map<String, dynamic>> downloaded = <Map<String, dynamic>>[];
+    await _api.loadToken();
+    final r = await _api.get('/api/settings/alarms', query: <String, dynamic>{'eqsn': eqsn});
+    if (r.statusCode != 200) {
+      throw Exception('download alarms failed (${r.statusCode})');
     }
-    return true;
+    final dynamic raw = jsonDecode(r.body);
+    if (raw is List) {
+      downloaded = raw
+          .cast<Map>()
+          .map((e) => Map<String, dynamic>.from(e.cast<String, dynamic>()))
+          .where((e) {
+            final String rowEqsn = _normalizeEqsn(e['eqsn'] as String?);
+            return rowEqsn.isEmpty || rowEqsn == eqsn;
+          })
+          .toList();
+    }
+    if (downloaded.isEmpty) {
+      downloaded = _defaultAlarms();
+    }
+    invalidateAlarmsMemCache();
+    await _saveCurrentSnAlarms(downloaded);
+    return listAlarms();
+  }
+
+  Future<bool> uploadAlarmsForCurrentSn() async {
+    final String eqsn = await _currentEqsn();
+    final List<Map<String, dynamic>> list = await _loadCurrentSnAlarms(ensureSeed: true);
+    await _api.loadToken();
+    bool allOk = true;
+    for (final row in list) {
+      final String id = (row['_id'] ?? '').toString();
+      final Map<String, dynamic> body = {
+        'type': (row['type'] ?? '').toString(),
+        'enabled': row['enabled'] == true,
+        'threshold': row['threshold'],
+        'quietFrom': row['quietFrom'],
+        'quietTo': row['quietTo'],
+        'sound': row['sound'],
+        'vibrate': row['vibrate'],
+        'repeatMin': row['repeatMin'],
+        if (row['overrideDnd'] != null) 'overrideDnd': row['overrideDnd'],
+        'eqsn': eqsn,
+      };
+      try {
+        if (id.isNotEmpty && !id.startsWith('local:')) {
+          final r = await _api.put('/api/settings/alarms/$id', body: body);
+          allOk = allOk && r.statusCode == 200;
+        } else {
+          final r = await _api.post('/api/settings/alarms', body: body);
+          allOk = allOk && (r.statusCode == 200 || r.statusCode == 201);
+        }
+      } catch (_) {
+        allOk = false;
+      }
+    }
+    return allOk;
   }
 
   // eq list (device registry) — BE 전용(조회/등록). 로컬 캐시 없음.
@@ -461,28 +685,33 @@ class SettingsService {
   }
 
   Future<Map<String, dynamic>?> updateAppSetting(Map<String, dynamic> body) async {
-    final st = await SettingsStorage.load();
+    final Map<String, dynamic> patch = <String, dynamic>{};
     if (body['unit'] != null) {
       final u = body['unit'].toString();
-      st['glucoseUnit'] = (u == 'mmol/L' || u == 'mmol') ? 'mmol' : 'mgdl';
+      patch['glucoseUnit'] = (u == 'mmol/L' || u == 'mmol') ? 'mmol' : 'mgdl';
     }
-    if (body['notifications'] != null) st['notificationsEnabled'] = body['notifications'] == true;
-    if (body['darkMode'] != null) st['darkMode'] = body['darkMode'] == true;
-    if (body['timeFormat'] != null) st['timeFormat'] = body['timeFormat'].toString();
-    if (body['alarmsMuteAll'] != null) st['alarmsMuteAll'] = body['alarmsMuteAll'] == true;
+    if (body['notifications'] != null) patch['notificationsEnabled'] = body['notifications'] == true;
+    if (body['darkMode'] != null) patch['darkMode'] = body['darkMode'] == true;
+    if (body['timeFormat'] != null) patch['timeFormat'] = body['timeFormat'].toString();
+    if (body['alarmsMuteAll'] != null) patch['alarmsMuteAll'] = body['alarmsMuteAll'] == true;
     final prefs = body['preferences'] as Map<String, dynamic>?;
     if (prefs != null) {
-      if (prefs['language'] != null) st['language'] = prefs['language'].toString();
-      if (prefs['region'] != null) st['region'] = prefs['region'].toString();
-      if (prefs['autoRegion'] != null) st['autoRegion'] = prefs['autoRegion'] == true;
-      if (prefs['guestMode'] != null) st['guestMode'] = prefs['guestMode'] == true;
-      if (prefs['timeFormat'] != null) st['timeFormat'] = prefs['timeFormat'].toString();
-      if (prefs['accHighContrast'] != null) st['accHighContrast'] = prefs['accHighContrast'] == true;
-      if (prefs['accLargerFont'] != null) st['accLargerFont'] = prefs['accLargerFont'] == true;
-      if (prefs['accColorblind'] != null) st['accColorblind'] = prefs['accColorblind'] == true;
-      if (prefs['notificationsEnabled'] != null) st['notificationsEnabled'] = prefs['notificationsEnabled'] == true;
+      if (prefs['language'] != null) patch['language'] = prefs['language'].toString();
+      if (prefs['region'] != null) patch['region'] = prefs['region'].toString();
+      if (prefs['autoRegion'] != null) patch['autoRegion'] = prefs['autoRegion'] == true;
+      if (prefs['guestMode'] != null) patch['guestMode'] = prefs['guestMode'] == true;
+      if (prefs['timeFormat'] != null) patch['timeFormat'] = prefs['timeFormat'].toString();
+      if (prefs['accHighContrast'] != null) patch['accHighContrast'] = prefs['accHighContrast'] == true;
+      if (prefs['accLargerFont'] != null) patch['accLargerFont'] = prefs['accLargerFont'] == true;
+      if (prefs['accColorblind'] != null) patch['accColorblind'] = prefs['accColorblind'] == true;
+      if (prefs['notificationsEnabled'] != null) {
+        patch['notificationsEnabled'] = prefs['notificationsEnabled'] == true;
+      }
     }
-    await SettingsStorage.save(st);
+    if (patch.isNotEmpty) {
+      await SettingsStorage.save(patch);
+    }
+    final st = await SettingsStorage.load();
     try {
       await _api.loadToken();
       final r = await _api.put('/api/settings/app', body: body);
@@ -547,13 +776,10 @@ class SettingsService {
       IngestQueueService().clear();
     } catch (_) {}
     try {
-      await BleLogService().clear();
-    } catch (_) {}
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('cgms.last_mac');
+      await BleInstallGuard.wipePersistentBleState();
       final s = await SettingsStorage.load();
       s['lastTrid'] = 0;
+      s['lastServerUploadedTrid'] = 0;
       await SettingsStorage.save(s);
     } catch (_) {}
     // restart background sync

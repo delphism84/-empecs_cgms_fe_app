@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:http/http.dart' as http;
+import 'package:helpcare/core/utils/api_sync_log.dart';
 import 'package:helpcare/core/utils/debug_config.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
@@ -63,48 +64,68 @@ class ApiClient {
   }
 
   Future<http.Response> put(String path, {Map<String, dynamic>? body, bool withGlobalLoading = true}) async {
-    await _ensureBaseLoaded();
-    final uri = Uri.parse('$base$path');
-    if (withGlobalLoading) GlobalLoading.begin();
-    try {
-      return await http
-          .put(uri, headers: _headers(), body: jsonEncode(body ?? {}))
-          .timeout(timeout);
-    } finally {
-      if (withGlobalLoading) GlobalLoading.end();
-    }
+    return _request('PUT', path, withGlobalLoading: withGlobalLoading, call: () async {
+      final uri = Uri.parse('$base$path');
+      final String payload = jsonEncode(body ?? {});
+      return http.put(uri, headers: _headers(), body: payload).timeout(timeout);
+    }, bodyBytes: body == null ? 0 : jsonEncode(body ?? {}).length);
   }
 
   Future<http.Response> post(String path, {Map<String, dynamic>? body, bool withGlobalLoading = true}) async {
-    await _ensureBaseLoaded();
-    final uri = Uri.parse('$base$path');
-    if (withGlobalLoading) GlobalLoading.begin();
-    try {
-      return await http
-          .post(uri, headers: _headers(), body: jsonEncode(body ?? {}))
-          .timeout(timeout);
-    } finally {
-      if (withGlobalLoading) GlobalLoading.end();
-    }
+    return _request('POST', path, withGlobalLoading: withGlobalLoading, call: () async {
+      final uri = Uri.parse('$base$path');
+      final String payload = jsonEncode(body ?? {});
+      return http.post(uri, headers: _headers(), body: payload).timeout(timeout);
+    }, bodyBytes: body == null ? 0 : jsonEncode(body ?? {}).length);
   }
 
   Future<http.Response> get(String path, {Map<String, dynamic>? query, bool withGlobalLoading = true}) async {
-    await _ensureBaseLoaded();
-    final uri = Uri.parse('$base$path').replace(queryParameters: query?.map((k, v) => MapEntry(k, '$v')));
-    if (withGlobalLoading) GlobalLoading.begin();
-    try {
-      return await http.get(uri, headers: _headers(jsonBody: false)).timeout(timeout);
-    } finally {
-      if (withGlobalLoading) GlobalLoading.end();
-    }
+    return _request('GET', path, withGlobalLoading: withGlobalLoading, call: () async {
+      final uri = Uri.parse('$base$path').replace(queryParameters: query?.map((k, v) => MapEntry(k, '$v')));
+      return http.get(uri, headers: _headers(jsonBody: false)).timeout(timeout);
+    });
   }
 
   Future<http.Response> delete(String path, {bool withGlobalLoading = true}) async {
+    return _request('DELETE', path, withGlobalLoading: withGlobalLoading, call: () async {
+      final uri = Uri.parse('$base$path');
+      return http.delete(uri, headers: _headers(jsonBody: false)).timeout(timeout);
+    });
+  }
+
+  Future<http.Response> _request(
+    String method,
+    String path, {
+    required Future<http.Response> Function() call,
+    bool withGlobalLoading = true,
+    int? bodyBytes,
+  }) async {
     await _ensureBaseLoaded();
-    final uri = Uri.parse('$base$path');
     if (withGlobalLoading) GlobalLoading.begin();
+    final Stopwatch sw = Stopwatch()..start();
     try {
-      return await http.delete(uri, headers: _headers(jsonBody: false)).timeout(timeout);
+      final http.Response r = await call();
+      sw.stop();
+      apiSyncLogHttp(
+        method: method,
+        path: path,
+        elapsedMs: sw.elapsedMilliseconds,
+        statusCode: r.statusCode,
+        globalLoading: withGlobalLoading,
+        bodyBytes: bodyBytes ?? r.body.length,
+      );
+      return r;
+    } catch (e) {
+      sw.stop();
+      apiSyncLogHttp(
+        method: method,
+        path: path,
+        elapsedMs: sw.elapsedMilliseconds,
+        error: e,
+        globalLoading: withGlobalLoading,
+        bodyBytes: bodyBytes,
+      );
+      rethrow;
     } finally {
       if (withGlobalLoading) GlobalLoading.end();
     }

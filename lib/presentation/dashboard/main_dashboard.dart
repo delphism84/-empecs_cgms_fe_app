@@ -12,6 +12,7 @@ import 'package:helpcare/core/utils/ingest_queue.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/sensor_usage.dart';
+import 'package:helpcare/core/utils/background_sync_gate.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
@@ -64,6 +65,10 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   /// IndexedStack 비가시 탭에서도 didChangeDependencies가 도므로, 홈(0번)일 때만 무거운 갱신.
   Timer? _guEvidenceDebounce;
   bool _seedInFlight = false;
+  bool _seedPending = false;
+  Timer? _seedDebounce;
+  /// glucosePoint로 최근 반영된 시각 — bulk count==1 시 DB seed 생략 판단용
+  DateTime? _lastLiveGlucosePointAt;
 
   @override
   void initState() {
@@ -71,12 +76,16 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     WidgetsBinding.instance.addObserver(this);
     _toastController = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000));
     _lastUpdateLine = 'dash_last_update_none'.tr();
-    _loadSensorInfo();
     _loadUnit();
     AppSettingsBus.changed.addListener(_onSettingsChanged);
     HomeTab.index.addListener(_onHomeTabIndex);
     BleService().phase.addListener(_onBlePhase);
-    _seedPoints();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      BackgroundSyncGate.runWhenUnblocked(() async {
+        await _loadSensorInfo();
+        await _seedPoints();
+      }, dedupeKey: 'dashboardSeed');
+    });
     _syncSub = DataSyncBus().stream.listen(_onDataSync);
     _toastSub = DebugToastBus().stream.listen(_onDebugToast);
     // 자동 시뮬레이션은 게이트가 on일 때만 시작
@@ -91,15 +100,17 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     super.didChangeDependencies();
     // IndexedStack: 다른 탭 선택 시에도 호출됨 → 홈 탭일 때만 서버/저장소 재조회
     if (HomeTab.index.value == 0) {
-      _loadSensorInfo();
+      BackgroundSyncGate.runWhenUnblocked(_loadSensorInfo);
     }
   }
 
   void _onHomeTabIndex() {
     if (!mounted) return;
     if (HomeTab.index.value == 0) {
-      unawaited(_loadSensorInfo());
-      unawaited(_seedPoints());
+      BackgroundSyncGate.runWhenUnblocked(() async {
+        await _loadSensorInfo();
+        await _seedPoints();
+      }, dedupeKey: 'dashboardSeed');
     }
   }
 
@@ -107,6 +118,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _guEvidenceDebounce?.cancel();
+    _seedDebounce?.cancel();
     HomeTab.index.removeListener(_onHomeTabIndex);
     _nextToastTimer?.cancel();
     _toastController.dispose();
@@ -122,7 +134,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     if (state == AppLifecycleState.resumed) {
       // 홈 탭이 아닐 때는 비가시 위젯 — DB·setState 생략으로 복귀 시 부하 감소
       if (HomeTab.index.value == 0) {
-        unawaited(_seedPoints());
+        BackgroundSyncGate.runWhenUnblocked(_seedPoints, dedupeKey: 'dashboardSeed');
       }
     }
   }
@@ -239,7 +251,6 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
       }
       _simulated = next;
       IngestQueueService().enqueueGlucose(now, next);
-      DataSyncBus().emitGlucosePoint(time: now, value: next.toDouble());
       _chartRefresh.value++; // 차트 새로고침 트리거
     } catch (_) {}
     setState(() {
@@ -257,8 +268,18 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     });
   }
 
+  void _scheduleSeedPoints() {
+    _seedDebounce?.cancel();
+    _seedDebounce = Timer(const Duration(milliseconds: 400), () {
+      unawaited(_seedPoints());
+    });
+  }
+
   Future<void> _seedPoints() async {
-    if (_seedInFlight) return;
+    if (_seedInFlight) {
+      _seedPending = true;
+      return;
+    }
     _seedInFlight = true;
     try {
       final now = DateTime.now();
@@ -276,19 +297,28 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
         final loose = await GlucoseLocalRepo().range(from: from, to: to, limit: 2000, eqsn: null);
         if (loose.isNotEmpty) rows = loose;
       }
-      _series.clear();
+      final List<Map<String, dynamic>> built = <Map<String, dynamic>>[];
       for (final r in rows) {
         final int ms = (r['time_ms'] as int?) ?? 0;
         final DateTime t = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal();
         final double v = ((r['value'] as num?) ?? 0).toDouble();
-        _series.add({'time': t, 'value': v});
+        built.add({'time': t, 'value': v});
       }
-      _series.sort((a, b) => (a['time'] as DateTime).compareTo(b['time'] as DateTime));
+      built.sort((a, b) => (a['time'] as DateTime).compareTo(b['time'] as DateTime));
+      _series
+        ..clear()
+        ..addAll(built);
       _recompute();
+      await BackgroundSyncGate.yieldToUi();
       if (mounted) setState(() {});
-    } catch (_) {}
-    finally {
+    } catch (_) {
+      // BUG-B: clear 후 예외 시에도 기존 시리즈 유지(별도 clear 없음)
+    } finally {
       _seedInFlight = false;
+      if (_seedPending) {
+        _seedPending = false;
+        unawaited(_seedPoints());
+      }
     }
   }
 
@@ -296,7 +326,9 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     try {
       final ss = SettingsService();
       try {
-        await SensorUsage.syncStartAtWithServer();
+        if (!BackgroundSyncGate.blocksHeavySync) {
+          await SensorUsage.syncStartAtWithServer();
+        }
         final Map<String, dynamic> s = await SettingsStorage.load();
         if (SettingsService.stripStaleSensorStart(s)) {
           await SettingsStorage.save(s);
@@ -351,12 +383,16 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
         if (mounted) setState(() {});
         return;
       }
-      // RACP 등 silent 배치는 DB에만 쌓일 수 있음 → 로컬에서 시리즈 재로드
-      unawaited(_seedPoints());
+      // count==1: 최근 10초 내 live point가 있으면 생략(온라인 sync). 없으면 seed(RACP 1건 등).
+      final bool recentLivePoint = _lastLiveGlucosePointAt != null &&
+          DateTime.now().difference(_lastLiveGlucosePointAt!) <= const Duration(seconds: 10);
+      final bool needsFullSeed = c == null || c > 1 || (c == 1 && !recentLivePoint);
+      if (needsFullSeed) {
+        _scheduleSeedPoints();
+      }
       if (HomeTab.index.value == 0) {
         try { _loadSensorInfo(); } catch (_) {}
       }
-      if (mounted) setState(() {});
       return;
     }
     // 기타 동기화 이벤트(이벤트 생성/삭제 등)에도 시작일을 재조회해 days-left 반영
@@ -371,13 +407,13 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     final DateTime t = (ev.payload['time'] as DateTime);
     final double v = ((ev.payload['value'] as num?) ?? double.nan).toDouble();
     if (v.isNaN) return;
-    _series.add({'time': t, 'value': v});
-    final DateTime cutoff = DateTime.now().subtract(const Duration(hours: 24));
-    _series.removeWhere((e) => (e['time'] as DateTime).isBefore(cutoff));
-    _recompute();
     if (!mounted) return;
+    _lastLiveGlucosePointAt = DateTime.now();
     setState(() {
-      _lastUpdateLine = _formatLastUpdateLine(t);
+      _series.add({'time': t, 'value': v});
+      final DateTime cutoff = DateTime.now().subtract(const Duration(hours: 24));
+      _series.removeWhere((e) => (e['time'] as DateTime).isBefore(cutoff));
+      _recompute();
     });
     // 실제 notify 이벤트용 토스트 애니메이션: 완료 후 자동 숨김, 재스케줄 없음
     _toastController.forward(from: 0).whenComplete(() {

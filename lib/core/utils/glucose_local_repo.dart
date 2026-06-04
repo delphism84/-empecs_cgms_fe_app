@@ -227,6 +227,33 @@ class GlucoseLocalRepo {
     return rows.map((r) => (r['d'] as String?) ?? '').where((s) => s.isNotEmpty).toList();
   }
 
+  /// [afterTrid] 초과 trid 행 — 서버 미전송 백로그 복구용 (시간 오름차순).
+  Future<List<Map<String, dynamic>>> rowsAfterTrid({
+    required int afterTrid,
+    int limit = 500,
+    String? eqsn,
+    String? userId,
+  }) async {
+    final db = await LocalDb().db;
+    userId ??= await _inferUserId();
+    final String uid = userId ?? '';
+    final bool strict = _strictUserScope(uid);
+    final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
+    final List<Map<String, dynamic>> rows = await db.query(
+      'glucose_points',
+      columns: ['time_ms', 'value', 'trid'],
+      where: (eqsn != null && eqsn.isNotEmpty)
+          ? 'trid IS NOT NULL AND trid > ? AND eqsn = ? AND $userClause'
+          : 'trid IS NOT NULL AND trid > ? AND $userClause',
+      whereArgs: (eqsn != null && eqsn.isNotEmpty)
+          ? [afterTrid, eqsn, uid]
+          : [afterTrid, uid],
+      orderBy: 'trid ASC',
+      limit: limit,
+    );
+    return rows;
+  }
+
   /// 날짜별 로컬 포인트 요약(내림차순): day, count, min/max time_ms
   Future<List<Map<String, dynamic>>> listDayCountsDesc() async {
     final db = await LocalDb().db;

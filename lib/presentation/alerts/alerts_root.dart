@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:developer';
 import 'package:helpcare/core/app_export.dart';
 import 'package:helpcare/widgets/debug_badge.dart';
 // import removed: report widgets not used in custom app fields
@@ -32,23 +33,57 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
     _load();
   }
 
-  Future<void> _load() async {
-    setState(() => _loading = true);
+  Future<void> _load({bool silent = false}) async {
+    if (!silent && mounted) setState(() => _loading = true);
     List<Map<String, dynamic>> list = <Map<String, dynamic>>[];
     try {
       list = await _svc.listAlarms();
     } catch (_) {
       list = <Map<String, dynamic>>[];
     }
-    if (list.isEmpty) {
-      // local fallback
-      try {
-        final st = await SettingsStorage.load();
-        final dynamic v = st['alarmsCache'];
-        if (v is List) {
-          list = v.cast<Map>().map((e) => e.cast<String, dynamic>()).toList();
+
+    void logSummary() {
+      int? thOf(String type) {
+        try {
+          final row = list.firstWhere((e) => (e['type'] ?? '').toString() == type);
+          final v = row['threshold'];
+          return v is num ? v.toInt() : null;
+        } catch (_) {
+          return null;
         }
-      } catch (_) {}
+      }
+
+      int? repOf(String type) {
+        try {
+          final row = list.firstWhere((e) => (e['type'] ?? '').toString() == type);
+          final v = row['repeatMin'];
+          return v is num ? v.toInt() : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      final int? veryLowTh = thOf('very_low');
+      final int? veryLowRep = repOf('very_low');
+      final int? highTh = thOf('high');
+      final int? highRep = repOf('high');
+      final int? lowTh = thOf('low');
+      final int? lowRep = repOf('low');
+      final int? rateTh = thOf('rate');
+      final int? rateRep = repOf('rate');
+      final int? systemTh = thOf('system');
+      final int? systemRep = repOf('system');
+
+      log(
+        '[qa][AlertsRootPage._load] silent=$silent '
+        'very_low(th=$veryLowTh, rep=$veryLowRep), '
+        'high(th=$highTh, rep=$highRep), '
+        'low(th=$lowTh, rep=$lowRep), '
+        'rate(th=$rateTh, rep=$rateRep), '
+        'system(th=$systemTh, rep=$systemRep) '
+        'rows=${list.length}',
+        name: 'qa',
+      );
     }
     bool notifOn = true;
     try {
@@ -60,17 +95,17 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
     setState(() {
       _alarms = list;
       _notificationsEnabled = notifOn;
-      _loading = false;
+      if (!silent) _loading = false;
     });
+
+    logSummary();
   }
 
   Future<void> _setNotificationsEnabled(bool enabled) async {
     setState(() => _notificationsEnabled = enabled);
     NotificationService().setEnabled(enabled);
     try {
-      final st = await SettingsStorage.load();
-      st['notificationsEnabled'] = enabled;
-      await SettingsStorage.save(st);
+      await SettingsStorage.save(<String, dynamic>{'notificationsEnabled': enabled});
     } catch (_) {}
     // best-effort sync
     try {
@@ -81,9 +116,41 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
     } catch (_) {}
   }
 
+  Future<void> _downloadNow() async {
+    try {
+      await _svc.downloadAlarmsForCurrentSn();
+      await _load(silent: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('alerts_download_success'.tr())),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('alerts_download_failed'.tr(namedArgs: {'e': '$e'}))),
+      );
+    }
+  }
+
+  Future<void> _uploadNow() async {
+    bool ok = false;
+    try {
+      ok = await _svc.uploadAlarmsForCurrentSn();
+    } catch (_) {
+      ok = false;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? 'alerts_upload_success'.tr() : 'alerts_upload_failed'.tr()),
+      ),
+    );
+  }
+
   Map<String, dynamic> _alarmForType(String type) {
     final idx = _alarms.indexWhere((a) => (a['type'] ?? '').toString() == type);
     if (idx >= 0) return _alarms[idx];
+    log('[qa][AlertsRootPage._alarmForType] seed default type=$type', name: 'qa');
     // seed local-only default (will be saved to cache on SAVE)
     return {
       '_id': 'local:$type',
@@ -171,14 +238,39 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
                 ),
                 Text('alerts_new_section'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _downloadNow,
+                        icon: const Icon(Icons.download),
+                        label: Text('alerts_manual_download'.tr()),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _uploadNow,
+                        icon: const Icon(Icons.upload),
+                        label: Text('alerts_manual_upload'.tr()),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 _alertItem(
                   context,
                   icon: Icons.priority_high,
                   title: 'alerts_title_very_low'.tr(),
                   subtitle: _subtitleFor('very_low', _alarmForType('very_low')),
                   reqId: 'AR_01_02',
-                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'very_low', title: 'alerts_title_very_low'.tr(), reqId: 'AR_01_02'),
-                  onReturn: _load,
+                  pageBuilder: (_) => AlarmTypeDetailPage(
+                    type: 'very_low',
+                    title: 'alerts_title_very_low'.tr(),
+                    reqId: 'AR_01_02',
+                    initialAlarm: _alarmForType('very_low'),
+                  ),
+                  onSaved: () => _load(silent: true),
                 ),
                 _alertItem(
                   context,
@@ -186,8 +278,13 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
                   title: 'alerts_title_high'.tr(),
                   subtitle: _subtitleFor('high', _alarmForType('high')),
                   reqId: 'AR_01_03',
-                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'high', title: 'alerts_title_high'.tr(), reqId: 'AR_01_03'),
-                  onReturn: _load,
+                  pageBuilder: (_) => AlarmTypeDetailPage(
+                    type: 'high',
+                    title: 'alerts_title_high'.tr(),
+                    reqId: 'AR_01_03',
+                    initialAlarm: _alarmForType('high'),
+                  ),
+                  onSaved: () => _load(silent: true),
                 ),
                 _alertItem(
                   context,
@@ -195,8 +292,13 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
                   title: 'alerts_title_low'.tr(),
                   subtitle: _subtitleFor('low', _alarmForType('low')),
                   reqId: 'AR_01_04',
-                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'low', title: 'alerts_title_low'.tr(), reqId: 'AR_01_04'),
-                  onReturn: _load,
+                  pageBuilder: (_) => AlarmTypeDetailPage(
+                    type: 'low',
+                    title: 'alerts_title_low'.tr(),
+                    reqId: 'AR_01_04',
+                    initialAlarm: _alarmForType('low'),
+                  ),
+                  onSaved: () => _load(silent: true),
                 ),
                 _alertItem(
                   context,
@@ -204,8 +306,13 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
                   title: 'alerts_title_rapid'.tr(),
                   subtitle: _subtitleFor('rate', _alarmForType('rate')),
                   reqId: 'AR_01_05',
-                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'rate', title: 'alerts_title_rapid'.tr(), reqId: 'AR_01_05'),
-                  onReturn: _load,
+                  pageBuilder: (_) => AlarmTypeDetailPage(
+                    type: 'rate',
+                    title: 'alerts_title_rapid'.tr(),
+                    reqId: 'AR_01_05',
+                    initialAlarm: _alarmForType('rate'),
+                  ),
+                  onSaved: () => _load(silent: true),
                 ),
                 _alertItem(
                   context,
@@ -213,8 +320,13 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
                   title: 'alerts_title_signal_loss'.tr(),
                   subtitle: _subtitleFor('system', _alarmForType('system')),
                   reqId: 'AR_01_06',
-                  pageBuilder: (_) => AlarmTypeDetailPage(type: 'system', title: 'alerts_title_signal_loss'.tr(), reqId: 'AR_01_06'),
-                  onReturn: _load,
+                  pageBuilder: (_) => AlarmTypeDetailPage(
+                    type: 'system',
+                    title: 'alerts_title_signal_loss'.tr(),
+                    reqId: 'AR_01_06',
+                    initialAlarm: _alarmForType('system'),
+                  ),
+                  onSaved: () => _load(silent: true),
                 ),
                 _alertItem(
                   context,
@@ -223,7 +335,6 @@ class _AlertsRootPageState extends State<AlertsRootPage> {
                   subtitle: 'alerts_lock_subtitle'.tr(),
                   reqId: 'AR_01_08',
                   pageBuilder: (_) => const Ar0108LockScreenScreen(),
-                  onReturn: _load,
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -695,7 +806,7 @@ Widget _alertItem(
   required String subtitle,
   required String reqId,
   required WidgetBuilder pageBuilder,
-  Future<void> Function()? onReturn,
+  Future<void> Function()? onSaved,
 }) {
   final bool isDark = Theme.of(context).brightness == Brightness.dark;
   return DebugBadge(
@@ -705,8 +816,10 @@ Widget _alertItem(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () async {
-          await Navigator.of(context).push(MaterialPageRoute(builder: pageBuilder));
-          if (onReturn != null) await onReturn();
+          final bool? saved = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(builder: pageBuilder),
+          );
+          if (saved == true && onSaved != null) await onSaved();
         },
         child: Container(
           margin: const EdgeInsets.only(bottom: 10),

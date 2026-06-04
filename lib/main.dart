@@ -48,11 +48,12 @@ import 'core/utils/online_monitor.dart';
 import 'core/utils/local_db.dart';
 import 'core/utils/settings_storage.dart';
 import 'core/utils/ble_service.dart';
-import 'core/utils/ble_emu_server.dart';
-import 'core/utils/emul_ble_recv_service.dart';
+import 'core/utils/ble_install_guard.dart';
 import 'core/utils/alert_engine.dart';
 import 'core/utils/sensor_warmup_service.dart';
+import 'core/utils/ingest_queue.dart';
 import 'core/utils/focus_bus.dart';
+import 'core/utils/app_locale.dart';
 import 'core/utils/app_nav.dart';
 import 'core/config/social_auth_config.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
@@ -73,22 +74,24 @@ Future<void> main() async {
   if (kIsWeb) {
     databaseFactory = databaseFactoryFfiWeb;
   }
-  // QA 자동화 서버는 가장 먼저 시도해서 초기화 병목의 영향을 받지 않도록 한다.
-  await BleEmuServer.maybeStart();
+  // Reinstall/backup-restore may leave stale BLE auto-pair prefs — wipe before BLE init.
+  try {
+    await BleInstallGuard.ensureSafeStartup();
+  } catch (_) {}
   await EasyLocalization.ensureInitialized();
-  await XlsxLangAssetLoader.preload('assets/lang/lang.xlsx');
+  await XlsxLangAssetLoader.preload('tools/lang-sheet/lang.import.csv');
   final Locale startLocale = await _appStartLocale();
   await NotificationService().initialize();
   await AlertEngine().start();
   await SensorWarmupService.init();
+  await IngestQueueService.warmCache();
+  IngestQueueService().startBackgroundUpload();
   // 로컬 DB 초기화
   await LocalDb().db;
   // 서버 pull 동기화는 비활성 (SN 변경 시에만 수동 fetch)
   try { LocalSyncService().stop(); } catch (_) {}
   // 10초마다 온라인 상태 모니터링 및 자동 push
   OnlineMonitor().start();
-  // Dev gate: emulate BLE receive every 10 seconds when enabled.
-  await EmulBleRecvService().start();
   // Kakao SDK 초기화 (키가 설정된 경우에만)
   if (SocialAuthConfig.hasKakaoKey) {
     kakao.KakaoSdk.init(nativeAppKey: SocialAuthConfig.kakaoNativeAppKey);
@@ -104,6 +107,7 @@ Future<void> main() async {
       assetLoader: const XlsxLangAssetLoader(),
       fallbackLocale: const Locale('en'),
       startLocale: startLocale,
+      // Persist selected locale so restart keeps the chosen language.
       saveLocale: false,
       child: const MyApp(),
     ),
@@ -134,10 +138,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _init() async {
-    Map<String, dynamic>? st;
     try {
       final loaded = await SettingsStorage.load();
-      st = loaded;
       if (!mounted) return;
       setState(() {
         _isLocal = (loaded['guestMode'] == true);
@@ -149,26 +151,12 @@ class _MyAppState extends State<MyApp> {
       });
     } catch (_) {}
     try {
-      // 부팅시 BLE 상태 정리
+      // GATT 정리. 페어링 MAC은 유지(재설치 감지 시 guard에서 이미 삭제됨).
       await BleService().disconnect(clearPersistentPairing: false);
     } catch (_) {}
     try {
-      if (!mounted) return;
-      final String lang = (st?['language'] ?? 'en').toString().toLowerCase();
-      await context.setLocale(lang == 'ko' ? const Locale('ko') : const Locale('en'));
+      await AppLocale.applyFromStorage();
     } catch (_) {}
-    // QA 자동화를 위해 앱 프레임 진입 후에도 EMU 서버 시작을 재시도한다.
-    // 일부 기기에서 main() 초기 부팅 타이밍에 바인딩이 실패하는 경우를 보완.
-    unawaited(() async {
-      for (int i = 0; i < 6; i++) {
-        try {
-          if (BleEmuServer.boundPort != null) break;
-          await BleEmuServer.maybeStart();
-        } catch (_) {}
-        if (BleEmuServer.boundPort != null) break;
-        await Future<void>.delayed(const Duration(seconds: 2));
-      }
-    }());
   }
 
   void _onAppSettingsChanged() {
@@ -185,8 +173,16 @@ class _MyAppState extends State<MyApp> {
           _accHighContrast = st['accHighContrast'] == true;
           _accColorblind = st['accColorblind'] == true;
         });
-        final String lang = (st['language'] ?? 'en').toString().toLowerCase();
-        await context.setLocale(lang == 'ko' ? const Locale('ko') : const Locale('en'));
+        final String lang = AppLocale.normalize(st['language'] as String?);
+        if (LocaleBus.language.value != lang) {
+          await AppLocale.applyFromStorage();
+        } else {
+          try {
+            if (mounted) {
+              await context.setLocale(AppLocale.toLocale(lang));
+            }
+          } catch (_) {}
+        }
       } catch (_) {}
     }();
   }

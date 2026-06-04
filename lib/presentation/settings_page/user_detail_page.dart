@@ -3,6 +3,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
+import 'package:helpcare/core/utils/glucose_local_repo.dart';
+import 'package:helpcare/core/utils/event_local_repo.dart';
+import 'package:helpcare/core/utils/ingest_queue.dart';
+import 'package:helpcare/core/utils/data_sync_bus.dart';
 
 /// User detail page: shows user info and Logout button
 class UserDetailPage extends StatelessWidget {
@@ -64,14 +68,31 @@ class UserDetailPage extends StatelessWidget {
                     await BleService().disconnect(clearPersistentPairing: false);
                   } catch (_) {}
                   try {
-                    final s = await SettingsStorage.load();
-                    s['authToken'] = '';
-                    s['lastUserId'] = '';
-                    s['displayName'] = 'Guest';
-                    s['guestMode'] = false;
-                    s['biometricEnabled'] = false;
-                    await SettingsStorage.save(s);
+                    await GlucoseLocalRepo().clear();
+                    await EventLocalRepo().clear();
+                    IngestQueueService().clear();
+                  } catch (_) {}
+                  try {
+                    await SettingsStorage.save(<String, dynamic>{
+                      'authToken': '',
+                      'lastUserId': '',
+                      'displayName': 'Guest',
+                      'guestMode': false,
+                      'biometricEnabled': false,
+                      'lastTrid': 0,
+                      'lastServerUploadedTrid': 0,
+                      'lastEvid': 0,
+                      'savedLoginEmail': '',
+                      'savedLoginPassword': '',
+                      'offlineLastLoginEmail': '',
+                      'offlinePwSaltHex': '',
+                      'offlinePwHashHex': '',
+                    });
                     await ApiClient().loadToken();
+                    try {
+                      DataSyncBus().emitGlucoseBulk(count: 0);
+                      DataSyncBus().emitEventBulk(count: 0);
+                    } catch (_) {}
                   } catch (_) {}
                   if (!context.mounted) return;
                   Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);

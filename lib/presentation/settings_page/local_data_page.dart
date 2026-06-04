@@ -56,6 +56,7 @@ class _LocalDataPageState extends State<LocalDataPage> {
       await EventLocalRepo().clear();
       final st = await SettingsStorage.load();
       st['lastTrid'] = 0;
+      st['lastServerUploadedTrid'] = 0;
       st['lastEvid'] = 0;
       await SettingsStorage.save(st);
       try { DataSyncBus().emitGlucoseBulk(count: 0); } catch (_) {}

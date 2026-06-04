@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
@@ -41,10 +42,11 @@ class AlertEngine {
     _sub = null;
   }
 
-  /// 설정 변경 직후 즉시 반영을 위해 알람 캐시 무효화
+  /// 설정 변경 직후 AlertEngine만 재로드 (SettingsService 메모리 캐시는 유지).
   void invalidateAlarmsCache() {
     _alarmsFetchedAt = DateTime.fromMillisecondsSinceEpoch(0);
     _alarms = const [];
+    log('[qa][AlertEngine.invalidateAlarmsCache] _alarms cleared (mem alarms kept)', name: 'qa');
   }
 
   /// BLE 링크가 끊겼을 때 (재연결 시도 전·중 포함). Weak RSSI 전용 알림은 사용하지 않음(req 1-2).
@@ -175,8 +177,8 @@ class AlertEngine {
       );
 
       try {
-        final s = await SettingsStorage.load();
-        s['lastAlert'] = {
+        await SettingsStorage.save(<String, dynamic>{
+          'lastAlert': {
           'id': nid,
           'title': title,
           'body': body,
@@ -188,8 +190,8 @@ class AlertEngine {
           'vibrate': vibrate,
           'overrideDnd': false,
           'time': DateTime.now().toUtc().toIso8601String(),
-        };
-        await SettingsStorage.save(s);
+          },
+        });
       } catch (_) {}
     } catch (e) {
       try {
@@ -369,8 +371,8 @@ class AlertEngine {
 
       // bot 검증 편의: 마지막 알람 스냅샷을 "정합성 있게" 한 번에 기록
       try {
-        final s = await SettingsStorage.load();
-        s['lastAlert'] = {
+        await SettingsStorage.save(<String, dynamic>{
+          'lastAlert': {
           'id': nid,
           'title': title,
           'body': body,
@@ -383,8 +385,8 @@ class AlertEngine {
           'vibrate': vibrate,
           'overrideDnd': (a['overrideDnd'] == true),
           'time': DateTime.now().toUtc().toIso8601String(),
-        };
-        await SettingsStorage.save(s);
+          },
+        });
       } catch (_) {}
     }
   }
