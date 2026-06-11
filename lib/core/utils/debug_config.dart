@@ -16,6 +16,13 @@ class DebugConfig {
       try {
         final Uri u = Uri.base.removeFragment();
         final String host = u.host.toLowerCase();
+        // Docker Compose QA: cgms-app-fe is published on 63104 with nginx → /api → same-stack BE.
+        // Otherwise 127.0.0.1 / localhost would skip same-origin and hit production (wrong for local QA).
+        final bool localComposeAppFe =
+            (host == '127.0.0.1' || host == 'localhost') && u.hasPort && u.port == 63104;
+        if (localComposeAppFe) {
+          return u.origin;
+        }
         final bool noApiOnThisOrigin = host.isEmpty ||
             host == 'localhost' ||
             host == '127.0.0.1' ||
