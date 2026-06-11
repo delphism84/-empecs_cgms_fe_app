@@ -78,6 +78,10 @@ class BleService {
   bool _userInitiatedDisconnect = false;
   /// CGM measurement notify 구독 성공 후에만 true — 접속 전·구독 실패 시 AR_01_06(signal loss) 알림 없음.
   bool _ar0106SessionReady = false;
+  bool _notifySubscribeInFlight = false;
+  Timer? _notifyRetryTimer;
+  int _notifyRetryCount = 0;
+  DateTime? _lastNotifyErrorToastAt;
   // discovered capabilities (updated by _validateCgmsProfile)
   bool _measFound = false;
   bool _measNotify = false;
@@ -301,8 +305,9 @@ class BleService {
             unawaited(BleLogService().add('CGMS', 'time sync exception'));
           }
         } finally {
-          // ACK 성공 여부와 무관하게 Measurement 구독 시도
-          await _subscribeGlucose(deviceId);
+          if (phase.value != BleConnPhase.notifySubscribed) {
+            await _subscribeGlucose(deviceId);
+          }
           // 로컬 기준 누락 TRID 보충 (RACP)
           unawaited(_racpFillMissingFromLocal());
         }
@@ -572,43 +577,114 @@ class BleService {
     _autoReconnectTimer = null;
   }
 
-  Future<void> _subscribeGlucose(String deviceId) async {
-    _notifySub?.cancel();
-    // short-circuit if characteristic wasn't discovered or is not notifiable
-    if (!_measFound || !_measNotify) {
-      DebugToastBus().show('CGMS: measurement char missing or not notifiable; skip subscribe');
-      unawaited(BleLogService().add('CGMS', 'skip meas subscribe (missing/notifiable)'));
-      return;
-    }
-    final ch = QualifiedCharacteristic(serviceId: serviceCgms, characteristicId: charMeasurement, deviceId: deviceId);
-    DebugToastBus().show('CGMS: subscribe notify');
-    unawaited(BleLogService().add('CGMS', 'subscribe notify'));
-    void _scheduleRetry([String reason = 'unknown']) {
-      unawaited(BleLogService().add('CGMS', 'notify stream ended: $reason; retry in 2s'));
-      Future.delayed(const Duration(seconds: 2), () {
-        if (phase.value != BleConnPhase.off) {
-          unawaited(_subscribeGlucose(deviceId));
-        }
-      });
-    }
+  void _cancelNotifyRetryTimer() {
+    _notifyRetryTimer?.cancel();
+    _notifyRetryTimer = null;
+  }
+
+  Future<void> _refreshCgmsDiscovery(String deviceId) async {
     try {
-      _notifySub = _nativeBle.subscribeToCharacteristic(ch).listen((data) async {
-      await _handleCgmsNotifyPacket(data, source: 'ble', silent: _historyInProgress);
-      }, onError: (e, st) {
+      await _validateCgmsProfile(deviceId);
+    } catch (_) {}
+  }
+
+  Future<void> _onNotifySubscribeFailed(String deviceId, Object? error, String reason) async {
+    try {
+      await _notifySub?.cancel();
+    } catch (_) {}
+    _notifySub = null;
+    _ar0106SessionReady = false;
+    if (phase.value == BleConnPhase.off) return;
+
+    unawaited(BleLogService().add('CGMS', 'notify stream ended: $reason ${error ?? ''}'));
+
+    final DateTime now = DateTime.now();
+    if (reason == 'error' &&
+        (_lastNotifyErrorToastAt == null ||
+            now.difference(_lastNotifyErrorToastAt!) > const Duration(seconds: 30))) {
+      _lastNotifyErrorToastAt = now;
       DebugToastBus().show('CGMS: notify error');
-      _scheduleRetry('error');
-      }, onDone: () {
-      _scheduleRetry('done');
-      }, cancelOnError: false);
-    } catch (e) {
-      // characteristic not found or not discovered yet
-      DebugToastBus().show('CGMS: subscribe notify failed (char not found)');
-      unawaited(BleLogService().add('CGMS', 'subscribe notify failed'));
-      return;
     }
-    phase.value = BleConnPhase.notifySubscribed;
-    _ar0106SessionReady = true;
-    _cancelSignalLossRepeatTimer();
+
+    _scheduleNotifyRetry(deviceId);
+  }
+
+  void _scheduleNotifyRetry(String deviceId) {
+    _cancelNotifyRetryTimer();
+    if (phase.value == BleConnPhase.off) return;
+
+    _notifyRetryCount++;
+    final int delaySec = _notifyRetryCount > 10
+        ? 60
+        : min(2 * _notifyRetryCount, 30);
+
+    _notifyRetryTimer = Timer(Duration(seconds: delaySec), () async {
+      if (phase.value == BleConnPhase.off) return;
+      if (_notifyRetryCount > 10) {
+        _notifyRetryCount = 0;
+      }
+      await _refreshCgmsDiscovery(deviceId);
+      if (!_measFound || !_measNotify) {
+        unawaited(BleLogService().add('CGMS', 'notify retry skip — char still missing'));
+        _scheduleNotifyRetry(deviceId);
+        return;
+      }
+      unawaited(_subscribeGlucose(deviceId));
+    });
+  }
+
+  Future<void> _subscribeGlucose(String deviceId) async {
+    if (_notifySubscribeInFlight) return;
+    if (phase.value == BleConnPhase.off) return;
+    _notifySubscribeInFlight = true;
+    try {
+      _cancelNotifyRetryTimer();
+
+      if (!_measFound || !_measNotify) {
+        await _refreshCgmsDiscovery(deviceId);
+      }
+      if (!_measFound || !_measNotify) {
+        DebugToastBus().show('CGMS: measurement char missing or not notifiable; skip subscribe');
+        unawaited(BleLogService().add('CGMS', 'skip meas subscribe (missing/notifiable)'));
+        _scheduleNotifyRetry(deviceId);
+        return;
+      }
+
+      try {
+        await _notifySub?.cancel();
+      } catch (_) {}
+      _notifySub = null;
+
+      final ch = QualifiedCharacteristic(serviceId: serviceCgms, characteristicId: charMeasurement, deviceId: deviceId);
+      DebugToastBus().show('CGMS: subscribe notify');
+      unawaited(BleLogService().add('CGMS', 'subscribe notify'));
+
+      try {
+        final Stream<List<int>> stream = _nativeBle.subscribeToCharacteristic(ch);
+        _notifySub = stream.listen(
+          (data) {
+            unawaited(_handleCgmsNotifyPacket(data, source: 'ble', silent: _historyInProgress));
+          },
+          onError: (e, st) {
+            unawaited(_onNotifySubscribeFailed(deviceId, e, 'error'));
+          },
+          onDone: () {
+            unawaited(_onNotifySubscribeFailed(deviceId, null, 'done'));
+          },
+          cancelOnError: false,
+        );
+      } catch (e) {
+        await _onNotifySubscribeFailed(deviceId, e, 'catch');
+        return;
+      }
+
+      phase.value = BleConnPhase.notifySubscribed;
+      _ar0106SessionReady = true;
+      _notifyRetryCount = 0;
+      _cancelSignalLossRepeatTimer();
+    } finally {
+      _notifySubscribeInFlight = false;
+    }
   }
 
   Future<void> _handleCgmsNotifyPacket(List<int> data, {required String source, required bool silent}) async {
@@ -915,6 +991,8 @@ class BleService {
   Future<void> disconnect({bool clearPersistentPairing = true}) async {
     _userInitiatedDisconnect = clearPersistentPairing;
     _cancelSignalLossRepeatTimer();
+    _cancelNotifyRetryTimer();
+    _notifyRetryCount = 0;
     _ar0106SessionReady = false;
     try { await _scanSub?.cancel(); } catch (_) {}
     try { await _notifySub?.cancel(); } catch (_) {}

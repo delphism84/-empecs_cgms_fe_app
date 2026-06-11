@@ -41,7 +41,7 @@ class _Lo0102GoogleLoginScreenState extends State<Lo0102GoogleLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return _SnsLoginProcessScaffold(
-      title: 'LO_01_02 · Google Login',
+      title: 'Google Login',
       subtitle: 'Google 계정으로 로그인',
       error: _error,
       loading: _loading,
@@ -89,7 +89,7 @@ class _Lo0103AppleLoginScreenState extends State<Lo0103AppleLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return _SnsLoginProcessScaffold(
-      title: 'LO_01_03 · Apple Login',
+      title: 'Apple Login',
       subtitle: 'Apple ID로 로그인',
       error: _error,
       loading: _loading,
@@ -137,7 +137,7 @@ class _Lo0104KakaoLoginScreenState extends State<Lo0104KakaoLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return _SnsLoginProcessScaffold(
-      title: 'LO_01_04 · Kakao Login',
+      title: 'Kakao Login',
       subtitle: '카카오 계정으로 로그인',
       error: _error,
       loading: _loading,

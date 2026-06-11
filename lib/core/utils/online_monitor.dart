@@ -45,6 +45,7 @@ class OnlineMonitor {
   /// 웜업 종료·홈 진입 후: 온라인이면 백로그를 UI 블로킹 없이 재시도.
   void schedulePostWarmupSync() {
     BackgroundSyncGate.runWhenUnblocked(() async {
+      await BackgroundSyncGate.yieldToUi(milliseconds: 500);
       await kickDeferredOnlineSync();
     }, dedupeKey: 'onlinePostWarmup');
   }

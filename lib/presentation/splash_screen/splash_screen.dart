@@ -6,6 +6,7 @@ import 'package:helpcare/core/app_export.dart';
 import 'package:helpcare/core/utils/qa_route_web.dart';
 import 'package:helpcare/core/utils/self_qa_runner.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
+import 'package:helpcare/core/utils/warmup_state.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -48,6 +49,11 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final st = await SettingsStorage.load();
       if (!mounted) return;
+      if (await WarmupState.isActive()) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed('/sc/01/06');
+        return;
+      }
       final String token = (st['authToken'] as String? ?? '').trim();
       final bool bioEnabled = st['biometricEnabled'] == true;
       if (bioEnabled && token.isNotEmpty) {

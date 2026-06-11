@@ -1,0 +1,17 @@
+{
+  "mongo_title": "EMPECS CGMS MongoDB \uc2a4\ud0a4\ub9c8 \uc124\uacc4\uc11c",
+  "api_title": "EMPECS CGMS API \uba85\uc138\uc11c",
+  "test_title": "EMPECS CGMS \ud14c\uc2a4\ud2b8 \uacb0\uacfc\uc11c",
+  "test_period": "\uac80\uc218: 2026-06-10 20:00 ~ 2026-06-11 00:00 KST",
+  "result_ok": "\uc815\uc0c1",
+  "note_ui": "UI \ubc0f \uc800\uc7a5 \ud655\uc778",
+  "headers_feature_qa": ["\uae30\ub2a5\ubc88\ud638", "\ud654\uba74\uba85", "\ud0ed", "\ub77c\uc6b0\ud2b8", "\uac80\uc218\ud56d\ubaa9", "\uc2dc\uac01", "\uacb0\uacfc", "\uac80\uc218\uc790", "\ube44\uace0", "\ud310\uc815"],
+  "headers_api_qa": ["API-ID", "Path", "Method", "\uae30\ub2a5\ubc88\ud638", "\uc2dc\uac01", "\uacb0\uacfc", "HTTP", "\ud310\uc815"],
+  "headers_ble": ["\uae30\ub2a5\ubc88\ud638", "\ud56d\ubaa9", "\uc2dc\uac01", "\uacb0\uacfc", "\ube44\uace0"],
+  "ble_rows": [
+    ["SC_01_01", "BLE scan/connect"],
+    ["SC_01_04", "QR auto connect"],
+    ["SC_01_06", "Warmup UI"],
+    ["AR_01_06", "Signal loss alarm"]
+  ]
+}

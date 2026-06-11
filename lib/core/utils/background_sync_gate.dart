@@ -23,20 +23,30 @@ class BackgroundSyncGate {
   }
 
   static void notifyUiWarmupEnded() {
-    runWhenUnblocked(() async {
-      IngestQueueService().kickUpload();
-    }, dedupeKey: 'ingestKick');
-    if (_pending.isEmpty) return;
     if (_flushScheduled) return;
     _flushScheduled = true;
-    unawaited(_flushPendingLoop());
+    unawaited(_deferredWarmupEndFlush());
+  }
+
+  static Future<void> _deferredWarmupEndFlush() async {
+    try {
+      await yieldToUi(milliseconds: 1200);
+      runWhenUnblocked(() async {
+        IngestQueueService().kickUpload();
+      }, dedupeKey: 'ingestKick');
+      if (_pending.isEmpty) return;
+      await yieldToUi(milliseconds: 800);
+      await _flushPendingLoop();
+    } finally {
+      _flushScheduled = false;
+    }
   }
 
   static Future<void> _flushPendingLoop() async {
     try {
       while (_pending.isNotEmpty && !blocksHeavySync) {
         final Future<void> Function() fn = _pending.removeAt(0);
-        await yieldToUi();
+        await yieldToUi(milliseconds: 48);
         try {
           await fn();
         } catch (_) {}

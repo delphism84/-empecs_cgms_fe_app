@@ -112,6 +112,30 @@ class SensorWarmupService {
     await refreshFromStorage();
   }
 
+  /// SN별 시작 시각을 과거로 당겨 남은 웜업 시간을 줄인다 (QA/이스터에그).
+  static Future<void> shiftStartBack(String eqsn, {Duration back = const Duration(minutes: 29)}) async {
+    final String k = eqsn.trim().toUpperCase();
+    if (k.isEmpty) return;
+    try {
+      final Map<String, dynamic> st = await SettingsStorage.load();
+      final Map<String, String> map = _parseStartMap(st[_kStartBySn]);
+      final String? cur = map[k];
+      DateTime startUtc;
+      if (cur != null && cur.isNotEmpty) {
+        final DateTime? parsed = DateTime.tryParse(cur);
+        startUtc = parsed == null
+            ? DateTime.now().toUtc().subtract(back)
+            : (parsed.isUtc ? parsed : parsed.toUtc()).subtract(back);
+      } else {
+        startUtc = DateTime.now().toUtc().subtract(back);
+      }
+      map[k] = startUtc.toIso8601String();
+      st[_kStartBySn] = map;
+      await SettingsStorage.save(st);
+    } catch (_) {}
+    await refreshFromStorage();
+  }
+
   /// UI에서 웜업 스킵(롱프레스 등): 해당 SN은 즉시 웜업 종료로 간주.
   static Future<void> applyUiWarmupSkipped(String eqsn) async {
     final String k = eqsn.trim().toUpperCase();

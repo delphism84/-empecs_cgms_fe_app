@@ -33,6 +33,7 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
   bool _sound = true;
   bool _vibrate = true;
   bool _overrideDnd = false;
+  bool _saving = false;
   int _repeatMin = 10;
   late TextEditingController _threshold;
   late TextEditingController _quietFrom;
@@ -127,16 +128,21 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
   }
 
   Future<void> _save() async {
-    // 알람 저장은 로컬 단일 루틴으로만 처리(수동 업/다운로드 버튼에서만 서버 동기화).
-    final bool ok = await _saveLocalCache();
-    if (!mounted) return;
-    if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('alarm_detail_save_failed'.tr())),
-      );
-      return;
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      final bool ok = await _saveLocalCache();
+      if (!mounted) return;
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('alarm_detail_save_failed'.tr())),
+        );
+        return;
+      }
+      Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
-    Navigator.of(context).pop(true);
   }
 
   Future<void> _testSignalAlert() async {
@@ -297,7 +303,7 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
               height: 48,
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _save,
+                onPressed: _saving ? null : _save,
                 child: Text('alarm_detail_save'.tr()),
               ),
             ),
@@ -425,13 +431,13 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
     );
   }
 
-  static const String _ar0106Help = 'AR_01_06 · Signal loss (link lost only).\n'
+  static const String _ar0106Help = 'Signal loss (link lost only).\n'
       'Alerts do not fire until the CGM measurement notify subscription has succeeded at least once.\n\n'
       'When the Bluetooth connection drops (out of range, timeout, etc.), a signal loss alert is evaluated.\n'
-      'Weak RSSI while still connected is not used (req 1-2).\n\n'
+      'Weak RSSI while still connected is not used.\n\n'
       'Repeat interval applies to signal loss re-notifications while the link stays down.\n'
-      'Quiet hours suppress sound/vibration; the app must not exit (req 1-3).\n\n'
-      'During sensor warm-up (SC_01_06), these alerts are suppressed.';
+      'Quiet hours suppress sound/vibration; the app must not exit.\n\n'
+      'During sensor warm-up, these alerts are suppressed.';
 
   Widget _ar0106BehaviorGuide() {
     return ExpansionTile(

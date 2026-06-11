@@ -173,7 +173,7 @@ class _CgmsReportScreenState extends State<CgmsReportScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Glucose Report (RP_01_01)',
+                  'report_title'.tr(),
                   style: TextStyle(
                     fontSize: getFontSize(20),
                     fontFamily: 'Gilroy-Medium',

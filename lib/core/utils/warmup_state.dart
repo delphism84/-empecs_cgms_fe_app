@@ -80,4 +80,29 @@ class WarmupState {
     st[_kDoneAt] = DateTime.now().toUtc().toIso8601String();
     await SettingsStorage.save(st);
   }
+
+  /// QA: UI 웜업 시작 시각을 과거로 당기고 종료 시각을 재계산한다.
+  static Future<({DateTime startUtc, DateTime endsUtc})> shiftStartBack({
+    Duration back = const Duration(minutes: 29),
+    int totalSec = 30 * 60,
+  }) async {
+    final st = await SettingsStorage.load();
+    final String s0 = (st[_kStartAt] as String? ?? '').trim();
+    DateTime startUtc;
+    if (s0.isNotEmpty) {
+      final DateTime? parsed = DateTime.tryParse(s0);
+      startUtc = parsed == null
+          ? DateTime.now().toUtc().subtract(back)
+          : (parsed.isUtc ? parsed : parsed.toUtc()).subtract(back);
+    } else {
+      startUtc = DateTime.now().toUtc().subtract(back);
+    }
+    final DateTime endsUtc = startUtc.add(Duration(seconds: totalSec));
+    st[_kStartAt] = startUtc.toIso8601String();
+    st[_kEndsAt] = endsUtc.toIso8601String();
+    st[_kActive] = true;
+    st[_kDoneAt] = '';
+    await SettingsStorage.save(st);
+    return (startUtc: startUtc, endsUtc: endsUtc);
+  }
 }

@@ -1,0 +1,6 @@
+# Generated archives and cloned repos (regenerate locally)
+*.zip
+2_api_server/cgms_be/
+2_api_server/cgms_admin_fe/
+1_android/_stage_source/
+1_android/2_build_apk/

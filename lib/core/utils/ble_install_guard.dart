@@ -9,12 +9,13 @@ import 'ble_auto_pair_store.dart';
 import 'ble_log_service.dart';
 import 'ble_service.dart';
 import 'settings_storage.dart';
+import 'warmup_state.dart';
 
 /// Detects reinstall / backup-restore and clears stale BLE auto-pair caches.
 ///
-/// Marker file lives in the app cache dir (excluded from Android Auto Backup).
-/// SharedPreferences may restore after reinstall; a missing cache marker with
-/// leftover prefs/BLE keys is treated as stale and wiped.
+/// Marker file lives in application support (survives temp-cache clears on some devices).
+/// SharedPreferences may restore after reinstall; a missing marker with leftover
+/// prefs/BLE keys is treated as stale and wiped.
 class BleInstallGuard {
   BleInstallGuard._();
 
@@ -27,17 +28,14 @@ class BleInstallGuard {
     bool wiped = false;
     try {
       if (await _detectStaleBleCacheAfterReinstall()) {
-        await wipePersistentBleState();
+        final bool keepWarmup = await WarmupState.isActive();
+        await wipePersistentBleState(clearWarmup: !keepWarmup);
         wiped = true;
       }
       await _syncMarkers();
     } catch (_) {
       try {
-        if (await _hasAnyBlePairHint()) {
-          await wipePersistentBleState();
-          wiped = true;
-          await _syncMarkers();
-        }
+        await _syncMarkers();
       } catch (_) {}
     }
     try {
@@ -47,7 +45,7 @@ class BleInstallGuard {
   }
 
   /// Force-clear all BLE pairing caches (safe to call from logout / SN change).
-  static Future<void> wipePersistentBleState() async {
+  static Future<void> wipePersistentBleState({bool clearWarmup = true}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('cgms.last_mac');
@@ -69,11 +67,13 @@ class BleInstallGuard {
       st['lastScannedQrSerial'] = '';
       st['lastScannedQrAt'] = '';
       st['lastScannedQrRegistered'] = false;
-      st['sc0106WarmupActive'] = false;
-      st['sc0106WarmupStartAt'] = '';
-      st['sc0106WarmupEndsAt'] = '';
-      st['sc0106WarmupDoneAt'] = '';
-      st['sensorWarmupStartBySn'] = <String, dynamic>{};
+      if (clearWarmup) {
+        st['sc0106WarmupActive'] = false;
+        st['sc0106WarmupStartAt'] = '';
+        st['sc0106WarmupEndsAt'] = '';
+        st['sc0106WarmupDoneAt'] = '';
+        st['sensorWarmupStartBySn'] = <String, dynamic>{};
+      }
       await SettingsStorage.save(st);
     } catch (_) {}
     try {
@@ -87,32 +87,12 @@ class BleInstallGuard {
 
     if (fileToken == null || fileToken.isEmpty) {
       if (prefToken != null && prefToken.isNotEmpty) return true;
-      if (await _hasAnyBlePairHint()) return true;
       return false;
     }
 
     if (prefToken == null || prefToken.isEmpty || prefToken != fileToken) {
       return true;
     }
-    return false;
-  }
-
-  static Future<bool> _hasAnyBlePairHint() async {
-    try {
-      if (await BleAutoPairStore.hasPair()) return true;
-    } catch (_) {}
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String mac = (prefs.getString('cgms.last_mac') ?? '').trim();
-      if (mac.isNotEmpty) return true;
-    } catch (_) {}
-    try {
-      final Map<String, dynamic> st = await SettingsStorage.load();
-      final dynamic devices = st['registeredDevices'];
-      if (devices is List && devices.isNotEmpty) return true;
-      final String qrSn = (st['lastScannedQrFullSn'] as String? ?? '').trim();
-      if (qrSn.isNotEmpty) return true;
-    } catch (_) {}
     return false;
   }
 
@@ -138,7 +118,7 @@ class BleInstallGuard {
   }
 
   static Future<File> _markerFile() async {
-    final dir = await getTemporaryDirectory();
+    final dir = await getApplicationSupportDirectory();
     return File('${dir.path}/$markerFileName');
   }
 

@@ -24,6 +24,8 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   DateTime? _endsAt;
   bool _active = false;
   bool _done = false;
+  bool _finishing = false;
+  int _warmupEggStage = 0;
 
   @override
   void initState() {
@@ -108,6 +110,7 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
       _endsAt = ends;
       _active = true;
       _done = false;
+      _warmupEggStage = 0;
     });
   }
 
@@ -132,12 +135,47 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
 
   /// 개발자 이스터에그: 시간 롱클릭 시 웜업 스킵
   void _onTimeLongPress() {
-    if (!_active || _done) return;
+    if (!_active || _done || _finishing) return;
     unawaited(_finishWarmupAndGoHome());
   }
 
+  /// QA 이스터에그: "웜업 중..." 더블탭 1회 → 적색, 2회 → 시작 29분 당김(1분 후 종료).
+  void _onWarmupStatusDoubleTap() {
+    if (!_active || _done || _finishing) return;
+    if (_warmupEggStage == 0) {
+      setState(() => _warmupEggStage = 1);
+      return;
+    }
+    if (_warmupEggStage == 1) {
+      unawaited(_applyWarmupFastForward());
+    }
+  }
+
+  Future<void> _applyWarmupFastForward() async {
+    if (!_active || _done || _finishing) return;
+    try {
+      String eqsn = '';
+      try {
+        final st = await SettingsStorage.load();
+        eqsn = (st['eqsn'] as String? ?? '').trim();
+      } catch (_) {}
+      final ({DateTime startUtc, DateTime endsUtc}) shifted =
+          await WarmupState.shiftStartBack(back: const Duration(minutes: 29));
+      if (eqsn.isNotEmpty) {
+        await SensorWarmupService.shiftStartBack(eqsn, back: const Duration(minutes: 29));
+      }
+      AlertEngine().invalidateWarmupCache();
+      if (!mounted) return;
+      setState(() {
+        _startAt = shifted.startUtc;
+        _endsAt = shifted.endsUtc;
+        _warmupEggStage = 0;
+      });
+    } catch (_) {}
+  }
+
   void _tick() {
-    if (!_active || _endsAt == null) return;
+    if (!_active || _endsAt == null || _finishing) return;
     final int rem = _remainingSec();
     if (rem <= 0 && !_done) {
       unawaited(_finishWarmupAndGoHome());
@@ -147,12 +185,29 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   }
 
   Future<void> _finishWarmupAndGoHome() async {
-    await _markDone();
-    if (!mounted) return;
-    WarmupState.setWarmupUiVisible(false);
-    BackgroundSyncGate.notifyUiWarmupEnded();
-    Future<void>.delayed(const Duration(seconds: 4), OnlineMonitor().schedulePostWarmupSync);
-    Navigator.of(context).pushReplacementNamed('/home');
+    if (_finishing) return;
+    _finishing = true;
+    try {
+      await _markDone();
+      if (!mounted) return;
+      WarmupState.setWarmupUiVisible(false);
+      _schedulePostWarmupWork();
+      Navigator.of(context).pushReplacementNamed('/home');
+    } finally {
+      _finishing = false;
+    }
+  }
+
+  void _schedulePostWarmupWork() {
+    // BLE GATT 안정화 후 백그라운드 I/O — notify 재구독·동기화 경합 완화
+    unawaited(Future<void>.delayed(const Duration(seconds: 8), () {
+      if (WarmupState.isWarmupNow) return;
+      BackgroundSyncGate.notifyUiWarmupEnded();
+    }));
+    unawaited(Future<void>.delayed(const Duration(seconds: 22), () {
+      if (WarmupState.isWarmupNow) return;
+      OnlineMonitor().schedulePostWarmupSync();
+    }));
   }
 
   Future<void> _ensureSnWarmupAlignedWithUiDone() async {
@@ -166,18 +221,29 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
   }
 
   void _navigateHome() {
-    if (!mounted) return;
-    WarmupState.setWarmupUiVisible(false);
-    BackgroundSyncGate.notifyUiWarmupEnded();
-    Future<void>.delayed(const Duration(seconds: 4), OnlineMonitor().schedulePostWarmupSync);
-    Navigator.of(context).pushReplacementNamed('/home');
+    if (!mounted || _finishing) return;
+    _finishing = true;
+    try {
+      WarmupState.setWarmupUiVisible(false);
+      _schedulePostWarmupWork();
+      Navigator.of(context).pushReplacementNamed('/home');
+    } finally {
+      _finishing = false;
+    }
   }
 
   int _remainingSec() {
     final DateTime? endsAt = _endsAt;
     if (endsAt == null) return 0;
-    final int s = endsAt.difference(DateTime.now().toUtc()).inSeconds;
+    final DateTime endsUtc = endsAt.isUtc ? endsAt : endsAt.toUtc();
+    final int s = endsUtc.difference(DateTime.now().toUtc()).inSeconds;
     return s < 0 ? 0 : s;
+  }
+
+  String _warmupStatusLabel() {
+    if (_done) return 'warmup_complete'.tr();
+    if (_active) return 'warmup_in_progress'.tr();
+    return 'warmup_not_started'.tr();
   }
 
   @override
@@ -188,6 +254,7 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
 
     final String mm = (rem ~/ 60).toString().padLeft(2, '0');
     final String ss = (rem % 60).toString().padLeft(2, '0');
+    final bool eggRed = _active && !_done && _warmupEggStage == 1;
 
     return PopScope(
       canPop: !(_active && !_done),
@@ -216,11 +283,16 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _done
-                                ? 'warmup_complete'.tr()
-                                : (_active ? 'warmup_in_progress'.tr() : 'warmup_not_started'.tr()),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                          GestureDetector(
+                            onDoubleTap: _active && !_done ? _onWarmupStatusDoubleTap : null,
+                            child: Text(
+                              _warmupStatusLabel(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: eggRed ? Colors.red : null,
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 12),
                           LinearProgressIndicator(value: progress),
@@ -271,5 +343,3 @@ class _Sc0106WarmupScreenState extends State<Sc0106WarmupScreen> {
     );
   }
 }
-
-

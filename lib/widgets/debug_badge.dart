@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:helpcare/core/utils/debug_config.dart';
 
@@ -7,7 +8,7 @@ class DebugBadge extends StatelessWidget {
   final String reqId; // 요구사항 ID, 예: TG_01_01, AR_01_01 등
   @override
   Widget build(BuildContext context) {
-    if (!DebugConfig.overlayEnabled) return child;
+    if (!kDebugMode || !DebugConfig.overlayEnabled) return child;
     return Stack(
       children: [
         child,

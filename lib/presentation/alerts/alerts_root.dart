@@ -387,7 +387,7 @@ class _VeryLowAlertPageState extends State<VeryLowAlertPage> {
   @override
   Widget build(BuildContext context) {
     return _scaffoldForm(
-      title: 'AR_01_02 · Very Low Glucose',
+      title: 'Very Low Glucose',
       body: [
         _group(context, title: 'Basic', children: [
           AppSwitchRow(label: 'Enable alert', value: enable, onChanged: (v) => setState(() => enable = v)),
@@ -471,7 +471,7 @@ class _HighAlertPageState extends State<HighAlertPage> {
   @override
   Widget build(BuildContext context) {
     return _scaffoldForm(
-      title: 'AR_01_03 · High Glucose',
+      title: 'High Glucose',
       body: [
         _group(context, title: 'Basic', children: [
           AppSwitchRow(label: 'Enable alert', value: enable, onChanged: (v) => setState(() => enable = v)),
@@ -537,7 +537,7 @@ class _LowAlertPageState extends State<LowAlertPage> {
   @override
   Widget build(BuildContext context) {
     return _scaffoldForm(
-      title: 'AR_01_04 · Low Glucose',
+      title: 'Low Glucose',
       body: [
         _group(context, title: 'Basic', children: [
           AppSwitchRow(label: 'Enable alert', value: enable, onChanged: (v) => setState(() => enable = v)),
@@ -601,7 +601,7 @@ class _RapidChangeAlertPageState extends State<RapidChangeAlertPage> {
   @override
   Widget build(BuildContext context) {
     return _scaffoldForm(
-      title: 'AR_01_05 · Rapid Change',
+      title: 'Rapid Change',
       body: [
         _group(context, title: 'Basic', children: [
           AppSwitchRow(label: 'Enable alert', value: enable, onChanged: (v) => setState(() => enable = v)),
@@ -655,7 +655,7 @@ class _SignalLossAlertPageState extends State<SignalLossAlertPage> {
   @override
   Widget build(BuildContext context) {
     return _scaffoldForm(
-      title: 'AR_01_06 · Signal Loss',
+      title: 'Signal Loss',
       body: [
         _group(context, title: 'Basic', children: [
           AppSwitchRow(label: 'Enable alert', value: enable, onChanged: (v) => setState(() => enable = v)),
@@ -706,7 +706,7 @@ class _LockAlertPageState extends State<LockAlertPage> {
   @override
   Widget build(BuildContext context) {
     return _scaffoldForm(
-      title: 'AR_01_08 · Lock Screen Alerts',
+      title: 'Lock Screen Alerts',
       body: [
         _group(context, title: 'Display', children: [
           AppSwitchRow(label: 'Show on lock screen', value: showOnLock, onChanged: (v) => setState(() => showOnLock = v)),

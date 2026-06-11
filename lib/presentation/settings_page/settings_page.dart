@@ -724,14 +724,16 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: 'settings_developer'.tr(),
                   subtitle: 'settings_developer_sub'.tr(),
                   child: Column(children: [
-                    _notifItem(
-                      context,
-                      icon: Icons.bug_report,
-                      title: 'settings_req_overlay'.tr(),
-                      subtitle: DebugConfig.overlayEnabled ? 'common_on'.tr() : 'common_off'.tr(),
-                      onTap: () => setState(() { DebugConfig.overlayEnabled = !DebugConfig.overlayEnabled; }),
-                    ),
-                    const SizedBox(height: 8),
+                    if (kDebugMode) ...[
+                      _notifItem(
+                        context,
+                        icon: Icons.bug_report,
+                        title: 'settings_req_overlay'.tr(),
+                        subtitle: DebugConfig.overlayEnabled ? 'common_on'.tr() : 'common_off'.tr(),
+                        onTap: () => setState(() { DebugConfig.overlayEnabled = !DebugConfig.overlayEnabled; }),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                     _notifItem(
                       context,
                       icon: Icons.list_alt,

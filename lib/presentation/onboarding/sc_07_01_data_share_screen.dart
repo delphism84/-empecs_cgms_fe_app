@@ -511,7 +511,7 @@ class _Sc0701DataShareScreenState extends State<Sc0701DataShareScreen> {
         await file.writeAsBytes(pdfBytes);
       } else {
         final StringBuffer buf = StringBuffer();
-        buf.writeln('# ${'sensor_share_pdf_title'.tr()} (SC_07_01)');
+        buf.writeln('# ${'sensor_share_pdf_title'.tr()}');
         buf.writeln('# ${'sensor_share_date_range'.tr()}=${_rangeLabel(r)}');
         buf.writeln('# ${'sensor_share_pdf_generated_utc'.tr()}=${DateTime.now().toUtc().toIso8601String()}');
         if (shareUserProfile) {
