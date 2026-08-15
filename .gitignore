@@ -23,3 +23,6 @@
 
 # Flutter
 *.iml
+
+# Gradle 빌드 캐시(리포트 폴더에 딸려 들어옴)
+**/.gradle/

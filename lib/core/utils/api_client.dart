@@ -9,6 +9,7 @@ import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/global_loading.dart';
 import 'package:helpcare/core/config/app_constants.dart';
+import 'package:helpcare/core/config/test_account.dart';
 // no widget import needed here
 
 class ApiClient {
@@ -93,6 +94,51 @@ class ApiClient {
     });
   }
 
+  static bool _reauthInFlight = false;
+  static DateTime? _lastReauthAt;
+
+  /// 테스트 계정으로 재로그인해 토큰을 갱신한다(**QA 빌드 전용**).
+  /// 계정이 실제로 없거나 비밀번호가 다르면 매 요청마다 로그인을 두드리게 되므로
+  /// 30초 쿨다운을 둔다.
+  Future<bool> _reauthWithTestAccount() async {
+    if (_reauthInFlight) return false;
+    final DateTime now = DateTime.now();
+    if (_lastReauthAt != null && now.difference(_lastReauthAt!) < const Duration(seconds: 30)) {
+      return false;
+    }
+    _lastReauthAt = now;
+    _reauthInFlight = true;
+    apiSyncLog('auth re-login (QA build) attempt email=${TestAccount.email}');
+    try {
+      final r = await http
+          .post(Uri.parse('$base/api/auth/login'),
+              headers: <String, String>{'Content-Type': 'application/json'},
+              body: jsonEncode(<String, String>{
+                'email': TestAccount.email,
+                'password': TestAccount.password,
+              }))
+          .timeout(timeout);
+      if (!isHttpSuccess(r.statusCode)) {
+        apiSyncLog('auth re-login FAILED status=${r.statusCode} body=${r.body.length}B');
+        return false;
+      }
+      final dynamic j = jsonDecode(r.body);
+      final String t = (j is Map ? (j['token'] as String? ?? '') : '').trim();
+      if (t.isEmpty) {
+        apiSyncLog('auth re-login FAILED: no token in response');
+        return false;
+      }
+      await saveToken(t);
+      apiSyncLog('auth re-login ok');
+      return true;
+    } catch (e) {
+      apiSyncLog('auth re-login FAILED: $e');
+      return false;
+    } finally {
+      _reauthInFlight = false;
+    }
+  }
+
   Future<http.Response> _request(
     String method,
     String path, {
@@ -104,7 +150,16 @@ class ApiClient {
     if (withGlobalLoading) GlobalLoading.begin();
     final Stopwatch sw = Stopwatch()..start();
     try {
-      final http.Response r = await call();
+      http.Response r = await call();
+      // QA 빌드 한정 자동 재인증.
+      // 토큰 TTL(현재 7일)이 지나면 모든 API 가 401 이 되고, 앱은 401 을 "오프라인"으로
+      // 해석하므로 로그인 화면에 들어가도 오프라인 모드로 빠져 스스로 복구할 수 없다.
+      // 실서비스 동작(재인증 UX)은 그대로 두고, 테스트 계정 빌드에서만 한 번 다시 로그인해 재시도한다.
+      if (r.statusCode == 401 && TestAccount.enabled && path != '/api/auth/login') {
+        if (await _reauthWithTestAccount()) {
+          r = await call();
+        }
+      }
       sw.stop();
       apiSyncLogHttp(
         method: method,
@@ -296,7 +351,9 @@ class DataService {
           String eqsn = '';
           String userId = '';
           try { final s = await SettingsStorage.load(); eqsn = (s['eqsn'] as String? ?? ''); userId = (s['lastUserId'] as String? ?? ''); } catch (_) {}
-          await GlucoseLocalRepo().addPointsBatch(times: times, values: values, trids: trids, eqsn: eqsn, userId: userId);
+          // 서버 응답에는 eqsn 이 없다 → 'srv' 로 출처를 남겨 기기 실측과 섞이지 않게 한다.
+          await GlucoseLocalRepo().addPointsBatch(
+              times: times, values: values, trids: trids, eqsn: eqsn, userId: userId, src: GlucoseSrc.server);
         } catch (_) {}
         return listOut;
       }
@@ -315,7 +372,8 @@ class DataService {
           String eqsn = '';
           String userId = '';
           try { final s = await SettingsStorage.load(); eqsn = (s['eqsn'] as String? ?? ''); userId = (s['lastUserId'] as String? ?? ''); } catch (_) {}
-          await GlucoseLocalRepo().addPointsBatch(times: times, values: values, trids: trids, eqsn: eqsn, userId: userId);
+          await GlucoseLocalRepo().addPointsBatch(
+              times: times, values: values, trids: trids, eqsn: eqsn, userId: userId, src: GlucoseSrc.server);
         } catch (_) {}
         return listOut;
       }
@@ -349,12 +407,34 @@ class DataService {
       'limit': limit,
     }, withGlobalLoading: false);
     if (resp.statusCode != 200) return [];
-    final list = jsonDecode(resp.body) as List<dynamic>;
-    return list.cast<Map<String, dynamic>>();
+    // 같은 엔드포인트가 compact Map({t,v,tr})·List 두 형태를 줄 수 있어 둘 다 처리(하드 캐스트 _TypeError 방지).
+    try {
+      final dynamic decoded = jsonDecode(resp.body);
+      if (decoded is Map && decoded.containsKey('t') && decoded.containsKey('v')) {
+        final List t = decoded['t'] as List? ?? const [];
+        final List v = decoded['v'] as List? ?? const [];
+        final List tr = decoded['tr'] as List? ?? const [];
+        final int n = t.length;
+        final List<Map<String, dynamic>> out = [];
+        for (int i = 0; i < n; i++) {
+          final DateTime time = DateTime.fromMillisecondsSinceEpoch((t[i] as num).toInt(), isUtc: true);
+          final double val = (i < v.length ? (v[i] as num).toDouble() : 0.0);
+          final int? trid = (i < tr.length && tr[i] != null) ? (tr[i] as num).toInt() : null;
+          out.add({'time': time.toUtc().toIso8601String(), 'value': val, if (trid != null) 'trid': trid});
+        }
+        return out;
+      }
+      if (decoded is List) {
+        return decoded.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+    } catch (_) {}
+    return [];
   }
 
-  Future<bool> postGlucose({required DateTime time, required num value, int? trid}) async {
-    if (!await _canUpload()) return false;
+  /// 단건 혈당 업로드. 서버 2xx 확인(`serverOk`)과 로컬 캐시 폴백(`localStored`)을 구분한다.
+  /// 호출부는 `serverOk` 일 때만 업로드 워터마크를 전진시켜야 한다(오프라인/4xx/5xx 시 영구 누락 방지).
+  Future<({bool serverOk, bool localStored})> postGlucoseResult({required DateTime time, required num value, int? trid}) async {
+    if (!await _canUpload()) return (serverOk: false, localStored: false);
     await _api.loadToken();
     try {
       String eqsn = '';
@@ -365,16 +445,24 @@ class DataService {
         if (trid != null) 'trid': trid,
         if (eqsn.isNotEmpty) 'eqsn': eqsn,
       }, withGlobalLoading: false);
-      if (ApiClient.isHttpSuccess(r.statusCode)) { await _markOnline(); return true; }
+      if (ApiClient.isHttpSuccess(r.statusCode)) {
+        await _markOnline();
+        return (serverOk: true, localStored: false);
+      }
     } catch (_) {}
-    // fallback: local cache only
-    try {
-      final s = await SettingsStorage.load();
-      final String eqsn = (s['eqsn'] as String? ?? '');
-      final String userId = (s['lastUserId'] as String? ?? '');
-      await GlucoseLocalRepo().addPoint(time: time, value: value.toDouble(), trid: trid, eqsn: eqsn, userId: userId);
-      return true;
-    } catch (_) { return false; }
+    // 서버 미확인 → 워터마크를 전진시키지 않고 그대로 반환. 큐가 유지되어 온라인 복귀 시 재전송한다.
+    //
+    // 예전에는 여기서 로컬에 다시 저장했는데, 유일한 호출부가 **이미 로컬에 저장된 행**을
+    // 올리는 업로드 큐라 재저장은 무의미할 뿐 아니라 위험했다. 행의 원래 eqsn 이 아니라
+    // **현재 eqsn** 으로 stamped 되어, 과거 센서의 판독이 현재 센서 데이터로 복제됐다
+    // (실기기에서 2026-04-18 행이 현재 센서 eqsn 으로 복제되는 것을 확인 — 원인 ③과 동일 계열).
+    return (serverOk: false, localStored: false);
+  }
+
+  /// 하위호환: 서버 업로드 성공 여부만 반환(로컬 폴백은 false).
+  Future<bool> postGlucose({required DateTime time, required num value, int? trid}) async {
+    final r = await postGlucoseResult(time: time, value: value, trid: trid);
+    return r.serverOk;
   }
 
   /// 혈당 배치 업로드 결과 (OnlineSync·QA 로그용).
@@ -592,6 +680,7 @@ class DataService {
           trids: trids,
           eqsn: eqsn,
           userId: userId.isEmpty ? null : userId,
+          src: GlucoseSrc.seed,
         );
       }
 
@@ -639,7 +728,7 @@ class DataService {
           final double wave = 120 + 35 * math.sin((i / stepsPerDay) * 6.28318 * 2);
           final double jitter = (i % 7) - 3; // -3..+3
           final double v = (wave + jitter).clamp(50.0, 250.0);
-          await GlucoseLocalRepo().addPoint(time: t, value: v, trid: null, eqsn: eqsn, userId: userId);
+          await GlucoseLocalRepo().addPoint(time: t, value: v, trid: null, eqsn: eqsn, userId: userId, src: GlucoseSrc.seed);
         }
       }
     } catch (_) {}

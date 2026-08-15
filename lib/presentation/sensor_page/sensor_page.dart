@@ -8,7 +8,6 @@ import 'package:helpcare/widgets/debug_badge.dart';
 import 'package:helpcare/widgets/gradient_icon.dart';
 import 'package:helpcare/core/utils/ingest_queue.dart';
 import 'package:helpcare/core/utils/api_client.dart';
-import 'package:helpcare/core/utils/event_local_repo.dart';
 import 'package:helpcare/core/utils/glucose_local_repo.dart';
 import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
@@ -826,11 +825,10 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
     st['sensorStartAtEqsn'] = '';
     SensorUsage.recordLocalStartUtc(st, newEqsn);
     await SettingsStorage.save(st);
-    try {
-      // SN 변경 시 로컬 데이터 전부 초기화 (혼섞임 방지)
-      await GlucoseLocalRepo().clear();
-      await EventLocalRepo().clear();
-    } catch (_) {}
+    // 예전에는 여기서 로컬 데이터를 **전부** 지웠다(`clear()`). "혼섞임 방지"가 목적이었지만
+    // 센서를 한 번 바꾸면 이전 센서 이력까지 통째로 사라졌다.
+    // 지금은 저장 유일키가 `(eqsn, time_ms)`이고 조회도 eqsn 스코프라 섞일 수 없으므로 삭제하지 않는다.
+    // (이전 센서 구간은 PD_01_01 "이전 데이터"에서 그대로 열람 가능해야 한다)
     // 대시보드 등 실시간 값 표시를 대시(–)로 즉시 반영
     try { DataSyncBus().emitGlucoseBulk(count: 0); } catch (_) {}
     String resolvedEqsn = newEqsn;
@@ -849,7 +847,7 @@ class _SensorSerialPageState extends State<SensorSerialPage> {
       final ev = await ds.fetchEvents(from: now.subtract(const Duration(days: 30)), to: now, limit: 1000, sync: true);
       try { DataSyncBus().emitEventBulk(count: ev.length); } catch (_) {}
     } catch (_) {}
-    try { final int last = await GlucoseLocalRepo().maxTrid(eqsn: resolvedEqsn); await BleService().requestRacpFromTrid((last + 1) & 0xFFFF); } catch (_) {}
+    try { await BleService().requestRacpBackfill(); } catch (_) {}
     if (!mounted) return;
     if (resolvedEqsn != newEqsn) _snCtrl.text = resolvedEqsn;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('sensor_saved_syncing'.tr())));

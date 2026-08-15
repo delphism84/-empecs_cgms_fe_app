@@ -5,7 +5,11 @@ import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class SensorRemovePage extends StatelessWidget {
-  const SensorRemovePage({super.key});
+  const SensorRemovePage({super.key, this.nextRoute});
+
+  /// 교체 플로우로 들어온 경우 다음 단계 라우트(예: 센서 부착 매뉴얼 `/um/01/01`).
+  /// null 이면 단독 열람 — 하단 CTA 없이 뒤로가기만 있다.
+  final String? nextRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +24,22 @@ class SensorRemovePage extends StatelessWidget {
     // removed unused theme variable
     return Scaffold(
       appBar: AppBar(title: Text('sensor_remove_title'.tr())),
+      // 교체 플로우의 다음 단계 버튼은 **하단 고정**. 본문에 넣으면 이미지 로딩으로
+      // 레이아웃이 늘어난 뒤 스크롤 끝까지 내려도 닿지 않는 경우가 생긴다.
+      bottomNavigationBar: nextRoute == null
+          ? null
+          : SafeArea(
+              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: SizedBox(
+                height: 48,
+                child: FilledButton(
+                  key: const Key('sensor_remove_next'),
+                  onPressed: () =>
+                      Navigator.of(context).pushReplacementNamed(nextRoute!),
+                  child: Text('sensor_remove_next_attach'.tr()),
+                ),
+              ),
+            ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

@@ -33,17 +33,20 @@ class SettingsStorage {
   /// 센서/온보딩/동기화 메타만 건드리는 저장인데 patch 에 사용자 설정이 끼어 있으면 stale.
   static bool _patchTouchesIncidentalMetadata(Map<String, dynamic> patch) {
     for (final String k in patch.keys) {
+      // 주의: QA 화면 텔레메트리 키(`gu0101*`, `sc0101*`, `me0101*` …)만 매칭해야 한다.
+      // `startsWith('gu')` 처럼 느슨하면 `guestMode` 같은 사용자 설정 키를 오탐해,
+      // 설정 저장 시 glucoseUnit/language 등 user pref가 통째로 stripped 되어 저장 안 됨.
       if (k == 'eqsn' ||
           k == 'lastTrid' ||
           k == 'lastEvid' ||
           k == 'lastServerUploadedTrid' ||
-          k.startsWith('sc') ||
+          k.startsWith('sc0') ||
           k.startsWith('lo0') ||
-          k.startsWith('gu') ||
-          k.startsWith('tg') ||
-          k.startsWith('rp') ||
-          k.startsWith('pd') ||
-          k.startsWith('me') ||
+          k.startsWith('gu0') ||
+          k.startsWith('tg0') ||
+          k.startsWith('rp0') ||
+          k.startsWith('pd0') ||
+          k.startsWith('me0') ||
           k.startsWith('ar01') ||
           k.startsWith('lastPush') ||
           k.startsWith('offline')) {
@@ -259,6 +262,14 @@ class SettingsStorage {
     });
   }
 
+  /// load()→save(전체 map) 패턴에서 오래된 스냅샷이 되돌리면 안 되는 단조 증가 카운터.
+  /// (BLE 인입이 디스크 값을 올린 사이, 낡은 _pushBacklog 스냅샷 저장이 워터마크를 후퇴시키는 것 방지)
+  static const Set<String> _monotonicCounterKeys = <String>{
+    'lastTrid',
+    'lastServerUploadedTrid',
+    'lastEvid',
+  };
+
   static void _applyPatch(Map<String, dynamic> current, Map<String, dynamic> patch) {
     for (final MapEntry<String, dynamic> entry in patch.entries) {
       final String k = entry.key;
@@ -271,10 +282,31 @@ class SettingsStorage {
           existing[sn.key.toString()] = sn.value;
         }
         current[k] = existing;
+      } else if (_monotonicCounterKeys.contains(k)) {
+        // 0(의도적 리셋)은 허용, 그 외에는 디스크 현재값보다 클 때만 전진(후퇴 차단).
+        final num newV = (v is num) ? v : (num.tryParse('$v') ?? 0);
+        final num curV = (current[k] is num) ? (current[k] as num) : 0;
+        if (newV == 0 || newV > curV) {
+          current[k] = v;
+        }
       } else {
         current[k] = v;
       }
     }
+  }
+
+  /// 단조 가드를 **의도적으로 우회**해 카운터를 되돌린다(워터마크 복구 전용).
+  /// 일반 저장 경로(`save`)로는 후퇴가 차단되므로, DB 실측값과 재동기할 때만 쓴다.
+  static Future<void> rewindCounter(String key, int value) {
+    if (!_monotonicCounterKeys.contains(key)) {
+      throw ArgumentError('rewindCounter is only for monotonic counters: $key');
+    }
+    return _runSerialized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      final current = await _readRaw(prefs);
+      current[key] = value;
+      await _writeRaw(prefs, current);
+    });
   }
 
   /// [patch] keys are merged into the latest on-disk settings (serialized, SN buckets deep-merged).

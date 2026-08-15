@@ -1,7 +1,18 @@
 import 'dart:async';
+import 'package:helpcare/core/utils/ble_log_service.dart';
 import 'package:helpcare/core/utils/local_db.dart';
 import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:sqflite/sqflite.dart';
+
+/// 혈당 행의 출처. 워터마크(`lastTrid`) 계산은 기기 실측(`ble`)만 신뢰한다.
+/// 서버 캐시(`srv`)를 섞으면 과거 센서의 trid 가 현재 센서 워터마크를 밀어 올려
+/// 이후 신규 판독이 전부 "이미 올린 것"으로 취급돼 업로드가 영구 차단된다.
+class GlucoseSrc {
+  GlucoseSrc._();
+  static const String ble = 'ble';
+  static const String server = 'srv';
+  static const String seed = 'seed';
+}
 
 class GlucoseLocalRepo {
   GlucoseLocalRepo._internal();
@@ -11,44 +22,82 @@ class GlucoseLocalRepo {
   final StreamController<Map<String, dynamic>> _stream = StreamController.broadcast();
   Stream<Map<String, dynamic>> get stream => _stream.stream;
 
-  Future<void> addPoint({required DateTime time, required double value, int? trid, String? eqsn, String? userId}) async {
+  /// 저장이 UNIQUE 충돌로 무시된 누적 횟수(프로세스 수명). QA dump 로 노출한다.
+  int droppedInserts = 0;
+  /// 마지막으로 폐기된 행의 요약(진단용).
+  String lastDropInfo = '';
+
+  /// 저장 결과. rowId==0 이면 UNIQUE 충돌로 **무시**된 것 — 예전에는 이 사실이
+  /// 아무 데도 남지 않아 "그냥 갱신이 안 됨"으로만 보였다.
+  Future<bool> addPoint({
+    required DateTime time,
+    required double value,
+    int? trid,
+    String? eqsn,
+    String? userId,
+    String src = GlucoseSrc.ble,
+  }) async {
     final db = await LocalDb().db;
     userId ??= await _inferUserId();
-    await db.insert('glucose_points', {
+    final int rowId = await db.insert('glucose_points', {
       'time_ms': time.toUtc().millisecondsSinceEpoch,
       'value': value,
       'trid': trid,
+      'src': src,
       if (eqsn != null) 'eqsn': eqsn,
       if (userId != null && userId.isNotEmpty) 'user_id': userId,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
-    _stream.add({'op': 'add', 'time': time, 'value': value, 'trid': trid, if (eqsn != null) 'eqsn': eqsn, if (userId != null) 'userId': userId});
+    final bool stored = rowId > 0;
+    if (!stored) {
+      droppedInserts++;
+      lastDropInfo = 'eqsn=$eqsn t=${time.toUtc().toIso8601String()} v=$value trid=$trid src=$src';
+      // 무음 폐기 금지: 로그와 누적 카운터로 남긴다(QA `dump` 로 조회).
+      // 화면 토스트는 쓰지 않는다 — 중복이 연속으로 들어오면 사용자 화면을 도배한다.
+      unawaited(BleLogService().add('DB', 'glucose insert IGNORED ($lastDropInfo) total=$droppedInserts'));
+    }
+    _stream.add({'op': 'add', 'time': time, 'value': value, 'trid': trid, 'stored': stored, if (eqsn != null) 'eqsn': eqsn, if (userId != null) 'userId': userId});
+    return stored;
   }
 
-  Future<void> addPointsBatch({
+  /// 배치 저장. 반환값은 **실제로 저장된 행 수**(무시된 행은 제외).
+  Future<int> addPointsBatch({
     required List<DateTime> times,
     required List<double> values,
     required List<int?> trids,
     String? eqsn,
     String? userId,
+    String src = GlucoseSrc.ble,
   }) async {
-    if (times.isEmpty) return;
+    if (times.isEmpty) return 0;
     final int n = times.length;
     final db = await LocalDb().db;
     userId ??= await _inferUserId();
-    await db.transaction((txn) async {
+    final List<Object?> results = await db.transaction((txn) async {
       final Batch b = txn.batch();
       for (int i = 0; i < n; i++) {
         b.insert('glucose_points', {
           'time_ms': times[i].toUtc().millisecondsSinceEpoch,
           'value': values[i],
           'trid': trids[i],
+          'src': src,
           if (eqsn != null) 'eqsn': eqsn,
           if (userId != null && userId.isNotEmpty) 'user_id': userId,
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
-      await b.commit(noResult: true);
+      return b.commit();
     });
-    _stream.add({'op': 'add-batch', 'count': times.length, if (eqsn != null) 'eqsn': eqsn, if (userId != null) 'userId': userId});
+    int stored = 0;
+    for (final Object? r in results) {
+      if (r is int && r > 0) stored++;
+    }
+    final int dropped = n - stored;
+    if (dropped > 0) {
+      droppedInserts += dropped;
+      lastDropInfo = 'batch eqsn=$eqsn dropped=$dropped/$n src=$src';
+      unawaited(BleLogService().add('DB', 'glucose batch IGNORED $dropped/$n (eqsn=$eqsn src=$src) total=$droppedInserts'));
+    }
+    _stream.add({'op': 'add-batch', 'count': times.length, 'stored': stored, if (eqsn != null) 'eqsn': eqsn, if (userId != null) 'userId': userId});
+    return stored;
   }
 
   /// 로그인 사용자(`lastUserId` 있음)는 익명(NULL) 행을 제외해 이전 게스트/다른 계정 데이터가 섞이지 않게 한다.
@@ -128,15 +177,30 @@ class GlucoseLocalRepo {
     return '→';
   }
 
-  Future<int> maxTrid({String? eqsn, String? userId}) async {
+  /// [src]를 주면 해당 출처의 행만 본다. 워터마크 계산은 반드시 `GlucoseSrc.ble`로
+  /// 좁혀야 한다 — 서버에서 내려온 과거 센서의 trid 가 섞이면 워터마크가 부풀어
+  /// 이후 신규 판독이 전부 "이미 전송됨"으로 취급된다.
+  Future<int> maxTrid({String? eqsn, String? userId, String? src}) async {
     final db = await LocalDb().db;
     userId ??= await _inferUserId();
     final String uid = userId ?? '';
     final bool strict = _strictUserScope(uid);
     final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
-    final List<Map<String, Object?>> res = (eqsn != null && eqsn.isNotEmpty)
-        ? await db.rawQuery('SELECT MAX(trid) AS max_trid FROM glucose_points WHERE eqsn = ? AND $userClause', [eqsn, uid])
-        : await db.rawQuery('SELECT MAX(trid) AS max_trid FROM glucose_points WHERE $userClause', [uid]);
+    final List<String> where = <String>[userClause];
+    final List<Object?> args = <Object?>[uid];
+    if (eqsn != null && eqsn.isNotEmpty) {
+      where.add('eqsn = ?');
+      args.add(eqsn);
+    }
+    if (src != null && src.isNotEmpty) {
+      // 레거시 행(src NULL)은 기기 실측으로 간주 — v3 이전에는 서버 캐시가 구분되지 않았다.
+      where.add(src == GlucoseSrc.ble ? '(src = ? OR src IS NULL)' : 'src = ?');
+      args.add(src);
+    }
+    final List<Map<String, Object?>> res = await db.rawQuery(
+      'SELECT MAX(trid) AS max_trid FROM glucose_points WHERE ${where.join(' AND ')}',
+      args,
+    );
     final Object? v = res.isNotEmpty ? res.first['max_trid'] : null;
     if (v == null) return 0;
     if (v is int) return v;
@@ -228,6 +292,7 @@ class GlucoseLocalRepo {
   }
 
   /// [afterTrid] 초과 trid 행 — 서버 미전송 백로그 복구용 (시간 오름차순).
+  /// 서버에서 내려받아 캐시한 행(`src='srv'`)은 되돌려 보낼 필요가 없으므로 제외한다.
   Future<List<Map<String, dynamic>>> rowsAfterTrid({
     required int afterTrid,
     int limit = 500,
@@ -239,15 +304,22 @@ class GlucoseLocalRepo {
     final String uid = userId ?? '';
     final bool strict = _strictUserScope(uid);
     final String userClause = strict ? 'user_id = ?' : '(user_id = ? OR user_id IS NULL)';
+    final List<String> where = <String>[
+      'trid IS NOT NULL',
+      'trid > ?',
+      "(src IS NULL OR src = '${GlucoseSrc.ble}')",
+      userClause,
+    ];
+    final List<Object?> args = <Object?>[afterTrid, uid];
+    if (eqsn != null && eqsn.isNotEmpty) {
+      where.add('eqsn = ?');
+      args.add(eqsn);
+    }
     final List<Map<String, dynamic>> rows = await db.query(
       'glucose_points',
       columns: ['time_ms', 'value', 'trid'],
-      where: (eqsn != null && eqsn.isNotEmpty)
-          ? 'trid IS NOT NULL AND trid > ? AND eqsn = ? AND $userClause'
-          : 'trid IS NOT NULL AND trid > ? AND $userClause',
-      whereArgs: (eqsn != null && eqsn.isNotEmpty)
-          ? [afterTrid, eqsn, uid]
-          : [afterTrid, uid],
+      where: where.join(' AND '),
+      whereArgs: args,
       orderBy: 'trid ASC',
       limit: limit,
     );

@@ -370,11 +370,9 @@ class _SettingsPageState extends State<SettingsPage> {
     st['sensorStartAtEqsn'] = '';
     SensorUsage.recordLocalStartUtc(st, newEqsn);
     await SettingsStorage.save(st);
-    // 2) SN 변경 시 로컬 데이터 전부 초기화 (혼섞임 방지)
-    try {
-        await GlucoseLocalRepo().clear();
-        await EventLocalRepo().clear();
-    } catch (_) {}
+    // 2) 이전 센서 이력은 보존한다.
+    // 예전에는 `clear()`로 로컬 데이터를 전부 지웠다 — 센서 교체 한 번에 전체 이력이 날아갔다.
+    // 저장 유일키 `(eqsn, time_ms)` + eqsn 스코프 조회로 이미 분리돼 있어 삭제가 필요 없다.
     String resolvedEqsn = newEqsn;
     try {
       await SensorUsage.syncStartAtWithServer();
@@ -402,10 +400,9 @@ class _SettingsPageState extends State<SettingsPage> {
       final now = DateTime.now();
       await ds.fetchGlucose(from: now.subtract(const Duration(days: 30)), to: now, limit: 5000);
     } catch (_) {}
-    // 5) RACP greater-than from last trid
+    // 5) RACP: 로컬 최대 time offset 이후 백필
     try {
-      final int last = await GlucoseLocalRepo().maxTrid(eqsn: resolvedEqsn);
-      await BleService().requestRacpFromTrid((last + 1) & 0xFFFF);
+      await BleService().requestRacpBackfill();
     } catch (_) {}
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('settings_saved_syncing'.tr())));

@@ -42,6 +42,8 @@ import 'presentation/qa/qa_qr_scan_success_redirect.dart';
 import 'presentation/sign_in_one_screen/sign_in_one_screen.dart';
 import 'presentation/settings_page/local_data_page.dart';
 import 'core/utils/global_loading.dart';
+import 'core/utils/crash_logger.dart';
+import 'core/utils/foreground_service_bridge.dart';
 import 'core/utils/notification_service.dart';
 import 'core/utils/local_sync_service.dart';
 import 'core/utils/online_monitor.dart';
@@ -55,6 +57,8 @@ import 'core/utils/ingest_queue.dart';
 import 'core/utils/focus_bus.dart';
 import 'core/utils/app_locale.dart';
 import 'core/utils/app_nav.dart';
+import 'core/utils/qa_command_channel.dart';
+import 'presentation/widgets/sensor_expiry_gate.dart';
 import 'core/config/social_auth_config.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 
@@ -70,7 +74,18 @@ Future<Locale> _appStartLocale() async {
 }
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // 전역 에러 핸들러: 잡히지 않은 동기/비동기 Dart 예외를 파일(logs/crash.log)로 남긴다.
+  // (네이티브 SIGSEGV 등은 여전히 adb logcat 필요)
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    CrashLogger.install();
+    await _bootstrap();
+  }, (Object error, StackTrace stack) {
+    CrashLogger.record(error, stack, source: 'zone');
+  });
+}
+
+Future<void> _bootstrap() async {
   if (kIsWeb) {
     databaseFactory = databaseFactoryFfiWeb;
   }
@@ -79,8 +94,11 @@ Future<void> main() async {
     await BleInstallGuard.ensureSafeStartup();
   } catch (_) {}
   await EasyLocalization.ensureInitialized();
-  await XlsxLangAssetLoader.preload('tools/lang-sheet/lang.import.csv');
+  await XlsxLangAssetLoader.preload('assets/lang/lang.xlsx');
   final Locale startLocale = await _appStartLocale();
+  // QA 원격 명령(디버그 빌드 전용) — 네이티브 브로드캐스트 → MethodChannel.
+  // 알림 권한 다이얼로그가 부트스트랩을 막는 동안에도 QA 명령이 살아 있도록 먼저 등록한다.
+  QaCommandChannel.install();
   await NotificationService().initialize();
   await AlertEngine().start();
   await SensorWarmupService.init();
@@ -92,6 +110,19 @@ Future<void> main() async {
   try { LocalSyncService().stop(); } catch (_) {}
   // 10초마다 온라인 상태 모니터링 및 자동 push
   OnlineMonitor().start();
+  // 네이티브 화면 ON/OFF 브로드캐스트로 서버 폴링을 결정적으로 제어(캐시 엔진 생명주기 지연 보완).
+  // 화면 OFF → 폴링 정지(BLE 수신·로컬저장은 계속). 화면 ON → 재개 + 백로그 flush.
+  const MethodChannel('cgms/screen').setMethodCallHandler((call) async {
+    try {
+      debugPrint('[Screen] ${call.method}');
+      if (call.method == 'screenOff') {
+        OnlineMonitor().stop();
+      } else if (call.method == 'screenOn') {
+        OnlineMonitor().start();
+        unawaited(OnlineMonitor().kickDeferredOnlineSync());
+      }
+    } catch (_) {}
+  });
   // Kakao SDK 초기화 (키가 설정된 경우에만)
   if (SocialAuthConfig.hasKakaoKey) {
     kakao.KakaoSdk.init(nativeAppKey: SocialAuthConfig.kakaoNativeAppKey);
@@ -122,7 +153,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool _isLocal = false;
   bool _always24h = true;
   double _textScale = kGlobalTextScale;
@@ -135,6 +166,41 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _init();
     AppSettingsBus.changed.addListener(_onAppSettingsChanged);
+    WidgetsBinding.instance.addObserver(this);
+    // 첫 프레임 후: 백그라운드 서비스 시작.
+    //  · CgmsForegroundService: 프로세스 유지(Phase 1, notification-only)
+    //  · CgmsBgService(스파이크): 상주 백그라운드 isolate에서 BLE 동작 검증(정석 Phase 2)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      CgmsForegroundService.start();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    debugPrint('[Lifecycle] $state');
+    // 화면 OFF/백그라운드: 서버 폴링(10초 온라인 프로브·업로드) 정지.
+    // BLE 수신·로컬 저장은 계속(별도 서비스) → 데이터 유실 없이 배터리·네트워크만 절약.
+    // 화면 OFF/홈이동은 hidden·paused로 확실히 잡힘. inactive는 포그라운드 중에도 잠깐
+    // 뜨는 과도상태라 제외(껐다켰다 thrash 방지).
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      try { OnlineMonitor().stop(); } catch (_) {}
+      return;
+    }
+    // 화면 ON/앱 복귀 시:
+    if (state == AppLifecycleState.resumed) {
+      // 1) 끊겨 있으면 즉시 재연결 시도(타이머 의존 지연 보완).
+      try {
+        if (BleService().phase.value == BleConnPhase.off) {
+          BleService().tryAutoReconnect();
+        }
+      } catch (_) {}
+      // 2) 서버 폴링 재개 + 백그라운드 동안 쌓인 로컬 백로그를 즉시 flush.
+      try { OnlineMonitor().start(); } catch (_) {}
+      try { unawaited(OnlineMonitor().kickDeferredOnlineSync()); } catch (_) {}
+    }
   }
 
   Future<void> _init() async {
@@ -151,8 +217,11 @@ class _MyAppState extends State<MyApp> {
       });
     } catch (_) {}
     try {
-      // GATT 정리. 페어링 MAC은 유지(재설치 감지 시 guard에서 이미 삭제됨).
-      await BleService().disconnect(clearPersistentPairing: false);
+      // 상주 엔진에서 이미 연결돼 있으면 끊지 않는다(Activity 재부착 시 연결 유지).
+      // 연결 상태가 아닐 때만 stale GATT 정리(페어링 MAC은 유지).
+      if (BleService().phase.value != BleConnPhase.connected) {
+        await BleService().disconnect(clearPersistentPairing: false);
+      }
     } catch (_) {}
     try {
       await AppLocale.applyFromStorage();
@@ -190,6 +259,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     try { AppSettingsBus.changed.removeListener(_onAppSettingsChanged); } catch (_) {}
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -242,13 +312,16 @@ class _MyAppState extends State<MyApp> {
         final Widget filtered = _applyAccessibilityFilters(fixedDir);
         return Stack(
           children: [
-            PopScope(
-              canPop: false,
-              onPopInvokedWithResult: (didPop, result) {
-                if (didPop) return;
-                unawaited(handleGlobalBack());
-              },
-              child: filtered,
+            // 센서 만료 예고(12h)·만료 시트를 화면과 무관하게 한 곳에서 띄운다.
+            SensorExpiryGate(
+              child: PopScope(
+                canPop: false,
+                onPopInvokedWithResult: (didPop, result) {
+                  if (didPop) return;
+                  unawaited(handleGlobalBack());
+                },
+                child: filtered,
+              ),
             ),
             if (_isLocal)
               Positioned(

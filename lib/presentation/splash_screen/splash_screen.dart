@@ -68,7 +68,9 @@ class _SplashScreenState extends State<SplashScreen> {
         Navigator.of(context).pushReplacementNamed('/passcode');
         return;
       }
-      if (SelfQaRunner.shouldRunBackend && token.isNotEmpty) {
+      // 유효 토큰이 있으면 콜드 스타트에서도 로그인 유지.
+      // (바이오/패스코드 미설정 시에도 /login 으로 튕기지 않게 — Doze/재기동 후 '랜덤 로그아웃' 방지)
+      if (token.isNotEmpty) {
         if (!mounted) return;
         Navigator.of(context).pushReplacementNamed('/home');
         return;

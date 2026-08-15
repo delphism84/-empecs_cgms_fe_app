@@ -19,6 +19,8 @@ import 'package:helpcare/core/utils/ble_service.dart';
 import 'package:helpcare/core/utils/debug_toast.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/config/app_constants.dart';
+import 'package:helpcare/core/utils/sensor_expiry_service.dart';
+import 'package:helpcare/presentation/widgets/sensor_expiry_dialogs.dart';
 import 'package:helpcare/presentation/dashboard/pd_01_01_previous_data_screen.dart';
 import 'package:helpcare/presentation/dashboard/pd_previous_routes.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -292,11 +294,10 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
         eqsn = q.isEmpty ? null : q;
       } catch (_) {}
       // 오프라인 우선: 로컬 DB에서 24h 범위 조회 (현재 SN·계정 범위)
-      List<Map<String, dynamic>> rows = await GlucoseLocalRepo().range(from: from, to: to, limit: 2000, eqsn: eqsn);
-      if (rows.isEmpty && (eqsn != null && eqsn.isNotEmpty)) {
-        final loose = await GlucoseLocalRepo().range(from: from, to: to, limit: 2000, eqsn: null);
-        if (loose.isNotEmpty) rows = loose;
-      }
+      // 현재 센서 범위로만 조회한다. eqsn:null 폴백은 이전 센서 데이터를
+      // 현재 센서 값처럼 보여줘, 수집이 멈춘 상태를 정상으로 오인하게 만든다.
+      final List<Map<String, dynamic>> rows =
+          await GlucoseLocalRepo().range(from: from, to: to, limit: 2000, eqsn: eqsn);
       final List<Map<String, dynamic>> built = <Map<String, dynamic>>[];
       for (final r in rows) {
         final int ms = (r['time_ms'] as int?) ?? 0;
@@ -728,6 +729,8 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
                       ],),
                     ),
                   ),
+                  // 만료 시 그래프 영역에 [새 센서 연결] — 요구 B(메인 진입점)
+                  const Positioned.fill(child: _ExpiredOverlay()),
                 ]),
               ),
             ),
@@ -743,6 +746,61 @@ class _MainDashboardPageState extends State<MainDashboardPage> with SingleTicker
     );
   }
 
+}
+
+/// 센서 만료 시 그래프 위에 겹쳐 뜨는 안내 + [새 센서 연결].
+/// 만료 상태에서는 새 값이 들어오지 않으므로 차트만 남겨두면 "왜 멈췄는지" 알 수 없다.
+class _ExpiredOverlay extends StatelessWidget {
+  const _ExpiredOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<SensorExpiryStatus?>(
+      valueListenable: SensorExpiryService().status,
+      builder: (BuildContext context, SensorExpiryStatus? s, _) {
+        if (s == null || !s.isExpired) return const SizedBox.shrink();
+        return IgnorePointer(
+          ignoring: false,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD32F2F).withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'sensor_expired_title'.tr(),
+                      key: const Key('dash_sensor_expired_label'),
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: FilledButton.icon(
+                      key: const Key('dash_connect_new_sensor'),
+                      onPressed: () => runSensorExpiryAction(
+                          context, SensorExpiryAction.startNew),
+                      icon: const Icon(Icons.add_link),
+                      label: Text('sensor_connect_new'.tr()),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 // removed: old icon mapping (단일 화살표 회전으로 대체)

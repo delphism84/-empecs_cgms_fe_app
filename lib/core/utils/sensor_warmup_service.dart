@@ -160,7 +160,7 @@ class SensorWarmupService {
       await SettingsStorage.save(st);
     } catch (_) {}
     _isWarmupFinished = true;
-    WarmupState.setWarmupUiVisible(false);
+    WarmupState.forceClearWarmupUi();
   }
 
   /// BLE만 붙고 웜업 화면을 거치지 않은 경우: SN에 시작 기록이 없으면 지금부터 웜업 창을 연다.

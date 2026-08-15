@@ -12,6 +12,7 @@ import 'package:helpcare/core/utils/settings_service.dart';
 import 'package:helpcare/core/utils/debug_toast.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
 import 'package:helpcare/core/utils/ble_log_service.dart';
+import 'package:helpcare/core/utils/foreground_service_bridge.dart';
 import 'package:helpcare/core/utils/app_nav.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/sensor_usage.dart';
@@ -19,12 +20,18 @@ import 'package:helpcare/core/utils/sensor_warmup_service.dart';
 import 'package:helpcare/core/utils/warmup_state.dart';
 import 'package:helpcare/core/utils/background_sync_gate.dart';
 import 'package:helpcare/core/utils/ble_auto_pair_store.dart';
+import 'package:helpcare/core/utils/crash_logger.dart';
 
 class _CgmsSample {
-  _CgmsSample({required this.time, required this.value, required this.trid});
-  final DateTime time;
+  _CgmsSample({required this.value, required this.offsetMin});
+
   final double value;
-  final int trid;
+
+  /// CGM Measurement(0x2AA7)의 `Time Offset` — 세션 시작으로부터의 **분**.
+  /// CGMS 스펙상 이 값이 레코드의 실제 식별자다(별도 sequence number 없음).
+  /// 예전 코드는 이 필드를 건너뛰고 모든 레코드에 `DateTime.now()`를 찍어,
+  /// RACP 백필 이력이 전부 "재연결한 시각"으로 몰려 기록됐다.
+  final int offsetMin;
 }
 
 
@@ -49,6 +56,17 @@ class BleService {
   String? _currentDeviceId;
   bool _historyInProgress = false;
   Timer? _historyDebounce;
+  Timer? _historyTimeout;
+
+  /// 이력(RACP 백필) 수신 창을 닫는다. 열려 있는 동안 도착한 패킷은 실시간이 아닌
+  /// 이력으로 취급돼 UI 즉시 반영·잠금화면 배너가 억제되므로, 필요 이상으로 열어두면 안 된다.
+  void _endHistoryMode(String reason) {
+    _historyTimeout?.cancel();
+    _historyTimeout = null;
+    if (!_historyInProgress) return;
+    _historyInProgress = false;
+    unawaited(BleLogService().add('CGMS', 'history mode end ($reason)'));
+  }
 
   /// Pairing UI (QR flow): [connectToDeviceAndWaitReady] waits until GATT is usable.
   Completer<bool>? _pairingCompleter;
@@ -226,6 +244,8 @@ class BleService {
         phase.value = BleConnPhase.connected;
         DebugToastBus().show('BLE: connected');
         unawaited(BleLogService().add('BLE', 'connected'));
+        // 연결 성공(=BT 권한 확보) 시점에 백그라운드 유지 Foreground Service 시작.
+        unawaited(CgmsForegroundService.start());
         try {
           _currentDeviceId = deviceId;
           connectedDeviceId.value = deviceId;
@@ -704,21 +724,37 @@ class BleService {
 
     try {
       final st = await SettingsStorage.load();
-      int last = (st['lastTrid'] as int? ?? 0);
       final String eqsn = (st['eqsn'] as String? ?? '');
+      final String userId = (st['lastUserId'] as String? ?? '');
+
+      // ── trid 워터마크 복구 ──────────────────────────────────────────────
+      // trid 는 기기 값이 아니라 앱이 만드는 카운터다. 설정 파일이 초기화되거나
+      // 파싱에 실패해 0으로 되돌아가면 예전에는 그대로 1,2,3… 을 다시 발급해
+      // 기존 행과 충돌시켰다. 저장된 값과 **DB 실측 최대값** 중 큰 쪽에서 이어간다.
+      final int stored = (st['lastTrid'] as num?)?.toInt() ?? 0;
+      final int dbMax = await GlucoseLocalRepo().maxTrid(eqsn: eqsn, userId: userId, src: GlucoseSrc.ble);
+      int last = stored >= dbMax ? stored : dbMax;
+      if (dbMax > stored) {
+        unawaited(BleLogService().add('CGMS', 'lastTrid recovered $stored → $dbMax (db max)'));
+      }
+
+      // ── 세션 기준시각 ─────────────────────────────────────────────────
+      // 레코드 시각 = (세션 시작) + offsetMin. 실시간 수신은 now ≈ 실제 측정시각이므로
+      // 첫 실시간 샘플에서 base = now - offset 을 구해 저장하고, 이후 RACP 백필은
+      // 그 base 로 과거 시각을 복원한다(재연결 시각에 몰아 찍지 않는다).
+      final int? base = await _resolveSessionBaseMs(st, records, live: !silent, eqsn: eqsn);
+
       int bulkCount = 0;
       for (final _CgmsSample r in records) {
-        int usedTrid = r.trid;
-        if (usedTrid <= 0 || usedTrid <= last) {
-          usedTrid = (last + 1) & 0xFFFF;
-        }
-        last = usedTrid;
-        DebugToastBus().show('CGMS: $source v=${r.value.toStringAsFixed(0)} trid=$usedTrid');
-        unawaited(BleLogService().add('CGMS', '$source v=${r.value.toStringAsFixed(0)} trid=$usedTrid'));
+        last = _nextTrid(last);
+        final DateTime t = (base == null)
+            ? DateTime.now()
+            : DateTime.fromMillisecondsSinceEpoch(base + r.offsetMin * 60000);
+        DebugToastBus().show('CGMS: $source v=${r.value.toStringAsFixed(0)} off=${r.offsetMin}m');
+        unawaited(BleLogService().add(
+            'CGMS', '$source v=${r.value.toStringAsFixed(0)} off=${r.offsetMin}m t=${t.toIso8601String()} trid=$last'));
         // 캐시/브로드캐스트/업로드는 큐 서비스 단일 경로로 처리 (중복 제거)
-        String userId = '';
-        try { final st2 = await SettingsStorage.load(); userId = (st2['lastUserId'] as String? ?? ''); } catch (_) {}
-        IngestQueueService().enqueueGlucose(r.time, r.value, trid: usedTrid, eqsn: eqsn, userId: userId, silent: silent);
+        IngestQueueService().enqueueGlucose(t, r.value, trid: last, eqsn: eqsn, userId: userId, silent: silent);
         if (silent) {
           bulkCount++;
           _historyDebounce?.cancel();
@@ -728,8 +764,67 @@ class BleService {
         }
       }
       st['lastTrid'] = last;
+      // RACP 재요청 기준(=이미 받은 최대 time offset). 기기의 레코드 식별자와 동일 축이다.
+      final int maxOff = records.map((e) => e.offsetMin).reduce((a, b) => a > b ? a : b);
+      final int prevOff = (st['lastCgmOffsetMin'] as num?)?.toInt() ?? -1;
+      if (maxOff > prevOff) st['lastCgmOffsetMin'] = maxOff;
       await SettingsStorage.save(st);
-    } catch (_) {}
+    } catch (e, s) {
+      // 예전에는 `catch (_) {}` 라 타입 오류 한 건에 전체 수집이 조용히 멈췄다.
+      unawaited(BleLogService().add('CGMS', 'ingest FAILED: $e'));
+      DebugToastBus().show('CGMS: ingest error');
+      CrashLogger.record(e, s, source: 'cgms-ingest');
+    }
+  }
+
+  /// 32비트 범위 내 단조 증가. 16비트 절단(`& 0xFFFF`)은 65,536회 후 0으로 되감겨
+  /// 신규 판독을 전부 과거 trid 와 충돌시켰다.
+  int _nextTrid(int last) {
+    final int n = last + 1;
+    return (n >= 0x7FFFFFFF) ? 1 : n;
+  }
+
+  /// 세션 시작 시각(epoch ms). 실시간 샘플에서 확정하고 센서(eqsn)별로 영속화한다.
+  Future<int?> _resolveSessionBaseMs(
+    Map<String, dynamic> st,
+    List<_CgmsSample> records, {
+    required bool live,
+    required String eqsn,
+  }) async {
+    final String owner = (st['cgmSessionBaseEqsn'] as String? ?? '');
+    int? base = (st['cgmSessionBaseMs'] as num?)?.toInt();
+    if (base != null && owner != eqsn) base = null; // 센서가 바뀌면 세션도 새로 시작
+
+    // 기준이 이미 있고 이력(백필) 수신이면 그대로 쓴다.
+    if (!live && base != null) return base;
+
+    // 기준 산출은 항상 `now - offset`. 이력 수신이어도 기준이 없으면 이 값을 쓴다.
+    //
+    // 예전에는 이력일 때 `sensorStartAt`(센서 등록 시각)으로 대체했는데, 재연결마다 도는
+    // RACP 백필이 **무조건 10초간** 이력 플래그를 켜는 탓에 그 창에 도착한 실시간 패킷이
+    // 이력으로 오분류됐다. 등록 시각이 2주 묵은 기기에서 실제로 측정값이 2주 전 날짜로
+    // 기록되는 것을 실기기에서 확인했다(SM-F946N, 2026-07-28).
+    final int candidate =
+        DateTime.now().millisecondsSinceEpoch - records.last.offsetMin * 60000;
+    // 재동기 임계를 크게 잡는다. 기준이 조금만 흔들려도 다시 잡으면 저장 시각이 **뒤로 점프**해
+    // 차트에 역순 포인트가 생긴다(잠금 18분 검증에서 -250초 점프 15회 관측).
+    // 기기 시계 리셋 같은 큰 어긋남만 바로잡고, 소소한 드리프트는 무시한다.
+    const int resyncThresholdMs = 30 * 60000;
+    final bool newSession = base == null;
+    if (base == null || (live && (candidate - base).abs() > resyncThresholdMs)) {
+      base = candidate;
+      st['cgmSessionBaseMs'] = base;
+      st['cgmSessionBaseEqsn'] = eqsn;
+      if (newSession) {
+        // 새 세션(센서 교체 포함)에서는 기기의 time offset 도 0 부터 다시 시작한다.
+        // 이전 세션의 최대 offset 을 남겨두면 `lastCgmOffsetMin` 은 단조 증가만 하므로
+        // RACP 백필이 **존재하지 않는 구간**을 요청하게 되어 이력 보충이 조용히 실패한다.
+        st['lastCgmOffsetMin'] = -1;
+      }
+      unawaited(BleLogService().add('CGMS',
+          'session base set ${DateTime.fromMillisecondsSinceEpoch(base).toIso8601String()} (live=$live)'));
+    }
+    return base;
   }
 
   Future<bool> _subscribeOpsAndStart(String deviceId) async {
@@ -826,6 +921,9 @@ class BleService {
           final int rc = data[3] & 0xFF;
           unawaited(BleLogService().add('CGMS', 'racp rsp req=${req.toRadixString(16)} rc=${rc.toRadixString(16)}'));
           DebugToastBus().show('RACP: rc=0x${rc.toRadixString(16)}');
+          // 이력 전송 종료 응답 → 즉시 실시간 모드로 복귀.
+          // 타이머(10초)만 믿으면 그 창에 도착한 **실시간** 패킷이 이력으로 오분류된다.
+          if (req == 0x01) _endHistoryMode('racp rsp rc=0x${rc.toRadixString(16)}');
         }
       }
       }, onError: (e, st) {
@@ -863,14 +961,18 @@ class BleService {
     await _racpWrite(id, const [0x01, 0x06]); // Report stored records, Operator: Last
   }
 
-  Future<void> requestRacpFromTrid(int fromTridInclusive) async {
+  /// RACP "Report stored records, Operator ≥, Filter type 0x01".
+  /// CGMS(0x181F)에서 filter type 0x01 은 **Time Offset(분)** 이다 — 별도 sequence
+  /// number 가 없다. 인자는 앱의 trid 가 아니라 반드시 time offset 이어야 한다.
+  Future<void> requestRacpFromTimeOffset(int fromOffsetMinInclusive) async {
     final id = _currentDeviceId;
     if (id == null) { DebugToastBus().show('RACP: not connected'); return; }
-    final int lo = fromTridInclusive & 0xFF;
-    final int hi = (fromTridInclusive >> 8) & 0xFF;
-    // Report stored records, Operator: >=, Filter: Sequence Number (0x01), Param: fromTrid (LE)
-    await _racpWrite(id, [0x01, 0x03, 0x01, lo, hi]);
+    final int v = fromOffsetMinInclusive < 0 ? 0 : (fromOffsetMinInclusive & 0xFFFF);
+    await _racpWrite(id, [0x01, 0x03, 0x01, v & 0xFF, (v >> 8) & 0xFF]);
   }
+
+  /// 로컬에 이미 있는 최대 time offset 이후를 기기에 요청(공개 진입점).
+  Future<void> requestRacpBackfill() => _racpFillMissingFromLocal();
 
   Future<void> _racpWrite(String deviceId, List<int> value) async {
     Future<bool> _try(Uuid serviceId) async {
@@ -889,15 +991,26 @@ class BleService {
     }
   }
 
+  /// RACP 백필 기준은 **이미 받은 최대 time offset**이다.
+  /// 예전에는 로컬 `MAX(trid)`(앱이 만든 카운터)로 요청해, 기기의 레코드 축과
+  /// 아무 관계 없는 값을 필터로 보내고 있었다.
   Future<void> _racpFillMissingFromLocal() async {
     try {
-      final int localMax = await GlucoseLocalRepo().maxTrid();
-      final int from = (localMax <= 0) ? 1 : (localMax + 1);
+      int fromOffset = 0;
+      try {
+        final st = await SettingsStorage.load();
+        fromOffset = ((st['lastCgmOffsetMin'] as num?)?.toInt() ?? -1) + 1;
+        if (fromOffset < 0) fromOffset = 0;
+      } catch (_) {}
       _historyInProgress = true;
-      // safety timeout to end history mode if no data arrives
-      Timer(const Duration(seconds: 10), () { _historyInProgress = false; });
-      await requestRacpFromTrid(from);
-    } catch (_) {}
+      // 안전망: RACP 종료 응답이 오지 않아도 창을 반드시 닫는다(응답이 오면 즉시 닫힘).
+      _historyTimeout?.cancel();
+      _historyTimeout = Timer(const Duration(seconds: 10), () => _endHistoryMode('timeout'));
+      unawaited(BleLogService().add('CGMS', 'racp backfill from offset=$fromOffset'));
+      await requestRacpFromTimeOffset(fromOffset);
+    } catch (e) {
+      unawaited(BleLogService().add('CGMS', 'racp backfill failed: $e'));
+    }
   }
 
   // legacy direct-write helper removed in favor of _subscribeOpsAndStart()
@@ -958,9 +1071,9 @@ class BleService {
       if (pos + 2 > data.length) break;
       final double glucose = _decodeSfloat(data[pos], data[pos + 1]);
       pos += 2;
-      // time offset (minutes); not used for timestamp here
+      // time offset (minutes since session start) — 레코드의 실제 타임스탬프 근거.
       if (pos + 2 > data.length) break;
-      // final int timeOffset = (data[pos] & 0xFF) | ((data[pos + 1] & 0xFF) << 8);
+      final int timeOffset = (data[pos] & 0xFF) | ((data[pos + 1] & 0xFF) << 8);
       pos += 2;
       // skip status octets if present
       if (warnPresent) pos += 1;
@@ -970,7 +1083,7 @@ class BleService {
       if (qualityPresent) pos += 2;
       if (crcPresent) pos += 2;
       if (glucose >= 0 && glucose <= 1000) {
-        out.add(_CgmsSample(time: DateTime.now(), value: glucose, trid: 0));
+        out.add(_CgmsSample(value: glucose, offsetMin: timeOffset));
       }
       offset += size;
     }

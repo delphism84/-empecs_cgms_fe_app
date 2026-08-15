@@ -178,6 +178,15 @@ class TestAccountRunner {
   }
 
   static Future<bool> _saveTestSensorSn() async {
+    final Map<String, dynamic> cur = await SettingsStorage.load();
+    final String existing = (cur['eqsn'] as String? ?? '').trim();
+    if (existing.isNotEmpty) {
+      // 이미 등록된 센서가 있으면 덮어쓰지 않는다.
+      // 앱을 재시작할 때마다 QA 상수(`testSensorSn`)로 되돌리면 실기기 QA 도중
+      // 센서 번호가 등록값과 QA 상수 사이를 오가고, 수집 데이터가 두 버킷으로 갈라진다.
+      _log('SKIP: sensor SN already registered ($existing)');
+      return true;
+    }
     final String sn = TestAccount.testSensorSn.toUpperCase();
     final String nowIso = DateTime.now().toUtc().toIso8601String();
     await SettingsStorage.save(<String, dynamic>{
@@ -191,9 +200,11 @@ class TestAccountRunner {
     return true;
   }
 
+  /// 등록이 유지되는지만 본다. 실기기 QA 에서는 실제 센서 번호가 들어 있는 것이
+  /// 정상이므로 QA 상수와의 일치를 요구하지 않는다.
   static Future<bool> _verifyTestSensorSn() async {
     final Map<String, dynamic> st = await SettingsStorage.load();
-    final String eqsn = (st['eqsn'] as String? ?? '').trim().toUpperCase();
-    return eqsn == TestAccount.testSensorSn.toUpperCase();
+    final String eqsn = (st['eqsn'] as String? ?? '').trim();
+    return eqsn.isNotEmpty;
   }
 }

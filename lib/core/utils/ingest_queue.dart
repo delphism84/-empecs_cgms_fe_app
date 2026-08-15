@@ -72,13 +72,20 @@ class IngestQueueService {
     final String resolvedEqsn = (eqsn != null && eqsn.isNotEmpty) ? eqsn : _inferEqsn();
     final String? resolvedUser = (userId != null && userId.isNotEmpty) ? userId : _inferUserIdOrNull();
 
-    await GlucoseLocalRepo().addPoint(
+    final bool stored = await GlucoseLocalRepo().addPoint(
       time: time,
       value: value.toDouble(),
       trid: trid,
       eqsn: resolvedEqsn,
       userId: resolvedUser,
     );
+
+    // 저장되지 않은 값을 UI로 방송하면 차트에 잠깐 찍혔다가 다음 재로드에서 사라진다
+    // (고객 리포트의 "현재시간에 찍혔다가 과거로 되돌아감"). 저장된 값만 방송한다.
+    if (!stored) {
+      apiSyncLog('ingest glucose DROPPED (unique conflict) trid=${trid ?? '—'} eqsn=$resolvedEqsn');
+      return;
+    }
 
     if (!silent) {
       DataSyncBus().emitGlucosePoint(time: time, value: value.toDouble());
@@ -129,13 +136,13 @@ class IngestQueueService {
 
   Future<void> _rebuildQueueFromLocal() async {
     try {
-      final int after = await _readLastServerUploadedTrid();
       String? eqsn = _cachedEqsn;
       if (eqsn == null || eqsn.isEmpty) {
         final st = await SettingsStorage.load();
         final String q = (st['eqsn'] as String? ?? '').trim();
         eqsn = q.isEmpty ? null : q;
       }
+      final int after = await _recoverUploadWatermark();
       final rows = await GlucoseLocalRepo().rowsAfterTrid(afterTrid: after, limit: 500, eqsn: eqsn);
       for (final r in rows) {
         final int? tr = (r['trid'] as int?);
@@ -183,11 +190,13 @@ class IngestQueueService {
         await BackgroundSyncGate.yieldToUi(milliseconds: 8);
 
         final Stopwatch sw = Stopwatch()..start();
-        final bool ok = await ds.postGlucose(time: time, value: value, trid: tr);
+        final ({bool serverOk, bool localStored}) res =
+            await ds.postGlucoseResult(time: time, value: value, trid: tr);
         sw.stop();
-        apiSyncLog('ingest glucose post trid=${tr ?? '—'} ok=$ok ${sw.elapsedMilliseconds}ms');
+        apiSyncLog('ingest glucose post trid=${tr ?? '—'} serverOk=${res.serverOk} ${sw.elapsedMilliseconds}ms');
 
-        if (!ok) break;
+        // 서버 2xx 확인 시에만 워터마크 전진·큐 제거. 오프라인/4xx/5xx 는 큐 유지 → 재시도.
+        if (!res.serverOk) break;
 
         if (tr != null && tr > 0) {
           await _markServerUploadedTrid(tr);
@@ -199,6 +208,28 @@ class IngestQueueService {
     } finally {
       _uploadRunning = false;
     }
+  }
+
+  /// `lastServerUploadedTrid`는 단조 증가만 하므로, trid 공간이 되감기거나
+  /// 로컬 데이터가 초기화되면 워터마크가 DB 최대값보다 훨씬 커진 채로 남는다.
+  /// 그 상태에서는 신규 판독(trid=1,2,3…)이 전부 "이미 전송됨"으로 걸러져
+  /// 큐에 들어가지도 못하고, 서버 전송이 영구 중단된다.
+  /// → DB 실측 최대값보다 크면 그 값으로 되돌린다.
+  Future<int> _recoverUploadWatermark() async {
+    final int mark = await _readLastServerUploadedTrid();
+    if (mark <= 0) return 0;
+    try {
+      // 워터마크는 센서와 무관한 **전역** 카운터이므로 비교 대상도 전역 최대값이어야 한다.
+      // 특정 eqsn 으로 좁히면 센서를 막 교체해 해당 센서 행이 아직 없을 때
+      // 워터마크가 0 으로 후퇴하고, 이전 센서의 이미 전송한 구간을 다시 올릴 수 있다.
+      final int dbMax = await GlucoseLocalRepo().maxTrid(src: GlucoseSrc.ble);
+      if (mark > dbMax) {
+        await SettingsStorage.rewindCounter(_kLastServerUploadedTrid, dbMax);
+        apiSyncLog('upload watermark rewound $mark → $dbMax (global db max)');
+        return dbMax;
+      }
+    } catch (_) {}
+    return mark;
   }
 
   static Future<int> readLastServerUploadedTrid() => _readLastServerUploadedTrid();

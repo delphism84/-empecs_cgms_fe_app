@@ -9,14 +9,24 @@ class WarmupState {
   /// [start]가 저장소에 쓰이기 전 await 구간 — 이 사이에 혈당/링크 알림이 새지 않도록 한다.
   static bool _persistingWarmup = false;
 
-  /// SC_01_06(및 동일 웜업 전면 UI)이 떠 있는 동안 true. SN 기반 게이트와 별도로 알람·notify를 확실히 막는다.
-  static bool _warmupUiVisible = false;
+  /// SC_01_06(및 동일 웜업 전면 UI)이 떠 있는 동안 >0. 여러 웜업 화면이 겹칠 수 있어
+  /// 단일 bool 대신 참조카운트로 관리한다(한 화면 dispose가 다른 화면의 억제를 조기 해제하는 버그 방지).
+  static int _warmupUiCount = 0;
 
   /// 웜업 전면 UI 표시 중이거나, 웜업 시작을 저장소에 반영하는 짧은 구간.
-  static bool get isWarmupNow => _warmupUiVisible || _persistingWarmup;
+  static bool get isWarmupNow => _warmupUiCount > 0 || _persistingWarmup;
 
   static void setWarmupUiVisible(bool visible) {
-    _warmupUiVisible = visible;
+    if (visible) {
+      _warmupUiCount++;
+    } else if (_warmupUiCount > 0) {
+      _warmupUiCount--;
+    }
+  }
+
+  /// 강제 초기화(resetAll 등, 짝 없는 해제) — 모든 웜업 UI 카운트를 0으로.
+  static void forceClearWarmupUi() {
+    _warmupUiCount = 0;
   }
 
   static const String _kStartAt = 'sc0106WarmupStartAt';

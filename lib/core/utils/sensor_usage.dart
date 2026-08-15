@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:helpcare/core/config/app_constants.dart';
 import 'package:helpcare/core/utils/api_client.dart';
 import 'package:helpcare/core/utils/data_sync_bus.dart';
@@ -41,6 +42,22 @@ class SensorUsage {
   static String formatStartLocal(DateTime t) {
     return '${t.year}/${t.month.toString().padLeft(2, '0')}/${t.day.toString().padLeft(2, '0')} '
         '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// 만료 예정 일시 표기 — `MM/dd HH:mm`
+  static String formatExpiryAt(DateTime t) {
+    return '${t.month.toString().padLeft(2, '0')}/${t.day.toString().padLeft(2, '0')} '
+        '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// 잔여시간 표기 — `11시간 59분` / `59분` (Dexcom 하단 시트 형식).
+  /// 초 단위는 내림. 0 이하이면 `0분`.
+  static String formatRemainHm(Duration d) {
+    final int total = d.inSeconds < 0 ? 0 : d.inSeconds;
+    final int h = total ~/ 3600;
+    final int m = (total % 3600) ~/ 60;
+    if (h <= 0) return 'sensor_expiry_fmt_m'.tr(args: <String>['$m']);
+    return 'sensor_expiry_fmt_hm'.tr(args: <String>['$h', '$m']);
   }
 
   /// Remaining time and progress from [startLocal] only (no separate remain field).

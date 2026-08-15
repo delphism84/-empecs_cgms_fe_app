@@ -227,6 +227,10 @@ class NotificationService {
     } catch (_) {}
   }
 
+  Future<void> cancel(int id) async {
+    try { await _plugin.cancel(id); } catch (_) {}
+  }
+
   /// AR_01_08: 잠금화면에 항상 보이는 배너/상태 알림(최신 혈당 + 추세 화살표)
   /// - 채널: cgms_lockscreen (무음/무진동, importance max)
   /// - 잠금화면 노출: public

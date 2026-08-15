@@ -11,11 +11,22 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 야간 백그라운드 BLE 유지: Foreground Service(연결기기 타입) + 웨이크락 + 배터리최적화 예외 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <application
+        android:name=".App"
         android:label="EMPECS CGMS"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true">
+        <!-- flutter_foreground_task 서비스 (이름 변경 금지). BLE 연결 유지용 connectedDevice 타입. -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="connectedDevice"
+            android:exported="false" />
          <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="AIzaSyBik0K8HHrKnsFfTo-XG5ArCy3XRcLVqN0"/>
         <!-- Google Sign-In: docs/cgms info.csv Web 클라이언트 ID -->

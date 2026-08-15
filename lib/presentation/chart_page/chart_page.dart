@@ -39,7 +39,7 @@ class ChartPage extends StatefulWidget {
   State<ChartPage> createState() => _ChartPageState();
 }
 
-class _ChartPageState extends State<ChartPage> {
+class _ChartPageState extends State<ChartPage> with WidgetsBindingObserver {
   static const double _defaultMaxY = 250.0;
 
   DateTime currentDay = DateTime.now();
@@ -75,7 +75,20 @@ class _ChartPageState extends State<ChartPage> {
     GlucoseFocus.focusTime.addListener(_onExternalFocus);
     AppSettingsBus.changed.addListener(_onSettingsChanged);
     ChartThresholdBus.changed.addListener(_onChartThresholdChanged);
-    _syncSub = DataSyncBus().stream.listen(_onDataSync);
+    // 브로드캐스트 리스너에서 예외가 나도 구독이 죽지 않도록 onError 무시.
+    _syncSub = DataSyncBus().stream.listen(_onDataSync, onError: (_) {});
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // 잠금 해제/복귀 시: 잠금 중 Doze로 놓친 BLE 갱신을 DB에서 강제 재로드해 그래프를 최신화.
+    // (라이브 DataSyncBus 이벤트에만 의존하면 잠금 구간에 놓친 포인트가 재기동 전까지 안 보이는 문제)
+    if (state == AppLifecycleState.resumed) {
+      if (widget.embedded && HomeTab.index.value != 0) return;
+      unawaited(_reloadPointsOnly());
+    }
   }
 
   @override
@@ -94,6 +107,7 @@ class _ChartPageState extends State<ChartPage> {
     ChartThresholdBus.changed.removeListener(_onChartThresholdChanged);
     _pointsReloadDebounce?.cancel();
     _syncSub?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -213,12 +227,9 @@ class _ChartPageState extends State<ChartPage> {
       eqsn = (s['eqsn'] as String? ?? '');
       userId = (s['lastUserId'] as String? ?? '');
     } catch (_) {}
-    List<Map<String, dynamic>> local =
-        await GlucoseLocalRepo().range(from: from, to: to, limit: 5000, eqsn: eqsn, userId: userId);
-    if (local.isEmpty && eqsn.isNotEmpty) {
-      local = await GlucoseLocalRepo().range(from: from, to: to, limit: 5000, eqsn: null, userId: userId);
-    }
-    return local;
+    // 현재 센서 범위로만 조회. 비어 있으면 "데이터 없음"이 맞다 —
+    // eqsn:null 폴백은 이전 센서 구간을 현재 센서 차트에 그려 넣는다.
+    return GlucoseLocalRepo().range(from: from, to: to, limit: 5000, eqsn: eqsn, userId: userId);
   }
 
   Future<void> _reloadPointsOnly() async {

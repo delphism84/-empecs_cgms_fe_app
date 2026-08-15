@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helpcare/core/utils/settings_service.dart';
+import 'package:helpcare/core/utils/settings_storage.dart';
 import 'package:helpcare/core/utils/alert_engine.dart';
 import 'package:helpcare/core/utils/focus_bus.dart';
 import 'package:helpcare/core/utils/notification_service.dart';
@@ -38,6 +39,15 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
   late TextEditingController _threshold;
   late TextEditingController _quietFrom;
   late TextEditingController _quietTo;
+
+  // 혈당 임계값은 저장/비교가 항상 mg/dL 기준(AlertEngine 계약). 화면은 사용자 단위로 표시/입력.
+  static const double _mmolFactor = 18.02;
+  String _glucoseUnit = 'mgdl';
+  bool get _isMmol => _glucoseUnit == 'mmol';
+  bool get _isGlucoseThreshold => _type == 'high' || _type == 'low' || _type == 'very_low';
+  String get _unitLabel => _isMmol ? 'mmol/L' : 'mg/dL';
+  String _mgdlToDisplay(num mgdl) => _isMmol ? (mgdl / _mmolFactor).toStringAsFixed(1) : mgdl.round().toString();
+  num _displayToMgdl(num shown) => _isMmol ? (shown * _mmolFactor).round() : shown;
 
   @override
   void initState() {
@@ -77,6 +87,23 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
     _threshold = TextEditingController(text: thInitial);
     _quietFrom = TextEditingController(text: (a['quietFrom'] ?? '').toString());
     _quietTo = TextEditingController(text: (a['quietTo'] ?? '').toString());
+    unawaited(_loadUnitAndConvert());
+  }
+
+  /// 저장소의 glucoseUnit을 읽어, 혈당 임계값 필드를 mg/dL → 사용자 단위로 변환해 표시.
+  Future<void> _loadUnitAndConvert() async {
+    try {
+      final st = await SettingsStorage.load();
+      final String u = (st['glucoseUnit'] as String? ?? 'mgdl').trim();
+      if (!mounted) return;
+      setState(() {
+        _glucoseUnit = (u == 'mmol') ? 'mmol' : 'mgdl';
+        if (_isGlucoseThreshold && _isMmol) {
+          final num? raw = num.tryParse(_threshold.text.trim());
+          if (raw != null) _threshold.text = _mgdlToDisplay(raw);
+        }
+      });
+    } catch (_) {}
   }
 
   @override
@@ -107,9 +134,10 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
       } else if (_type == 'rate') {
         one['threshold'] = num.tryParse(_threshold.text.trim()) ?? 2;
       } else {
+        // high/low/very_low: 화면값(사용자 단위) → 저장은 항상 mg/dL 로 변환.
         final p = num.tryParse(_threshold.text.trim());
         if (p != null) {
-          one['threshold'] = p;
+          one['threshold'] = _isGlucoseThreshold ? _displayToMgdl(p) : p;
         }
       }
       await _svc.upsertAlarmByType(_type, one);
@@ -223,7 +251,7 @@ class _AlarmDetailPageState extends State<AlarmDetailPage> {
                 subtitle: 'alarm_section_threshold_sub'.tr(),
                 child: Column(
                   children: [
-                    if (!isRate) _textField(label: 'alarm_section_threshold'.tr(), controller: _threshold, icon: Icons.straighten, keyboardType: TextInputType.number),
+                    if (!isRate) _textField(label: '${'alarm_section_threshold'.tr()} (${_isGlucoseThreshold ? _unitLabel : 'mg/dL'})', controller: _threshold, icon: Icons.straighten, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
                     if (isRate) _ratePicker(),
                   ],
                 ),
